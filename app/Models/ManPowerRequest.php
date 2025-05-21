@@ -16,7 +16,7 @@ class ManPowerRequest extends Model
         'status',
     ];
 
-    public function subSection()
+    public function sub_section()
     {
         return $this->belongsTo(SubSection::class);
     }

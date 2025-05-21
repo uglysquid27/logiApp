@@ -11,10 +11,12 @@ class ManPowerRequestController extends Controller
 {
     public function index()
     {
-        $requests = ManPowerRequest::with('subSection')->latest()->get();
+        $requests = ManpowerRequest::with(['sub_section.section'])->latest()->get();
+
         return Inertia::render('ManpowerRequests/Index', [
-            'requests' => $requests
+            'requests' => $requests,
         ]);
+        
     }
 
     public function create()

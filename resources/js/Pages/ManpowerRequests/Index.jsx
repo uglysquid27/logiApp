@@ -25,6 +25,7 @@ export default function Index({ requests }) {
           <thead className="bg-gray-100">
             <tr>
               <th className="border px-2 py-1">Tanggal</th>
+              <th className="border px-2 py-1">Section</th>
               <th className="border px-2 py-1">Sub Section</th>
               <th className="border px-2 py-1">Jumlah</th>
               <th className="border px-2 py-1">Status</th>
@@ -33,7 +34,7 @@ export default function Index({ requests }) {
           <tbody>
             {requests.length === 0 ? (
               <tr>
-                <td colSpan="4" className="text-center py-4 text-gray-500">
+                <td colSpan="5" className="text-center py-4 text-gray-500">
                   Belum ada request.
                 </td>
               </tr>
@@ -41,6 +42,7 @@ export default function Index({ requests }) {
               requests.map((req) => (
                 <tr key={req.id}>
                   <td className="border px-2 py-1">{req.date}</td>
+                  <td className="border px-2 py-1">{req.sub_section?.section?.name ?? '-'}</td>
                   <td className="border px-2 py-1">{req.sub_section?.name}</td>
                   <td className="border px-2 py-1">{req.requested_amount}</td>
                   <td className="border px-2 py-1 capitalize">{req.status}</td>
@@ -49,6 +51,7 @@ export default function Index({ requests }) {
             )}
           </tbody>
         </table>
+
       </div>
     </AuthenticatedLayout>
   );
