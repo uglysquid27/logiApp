@@ -20,4 +20,9 @@ class ManPowerRequest extends Model
     {
         return $this->belongsTo(SubSection::class);
     }
+    public function subSection()
+{
+    return $this->belongsTo(SubSection::class);
+}
+
 }

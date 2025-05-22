@@ -25,10 +25,10 @@ export default function Index({ requests }) {
           <thead className="bg-gray-100">
             <tr>
               <th className="border px-2 py-1">Tanggal</th>
-              <th className="border px-2 py-1">Section</th>
               <th className="border px-2 py-1">Sub Section</th>
               <th className="border px-2 py-1">Jumlah</th>
               <th className="border px-2 py-1">Status</th>
+              <th className="border px-2 py-1">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -42,16 +42,26 @@ export default function Index({ requests }) {
               requests.map((req) => (
                 <tr key={req.id}>
                   <td className="border px-2 py-1">{req.date}</td>
-                  <td className="border px-2 py-1">{req.sub_section?.section?.name ?? '-'}</td>
                   <td className="border px-2 py-1">{req.sub_section?.name}</td>
                   <td className="border px-2 py-1">{req.requested_amount}</td>
                   <td className="border px-2 py-1 capitalize">{req.status}</td>
+                  <td className="border px-2 py-1">
+                    {req.status !== 'fulfilled' ? (
+                      <Link
+                        href={route('manpower-requests.fulfill', req.id)}
+                        className="text-blue-600 underline hover:text-blue-800"
+                      >
+                        Penuhi
+                      </Link>
+                    ) : (
+                      <span className="text-gray-400 italic">Sudah dipenuhi</span>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
-
       </div>
     </AuthenticatedLayout>
   );

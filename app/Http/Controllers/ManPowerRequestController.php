@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ManPowerRequest;
 use App\Models\SubSection;
+use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -11,13 +12,13 @@ class ManPowerRequestController extends Controller
 {
     public function index()
     {
-        $requests = ManpowerRequest::with(['sub_section.section'])->latest()->get();
-
+        $requests = ManPowerRequest::with('subSection')->get();
+    
         return Inertia::render('ManpowerRequests/Index', [
             'requests' => $requests,
         ]);
-        
     }
+    
 
     public function create()
     {
@@ -44,4 +45,29 @@ class ManPowerRequestController extends Controller
 
         return redirect()->route('manpower-requests.index');
     }
+
+    public function fulfill(Request $request, $id)
+{
+    $validated = $request->validate([
+        'employee_ids' => 'required|array',
+        'employee_ids.*' => 'exists:employees,id',
+    ]);
+
+    $manpowerRequest = ManPowerRequest::with('subSection')->findOrFail($id);
+    $manpowerRequest->employees()->sync($validated['employee_ids']);
+    $manpowerRequest->status = 'terpenuhi';
+    $manpowerRequest->save();
+
+    // Buat schedule untuk setiap employee
+    foreach ($validated['employee_ids'] as $empId) {
+        Schedule::create([
+            'employee_id' => $empId,
+            'sub_section_id' => $manpowerRequest->sub_section_id,
+            'date' => $manpowerRequest->date,
+            'man_power_request_id' => $manpowerRequest->id,
+        ]);
+    }
+
+    return redirect()->route('manpower-requests.index')->with('success', 'Request berhasil dijadwalkan.');
+}
 }

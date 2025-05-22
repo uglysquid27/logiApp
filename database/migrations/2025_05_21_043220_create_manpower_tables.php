@@ -49,16 +49,7 @@ return new class extends Migration
             $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
             $table->foreignId('sub_section_id')->constrained('sub_sections')->onDelete('cascade');
             $table->timestamps();
-        });
-
-        // Schedules
-        Schema::create('schedules', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
-            $table->date('date');
-            $table->enum('shift', ['I', 'II', 'III', 'off']);
-            $table->timestamps();
-        });
+        });     
 
         // Attendances
         Schema::create('attendances', function (Blueprint $table) {
