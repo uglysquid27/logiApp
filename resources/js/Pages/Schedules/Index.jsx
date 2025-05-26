@@ -14,21 +14,64 @@ dayjs.extend(isTomorrow);
 dayjs.locale('id'); // Set lokal ke bahasa Indonesia
 
 const ScheduleSection = ({ title, schedulesBySubSection }) => (
-  <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
-    <h2 className="text-xl font-semibold mb-4 text-gray-800">{title}</h2>
+  <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+    <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100">{title}</h2>
     {Object.keys(schedulesBySubSection).length === 0 ? (
-      <p className="text-gray-600 italic">Tidak ada penjadwalan di bagian ini.</p>
+      <p className="text-gray-600 dark:text-gray-400 italic">Tidak ada penjadwalan di bagian ini.</p>
     ) : (
-      Object.entries(schedulesBySubSection).map(([subSectionName, employees]) => (
-        <div key={subSectionName} className="mb-6 border-b pb-4 last:border-b-0 last:pb-0">
-          <h3 className="text-lg font-medium mb-3 text-blue-700">{subSectionName}</h3>
-          <ul className="list-disc list-inside space-y-2">
-            {employees.map((employee, index) => (
-              <li key={index} className="text-gray-700">
-                {employee.name || 'Nama Pegawai Tidak Diketahui'}
-              </li>
-            ))}
-          </ul>
+      Object.entries(schedulesBySubSection).map(([subSectionName, employeesWithDetails]) => (
+        <div key={subSectionName} className="mb-6 border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0 last:pb-0">
+          <h3 className="text-lg font-medium mb-3 text-blue-700 dark:text-blue-400">{subSectionName}</h3>
+          <div className="overflow-x-auto rounded-lg shadow-sm">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Nama Pegawai
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    NIK
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Tipe
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Sub-Section
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    Section
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {employeesWithDetails.map((item, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {item.employee.name || 'Nama Pegawai Tidak Diketahui'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      {item.employee.nik || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      {item.employee.type || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      {item.employee.status || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      {item.sub_section?.name || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      {item.sub_section?.section?.name || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ))
     )}
@@ -48,7 +91,8 @@ const Index = () => {
     } else if (date.isTomorrow()) {
       dayKey = 'tomorrow';
     } else {
-      // Untuk tanggal lain jika ada, bisa ditambahkan logika di sini
+      // For other dates, you can add logic here if needed
+      // For now, we'll only display today and tomorrow.
       return acc;
     }
 
@@ -60,7 +104,11 @@ const Index = () => {
     if (!acc[dayKey][subSectionName]) {
       acc[dayKey][subSectionName] = [];
     }
-    acc[dayKey][subSectionName].push(schedule.employee);
+    // Push an object containing both employee and sub_section details
+    acc[dayKey][subSectionName].push({
+      employee: schedule.employee,
+      sub_section: schedule.sub_section // This will contain section if eager loaded
+    });
 
     return acc;
   }, {});
@@ -72,15 +120,15 @@ const Index = () => {
     <AuthenticatedLayout
     header={
       <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-        Request Man Power
+        Agenda Penjadwalan
       </h2>
     }
   >
     <div className="max-w-5xl mx-auto mt-10 p-4">
-      <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900">Agenda Penjadwalan</h1>
+      <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900 dark:text-gray-100">Agenda Penjadwalan</h1>
 
       {Object.keys(todaySchedules).length === 0 && Object.keys(tomorrowSchedules).length === 0 ? (
-        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4" role="alert">
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 dark:bg-blue-900 dark:border-blue-700 dark:text-blue-200 rounded-md" role="alert">
           <p className="font-bold">Informasi:</p>
           <p>Belum ada penjadwalan untuk hari ini atau besok. Santai saja!</p>
         </div>
@@ -88,14 +136,14 @@ const Index = () => {
         <>
           {/* Hari Ini */}
           <ScheduleSection
-            title={`Jadwal Hari Ini (${dayjs().format('dddd, DD MMMM YYYY')})`}
+            title={`Jadwal Hari Ini (${dayjs().format('dddd, DD MMMMYYYY')})`}
             schedulesBySubSection={todaySchedules}
           />
-          <hr className="my-10 border-t-2 border-gray-200" />
+          <hr className="my-10 border-t-2 border-gray-200 dark:border-gray-700" />
 
           {/* Besok */}
           <ScheduleSection
-            title={`Jadwal Besok (${dayjs().add(1, 'day').format('dddd, DD MMMM YYYY')})`}
+            title={`Jadwal Besok (${dayjs().add(1, 'day').format('dddd, DD MMMMYYYY')})`}
             schedulesBySubSection={tomorrowSchedules}
           />
         </>
