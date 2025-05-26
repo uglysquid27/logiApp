@@ -57,5 +57,29 @@ class ScheduleSeeder extends Seeder
         }
 
         $this->command->info('Successfully created 50 schedule entries.');
+
+        // Update ManPowerRequest statuses
+        $allManPowerRequests = ManPowerRequest::all();
+        $today = Carbon::today();
+        $updatedCount = 0;
+
+        foreach ($allManPowerRequests as $requestToUpdate) {
+            $requestDate = Carbon::parse($requestToUpdate->date);
+            $scheduledEmployeeCount = Schedule::where('man_power_request_id', $requestToUpdate->id)->count();
+
+            if ($requestDate->isPast() || ($requestDate->isToday() && $scheduledEmployeeCount >= $requestToUpdate->requested_amount)) {
+                if ($requestToUpdate->status !== 'terpenuhi') { // Only update if not already fulfilled
+                    $requestToUpdate->status = 'terpenuhi';
+                    $requestToUpdate->save();
+                    $updatedCount++;
+                }
+            }
+        }
+
+        if ($updatedCount > 0) {
+            $this->command->info("Updated $updatedCount ManPowerRequest statuses to 'terpenuhi' based on dates and schedule fulfillment.");
+        } else {
+            $this->command->info('No ManPowerRequest statuses needed updating based on dates and schedule fulfillment.');
+        }
     }
 }
