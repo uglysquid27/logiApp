@@ -1,18 +1,15 @@
 import { Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-// Optional: Heroicons for icons (npm install @heroicons/react)
-// import { PlusIcon, DocumentTextIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'; // Example icons
-
 export default function Index({ requests }) {
   // Helper function for status badges (customize colors as needed)
   const getStatusClasses = (status) => {
     switch (status.toLowerCase()) {
       case 'fulfilled':
         return 'bg-green-100 text-green-700';
-      case 'pending': // Assuming you might have a 'pending' status
+      case 'pending':
         return 'bg-yellow-100 text-yellow-700';
-      case 'rejected': // Assuming you might have a 'rejected' status
+      case 'rejected':
         return 'bg-red-100 text-red-700';
       default:
         return 'bg-blue-100 text-blue-700';
@@ -32,7 +29,6 @@ export default function Index({ requests }) {
     }
   };
 
-
   return (
     <AuthenticatedLayout
       header={
@@ -41,7 +37,7 @@ export default function Index({ requests }) {
         </h2>
       }
     >
-      <div className="py-8"> {/* Added padding around the main content area */}
+      <div className="py-8">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
           <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg">
             <div className="p-6 md:p-8 text-gray-900 dark:text-gray-100">
@@ -53,7 +49,6 @@ export default function Index({ requests }) {
                   href={route('manpower-requests.create')}
                   className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
                 >
-                  {/* Optional Icon: <PlusIcon className="w-5 h-5 mr-2 -ml-1" /> */}
                   <svg className="w-5 h-5 mr-2 -ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"></path></svg>
                   Request Man Power
                 </Link>
@@ -89,7 +84,6 @@ export default function Index({ requests }) {
                       <tr>
                         <td colSpan="6" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center">
-                            {/* Optional Icon: <DocumentTextIcon className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3" /> */}
                              <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
@@ -136,7 +130,6 @@ export default function Index({ requests }) {
                                 Penuhi
                               </Link>
                             ) : (
-                              // Optional Icon: <CheckCircleIcon className="w-5 h-5 text-green-500 inline mr-1" />
                               <span className="text-green-600 dark:text-green-400 italic inline-flex items-center">
                                 <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
                                 Sudah dipenuhi

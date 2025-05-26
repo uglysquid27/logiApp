@@ -14,7 +14,7 @@ return new class extends Migration
     {
         // This raw SQL is MySQL-specific.
         // It will fail on databases like SQLite that don't support MODIFY COLUMN for ENUMs this way.
-        DB::statement("ALTER TABLE man_power_requests MODIFY COLUMN status ENUM('pending', 'fulfilled', 'terpenuhi') NOT NULL DEFAULT 'pending'");
+        DB::statement("ALTER TABLE man_power_requests MODIFY COLUMN status ENUM('pending', 'fulfilled') NOT NULL DEFAULT 'pending'");
     }
 
     /**

@@ -8,17 +8,22 @@ use App\Models\Schedule;
 use App\Models\Shift;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class ManPowerRequestController extends Controller
 {
-    public function index()
-    {
-        $requests = ManPowerRequest::with(['subSection', 'shift'])->get();
-    
-        return Inertia::render('ManpowerRequests/Index', [
-            'requests' => $requests,
-        ]);
-    }
+  // In your ManPowerRequestController.php
+public function index(): Response
+{
+    $requests = ManPowerRequest::with(['subSection', 'shift'])
+                                ->orderBy('date', 'desc') // This sorts by date in descending order
+                                ->orderBy('created_at', 'desc') // This provides a secondary sort
+                                ->get();
+
+    return Inertia::render('ManpowerRequests/Index', [
+        'requests' => $requests,
+    ]);
+}
     
 
     public function create()
