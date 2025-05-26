@@ -5,11 +5,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 // import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 
 export default function Create({ subSections, shifts }) {
+  // Initialize requested_amounts_by_shift from the shifts prop
+  const initialRequestedAmounts = {};
+  if (shifts && Array.isArray(shifts)) {
+    shifts.forEach(shift => {
+      initialRequestedAmounts[shift.id] = ''; // Initialize each shift's amount to empty
+    });
+  }
+
   const { data, setData, post, processing, errors, reset } = useForm({
     sub_section_id: '',
-    shift_id: '',
     date: '',
-    requested_amount: '',
+    requested_amounts_by_shift: initialRequestedAmounts,
   });
 
   const submit = (e) => {
@@ -72,29 +79,6 @@ export default function Create({ subSections, shifts }) {
                   {errors.sub_section_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.sub_section_id}</p>}
                 </div>
 
-                {/* Shift Field */}
-                <div>
-                  <label htmlFor="shift_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Shift <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="shift_id"
-                    name="shift_id"
-                    value={data.shift_id}
-                    onChange={(e) => setData('shift_id', e.target.value)}
-                    className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.shift_id ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                    required
-                  >
-                    <option value="">-- Pilih Shift --</option>
-                    {shifts.map((shift) => (
-                      <option key={shift.id} value={shift.id}>
-                        {shift.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.shift_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shift_id}</p>}
-                </div>
-
                 {/* Date Field */}
                 <div>
                   <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -113,24 +97,31 @@ export default function Create({ subSections, shifts }) {
                   {errors.date && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date}</p>}
                 </div>
 
-                {/* Requested Amount Field */}
-                <div>
-                  <label htmlFor="requested_amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Jumlah Man Power <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    id="requested_amount"
-                    name="requested_amount"
-                    min="1"
-                    value={data.requested_amount}
-                    onChange={(e) => setData('requested_amount', e.target.value)}
-                    placeholder="Contoh: 5"
-                    className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.requested_amount ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                    required
-                  />
-                  {errors.requested_amount && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.requested_amount}</p>}
-                </div>
+                {/* Dynamically add input fields for each shift */}
+                {shifts && Array.isArray(shifts) && shifts.map((shift) => (
+                  <div key={shift.id} className="pt-4 border-t mt-4 grid grid-cols-3"> {/* Optional: add some styling per shift section */}
+                    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">{shift.name}</h3>
+                    <label htmlFor={`requested_amount_${shift.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Jumlah Man Power
+                    </label>
+                    <input
+                      type="number"
+                      id={`requested_amount_${shift.id}`}
+                      name={`requested_amounts_by_shift[${shift.id}]`} // Name for backend
+                      min="0" // Allow empty or positive numbers
+                      value={data.requested_amounts_by_shift[shift.id] || ''} // Ensure controlled component
+                      onChange={(e) => setData('requested_amounts_by_shift', {
+                        ...data.requested_amounts_by_shift,
+                        [shift.id]: e.target.value ? parseInt(e.target.value, 10) : ''
+                      })}
+                      placeholder="Contoh: 3"
+                      className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors && errors[`requested_amounts_by_shift.${shift.id}`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
+                    />
+                    {errors && errors[`requested_amounts_by_shift.${shift.id}`] && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors[`requested_amounts_by_shift.${shift.id}`]}</p>
+                    )}
+                  </div>
+                ))}
 
                 {/* Submit Button */}
                 <div className="flex items-center justify-end pt-2">

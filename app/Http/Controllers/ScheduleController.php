@@ -12,17 +12,26 @@ use Carbon\Carbon;
 
 class ScheduleController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
         $today = Carbon::today();
         $tomorrow = Carbon::tomorrow();
 
-        // --- IMPORTANT CHANGE HERE ---
-        // Eager load 'employee' and 'subSection' (and its nested 'section')
-        $schedules = Schedule::with(['employee', 'subSection.section'])
-            ->whereIn('date', [$today->toDateString(), $tomorrow->toDateString()])
-            ->orderBy('date')
-            ->get();
+        // --- CRITICAL: Ensure all necessary relationships are eager loaded ---
+        // Now eager-loading:
+        // - employee
+        // - subSection (for schedule's direct sub_section) AND its nested section
+        // - manPowerRequest (for schedule's linked request) AND its nested shift
+        // - manPowerRequest's nested subSection AND its nested section
+        $schedules = Schedule::with([
+            'employee',
+            'subSection.section', // For direct subSection on schedule
+            'manPowerRequest.shift', // For shift details from the request
+            'manPowerRequest.subSection.section' // For subSection and Section details from the request
+        ])
+                             ->whereIn('date', [$today->toDateString(), $tomorrow->toDateString()])
+                             ->orderBy('date')
+                             ->get();
 
         return Inertia::render('Schedules/Index', [
             'schedules' => $schedules,

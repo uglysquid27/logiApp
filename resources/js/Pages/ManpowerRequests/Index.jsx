@@ -1,7 +1,7 @@
-import { Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react'; // Ensure this is the ONLY Link import
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Index({ requests }) {
+export default function Index({ requests }) { // `requests` will now be a pagination object
   // Helper function for status badges (customize colors as needed)
   const getStatusClasses = (status) => {
     switch (status.toLowerCase()) {
@@ -28,6 +28,10 @@ export default function Index({ requests }) {
       return dateString; // fallback to original if parsing fails
     }
   };
+
+  // Safely access requests.data, default to empty array if requests or requests.data is undefined
+  const manpowerRequests = requests?.data || [];
+  const paginationLinks = requests?.links || [];
 
   return (
     <AuthenticatedLayout
@@ -80,7 +84,7 @@ export default function Index({ requests }) {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {requests.length === 0 ? (
+                    {manpowerRequests.length === 0 ? (
                       <tr>
                         <td colSpan="6" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center">
@@ -100,7 +104,7 @@ export default function Index({ requests }) {
                         </td>
                       </tr>
                     ) : (
-                      requests.map((req) => (
+                      manpowerRequests.map((req) => (
                         <tr key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                             {formatDate(req.date)}
@@ -142,6 +146,25 @@ export default function Index({ requests }) {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Links */}
+              {paginationLinks.length > 3 && ( // Check if there are actual pagination links to display
+                <div className="mt-6 flex justify-end flex-wrap gap-2">
+                  {paginationLinks.map((link, index) => (
+                    <Link
+                      key={index}
+                      href={link.url || '#'} // Use '#' if url is null (for prev/next when on first/last page)
+                      className={`px-3 py-1 rounded-md text-sm transition-all ${
+                        link.active
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      } ${!link.url && 'pointer-events-none opacity-50'}`} 
+                      dangerouslySetInnerHTML={{ __html: link.label }}
+                      preserveScroll // Keep scroll position after navigation
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
