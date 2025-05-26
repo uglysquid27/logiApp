@@ -16,7 +16,6 @@ const MoonIcon = () => (
     </svg>
 );
 
-
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     // State for dark mode
@@ -89,6 +88,13 @@ export default function AuthenticatedLayout({ header, children }) {
                         className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
                     >
                         <span className="pt-4 block">Schedules</span>
+                    </NavLink>
+                    <NavLink
+                        href={route('shifts.index')}
+                        active={route().current('shifts.index')}
+                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                    >
+                        <span className="pt-4 block">Shifts</span>
                     </NavLink>
                     <NavLink
                         href={route('profile.edit')}

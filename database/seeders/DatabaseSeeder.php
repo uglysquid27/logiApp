@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             EmployeeSubSectionSeeder::class,
             ManPowerRequestSeeder::class,
             ScheduleSeeder::class,
+            ShiftSeeder::class,
         ]);
     }
 }

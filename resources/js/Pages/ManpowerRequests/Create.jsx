@@ -4,9 +4,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 // Optional: Heroicons for a back button or other elements
 // import { ArrowLeftIcon } from '@heroicons/react/24/solid';
 
-export default function Create({ subSections }) {
+export default function Create({ subSections, shifts }) {
   const { data, setData, post, processing, errors, reset } = useForm({
     sub_section_id: '',
+    shift_id: '',
     date: '',
     requested_amount: '',
   });
@@ -69,6 +70,29 @@ export default function Create({ subSections }) {
                     ))}
                   </select>
                   {errors.sub_section_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.sub_section_id}</p>}
+                </div>
+
+                {/* Shift Field */}
+                <div>
+                  <label htmlFor="shift_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Shift <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="shift_id"
+                    name="shift_id"
+                    value={data.shift_id}
+                    onChange={(e) => setData('shift_id', e.target.value)}
+                    className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.shift_id ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
+                    required
+                  >
+                    <option value="">-- Pilih Shift --</option>
+                    {shifts.map((shift) => (
+                      <option key={shift.id} value={shift.id}>
+                        {shift.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.shift_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.shift_id}</p>}
                 </div>
 
                 {/* Date Field */}

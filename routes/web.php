@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ManPowerRequestController;
 use App\Http\Controllers\ManPowerRequestFulfillmentController;
+use App\Http\Controllers\ShiftController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -31,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+    Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
 
 });
 
