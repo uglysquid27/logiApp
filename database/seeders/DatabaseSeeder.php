@@ -21,6 +21,8 @@ class DatabaseSeeder extends Seeder
             SectionSeeder::class,
             SubSectionSeeder::class,
             EmployeeSubSectionSeeder::class,
+            ManPowerRequestSeeder::class,
+            ScheduleSeeder::class,
         ]);
     }
 }

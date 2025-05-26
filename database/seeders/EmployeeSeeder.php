@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Employee;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class EmployeeSeeder extends Seeder
 {
@@ -14,8 +13,10 @@ class EmployeeSeeder extends Seeder
             Employee::create([
                 'nik'    => 'EMP' . str_pad($i, 4, '0', STR_PAD_LEFT), // e.g., EMP0001
                 'name'   => fake()->name(),
-                'type'   => fake()->randomElement(['harian', 'bulanan']),
-                'status' => fake()->randomElement(['aktif', 'cuti', 'resign']),
+           // Seeder: pakai nilai yang valid
+                'type' => fake()->randomElement(['harian', 'bulanan']),
+                'status' => fake()->randomElement(['aktif', 'cuti', 'resign', 'assigned']),
+
             ]);
         }
     }

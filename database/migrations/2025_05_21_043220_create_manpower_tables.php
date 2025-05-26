@@ -24,7 +24,8 @@ return new class extends Migration
             $table->string('nik')->unique();
             $table->string('name');
             $table->enum('type', ['harian', 'bulanan']);
-            $table->enum('status', ['aktif', 'cuti', 'resign', 'assigned']);
+            $table->enum('status', ['available', 'assigned', 'aktif', 'cuti', 'resign']);
+
 
             $table->timestamps();
         });

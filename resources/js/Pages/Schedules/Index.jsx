@@ -5,6 +5,7 @@ import 'dayjs/locale/id'; // Impor lokal bahasa Indonesia
 import localizedFormat from 'dayjs/plugin/localizedFormat'; // Plugin untuk format lokal
 import isToday from 'dayjs/plugin/isToday'; // Plugin untuk mengecek apakah hari ini
 import isTomorrow from 'dayjs/plugin/isTomorrow'; // Plugin untuk mengecek apakah besok
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 // Aktifkan plugin dayjs
 dayjs.extend(localizedFormat);
@@ -68,6 +69,13 @@ const Index = () => {
   const tomorrowSchedules = groupedSchedules.tomorrow || {};
 
   return (
+    <AuthenticatedLayout
+    header={
+      <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        Request Man Power
+      </h2>
+    }
+  >
     <div className="max-w-5xl mx-auto mt-10 p-4">
       <h1 className="text-3xl font-extrabold mb-8 text-center text-gray-900">Agenda Penjadwalan</h1>
 
@@ -93,6 +101,7 @@ const Index = () => {
         </>
       )}
     </div>
+    </AuthenticatedLayout>
   );
 };
 
