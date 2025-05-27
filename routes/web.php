@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\EmployeeSum;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ManPowerRequestController;
 use App\Http\Controllers\ManPowerRequestFulfillmentController;
@@ -33,6 +34,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
+
+    Route::get('/employee-attendance', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
+
 
 });
 
