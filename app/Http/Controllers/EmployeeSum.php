@@ -19,7 +19,9 @@ class EmployeeSum extends Controller
                                 // Count schedules only for the last 7 days
                                 $query->whereBetween('date', [$startDate, $endDate]);
                             }])
-                            
+                             // Eager load ALL schedules and their shifts for 'total_assigned_hours' if it's still meant to be cumulative
+                             // If 'total_assigned_hours' should also be weekly, this 'with' clause needs to be filtered as well,
+                             // or a separate relationship/accessor is needed.
                              ->with(['schedules.manPowerRequest.shift'])
                              ->orderBy('name')
                              ->get()
@@ -58,6 +60,9 @@ class EmployeeSum extends Controller
                                      // So, setting rating to 0 here aligns with that.
                                      $rating = 0;
                                  }
+
+                                 // --- Add the calculated rating to the employee object ---
+                                 $employee->calculated_rating = $rating;
 
                                  // --- Apply the Excel weighting formula using the derived 'rating' ---
                                  $workingDayWeight = 0;

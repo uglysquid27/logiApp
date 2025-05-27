@@ -3,8 +3,16 @@ import { useState } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Fulfill({ request, employees }) {
-    // Take only the number of employees requested
-    const initialSelectedEmployees = employees.slice(0, request.requested_amount);
+    // Sort employees by working_day_weight in ascending order (lower weight = higher priority)
+    const sortedEmployees = [...employees].sort((a, b) => {
+        // Handle cases where working_day_weight might be undefined or null
+        const weightA = a.working_day_weight !== undefined ? a.working_day_weight : Infinity;
+        const weightB = b.working_day_weight !== undefined ? b.working_day_weight : Infinity;
+        return weightA - weightB;
+    });
+
+    // Take the top 'requested_amount' employees from the sorted list
+    const initialSelectedEmployees = sortedEmployees.slice(0, request.requested_amount);
     const initialSelectedEmployeeIds = initialSelectedEmployees.map((emp) => emp.id);
 
     const { data, setData, post, processing } = useForm({
@@ -18,20 +26,20 @@ export default function Fulfill({ request, employees }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Form dikirim dengan data:', data); // Tambahkan log ini
+        console.log('Form dikirim dengan data:', data);
         post(route('manpower-requests.fulfill.store', request.id));
     };
 
     // Function to open the modal and set the index of the employee to change
     const openChangeModal = (index) => {
-        console.log('Membuka modal untuk index:', index); // Tambahkan log ini
+        console.log('Membuka modal untuk index:', index);
         setChangingEmployeeIndex(index);
         setShowModal(true);
     };
 
     // Function to handle selecting a new employee from the modal
     const selectNewEmployee = (newEmployeeId) => {
-        console.log('Memilih karyawan baru dengan ID:', newEmployeeId); // Tambahkan ini
+        console.log('Memilih karyawan baru dengan ID:', newEmployeeId);
 
         if (changingEmployeeIndex !== null) {
             const currentEmployeeIds = [...data.employee_ids];
@@ -49,9 +57,9 @@ export default function Fulfill({ request, employees }) {
         }
     };
 
-
     // Helper to get employee details by ID for display
     const getEmployeeDetails = (id) => employees.find(emp => emp.id === id);
+    console.log(employees)
 
     return (
         <AuthenticatedLayout
@@ -70,7 +78,7 @@ export default function Fulfill({ request, employees }) {
                 <form onSubmit={handleSubmit}>
                     {/* Automatically Selected Employees Card */}
                     <div className="mb-6 p-4 bg-white rounded-lg shadow-md">
-                        <h3 className="text-lg font-bold mb-3">Karyawan Terpilih Otomatis</h3>
+                        <h3 className="text-lg font-bold mb-3">Karyawan Terpilih Otomatis (Prioritas Tertinggi)</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {data.employee_ids.map((employeeId, index) => {
                                 const employee = getEmployeeDetails(employeeId);
@@ -85,6 +93,14 @@ export default function Fulfill({ request, employees }) {
                                             />
                                             <span>
                                                 <strong>{employee?.name || 'N/A'}</strong> ({employee?.nik || 'N/A'})
+                                                {/* Display schedules_count, calculated_rating, and working_day_weight */}
+                                                {employee && (
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        <span>Penugasan Minggu Ini: {employee.schedules_count !== undefined ? employee.schedules_count : 'N/A'}</span>
+                                                        <span className="ml-2">Rating: {employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}</span>
+                                                        <span className="ml-2">Bobot: {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}</span>
+                                                    </div>
+                                                )}
                                             </span>
                                         </div>
                                         <button
@@ -115,11 +131,11 @@ export default function Fulfill({ request, employees }) {
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
                         <h3 className="text-xl font-bold mb-4">Pilih Karyawan Baru</h3>
-                        {/* --- Perubahan di sini: Menggunakan 4 kolom pada layar besar --- */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                            {employees.map((emp) => {
+                            {/* Sort employees in the modal by weight as well, for consistent display */}
+                            {sortedEmployees.map((emp) => {
                                 const isSelected = data.employee_ids.includes(emp.id);
-                                const isAssigned = emp.status === 'assigned';
+                                const isAssigned = emp.status === 'assigned'; // Assuming 'assigned' status means already taken
                                 const isDisabled = isSelected || isAssigned;
 
                                 let bgColor = 'hover:bg-gray-100';
@@ -137,13 +153,20 @@ export default function Fulfill({ request, employees }) {
                                         disabled={isDisabled}
                                     >
                                         <strong>{emp.name}</strong> ({emp.nik})
+                                        {/* Display schedules_count, calculated_rating, and working_day_weight */}
+                                        {emp && (
+                                            <div className="text-xs text-gray-500 mt-1">
+                                                <span>Penugasan Minggu Ini: {emp.schedules_count !== undefined ? emp.schedules_count : 'N/A'}</span>
+                                                <span className="ml-2">Rating: {emp.calculated_rating !== undefined ? emp.calculated_rating : 'N/A'}</span>
+                                                <span className="ml-2">Bobot: {emp.working_day_weight !== undefined ? emp.working_day_weight : 'N/A'}</span>
+                                            </div>
+                                        )}
                                         {isAssigned && <span className="text-xs ml-1">(Assigned)</span>}
                                     </button>
                                 );
                             })}
                         </div>
 
-                        {/* --- Akhir perubahan --- */}
                         <div className="mt-6 flex justify-end">
                             <button
                                 onClick={() => setShowModal(false)}

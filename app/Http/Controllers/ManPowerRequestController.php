@@ -2,136 +2,148 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ManPowerRequest;
-use App\Models\SubSection;
-use App\Models\Schedule;
-use App\Models\Shift;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator; // Added Validator
+use App\Models\ManPowerRequest;
+use App\Models\Employee;
+use App\Models\SubSection;
+use App\Models\Shift;
 use Inertia\Inertia;
+use Inertia\Response;
+use Carbon\Carbon;
 
 class ManPowerRequestController extends Controller
 {
-    public function index()
+    public function index(): Response
     {
+        // Use paginate() instead of get() to retrieve paginated results
         $requests = ManPowerRequest::with(['subSection', 'shift'])
-            ->latest()
-            ->paginate(10); // <= hanya 10 data per halaman
-    
+                                    ->orderBy('date', 'desc')
+                                    ->orderBy('created_at', 'desc')
+                                    ->paginate(10); // Paginate with 10 items per page
+
         return Inertia::render('ManpowerRequests/Index', [
-            'requests' => $requests,
+            'requests' => $requests, // Inertia automatically serializes pagination data
         ]);
     }
-    
 
-    public function create()
+    public function create(): Response
     {
         $subSections = SubSection::all();
-        $shifts = Shift::all();
+        $shifts = Shift::all(); // Fetch shifts to pass to the frontend
+
         return Inertia::render('ManpowerRequests/Create', [
             'subSections' => $subSections,
-            'shifts' => $shifts
+            'shifts' => $shifts, // Pass shifts to the create form
         ]);
     }
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $validated = $request->validate([
             'sub_section_id' => 'required|exists:sub_sections,id',
-            'date' => 'required|date',
+            'date' => 'required|date|after_or_equal:today',
+            // 'shift_id' is no longer a single field, but part of requested_amounts_by_shift
             'requested_amounts_by_shift' => 'required|array',
-            // Individual amounts will be validated inside the loop
+            'requested_amounts_by_shift.*' => 'nullable|integer|min:0', // Allow null or 0 for optional amounts
         ]);
 
-        $createdCount = 0;
-        $errors = [];
-
-        foreach ($validatedData['requested_amounts_by_shift'] as $shift_id => $amount) {
-            // Skip if amount is not provided or is zero
-            if (empty($amount) || $amount == 0) {
-                continue;
+        // Process requested_amounts_by_shift to create individual ManPowerRequest entries
+        foreach ($validated['requested_amounts_by_shift'] as $shiftId => $amount) {
+            if ($amount > 0) { // Only create a request if the amount is greater than 0
+                ManPowerRequest::create([
+                    'sub_section_id' => $validated['sub_section_id'],
+                    'date' => $validated['date'],
+                    'shift_id' => $shiftId,
+                    'requested_amount' => $amount,
+                    'status' => 'pending', // Default status
+                ]);
             }
+        }
 
-            $shiftSpecificValidator = Validator::make(
-                ['shift_id' => $shift_id, 'requested_amount' => $amount],
-                [
-                    'shift_id' => 'required|exists:shifts,id',
-                    'requested_amount' => 'required|integer|min:1',
-                ],
-                [
-                    // Custom messages referencing the shift might be tricky here if shift names aren't easily available
-                    // For simplicity, using generic messages or just field names for now.
-                    // Example: "requested_amounts_by_shift.{$shift_id}.requested_amount.min" => "Amount for shift needs to be at least 1"
-                    // For now, the default messages from Validator will be used, prefixed by the field name.
-                ]
-            );
-            
-            // If validation for this specific shift fails, collect errors and continue to check others
-            // This allows displaying all errors at once if multiple shifts have issues.
-            if ($shiftSpecificValidator->fails()) {
-                // Prefix errors with the dynamic field name for better display in the view
-                foreach ($shiftSpecificValidator->errors()->toArray() as $key => $messages) {
-                    $errors["requested_amounts_by_shift.{$shift_id}.{$key}"] = $messages;
+        return redirect()->route('manpower-requests.index')->with('success', 'Man power request created successfully.');
+    }
+
+    public function fulfill($id): Response
+    {
+        $manPowerRequest = ManPowerRequest::with(['subSection.section', 'shift'])->findOrFail($id);
+
+        // Define the start and end of the last 7 days for schedule count and rating calculation
+        $startDate = Carbon::now()->subDays(6)->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
+
+        // Fetch employees relevant to the sub_section of the request
+        $employees = Employee::whereHas('subSections', fn($q) =>
+            $q->where('id', $manPowerRequest->sub_section_id)
+        )
+        // Now, 'schedules_count' will directly represent the count for the last 7 days
+        ->withCount(['schedules' => function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('date', [$startDate, $endDate]);
+        }])
+        // Eager load ALL schedules and their shifts for total_assigned_hours (if still needed as cumulative)
+        // If total_assigned_hours should also be weekly, this 'with' clause needs to be filtered as well.
+        ->with(['schedules.manPowerRequest.shift'])
+        ->orderBy('name')
+        ->get()
+        ->map(function ($employee) {
+            // Calculate total working hours from ALL assigned schedules (cumulative)
+            // If this should also be weekly, you'd need to filter $employee->schedules here too.
+            $totalWorkingHours = 0;
+            foreach ($employee->schedules as $schedule) {
+                if ($schedule->manPowerRequest && $schedule->manPowerRequest->shift) {
+                    $totalWorkingHours += $schedule->manPowerRequest->shift->hours;
                 }
-                continue; // Continue to validate other shift amounts
             }
-            
-            // If there were errors from other iterations, but this one is valid, we still should not proceed to create
-            // until all inputs are validated. The check for $errors below handles this.
-        }
 
-        // If any errors were collected from any of the shift validations, redirect back.
-        if (!empty($errors)) {
-            return redirect()->back()
-                ->withErrors($errors)
-                ->withInput();
-        }
+            // --- Derive 'rating' based on schedules_count (which is now the weekly count) ---
+            $rating = 0;
+            $weeklyScheduleCount = $employee->schedules_count; // Use schedules_count directly for weekly count
 
-        // If all validations passed (initial and all iterated ones), proceed to create.
-        foreach ($validatedData['requested_amounts_by_shift'] as $shift_id => $amount) {
-            if (empty($amount) || $amount == 0) {
-                continue;
+            if ($weeklyScheduleCount === 5) {
+                $rating = 5;
+            } elseif ($weeklyScheduleCount === 4) {
+                $rating = 4;
+            } elseif ($weeklyScheduleCount === 3) {
+                $rating = 3;
+            } elseif ($weeklyScheduleCount === 2) {
+                $rating = 2;
+            } elseif ($weeklyScheduleCount === 1) {
+                $rating = 1;
+            } elseif ($weeklyScheduleCount === 0) {
+                $rating = 0;
+            } else {
+                $rating = 0; // Default for counts > 5
             }
-            // We've already validated, so we can safely use $amount and $shift_id
-            ManPowerRequest::create([
-                'sub_section_id' => $validatedData['sub_section_id'],
-                'date' => $validatedData['date'],
-                'shift_id' => $shift_id,
-                'requested_amount' => $amount,
-                'status' => 'pending',
-            ]);
-            $createdCount++;
-        }
 
-        if ($createdCount > 0) {
-            return redirect()->route('manpower-requests.index')->with('success', $createdCount . ' manpower request(s) created successfully.');
-        } else {
-            return redirect()->route('manpower-requests.index')->with('info', 'No manpower amounts were specified for any shift.');
-        }
-    }
+            // Apply the Excel weighting formula using the derived 'rating'
+            $workingDayWeight = 0;
+            if ($rating === 5) {
+                $workingDayWeight = 15;
+            } elseif ($rating === 4) {
+                $workingDayWeight = 45;
+            } elseif ($rating === 3) {
+                $workingDayWeight = 75;
+            } elseif ($rating === 2) {
+                $workingDayWeight = 105;
+            } elseif ($rating === 1) {
+                $workingDayWeight = 135;
+            } elseif ($rating === 0) {
+                $workingDayWeight = 165;
+            } else {
+                $workingDayWeight = 0; // Fallback
+            }
 
-    public function fulfill(Request $request, $id)
-{
-    $validated = $request->validate([
-        'employee_ids' => 'required|array',
-        'employee_ids.*' => 'exists:employees,id',
-    ]);
+            // Explicitly set the attributes on the employee model for serialization
+            $employee->setAttribute('calculated_rating', $rating);
+            $employee->setAttribute('working_day_weight', $workingDayWeight);
+            $employee->setAttribute('total_assigned_hours', $totalWorkingHours); // Still cumulative
+            // schedules_count is already handled by withCount, no need to setAttribute for it
 
-    $manpowerRequest = ManPowerRequest::with('subSection')->findOrFail($id);
-    $manpowerRequest->employees()->sync($validated['employee_ids']);
-    $manpowerRequest->status = 'terpenuhi';
-    $manpowerRequest->save();
+            return $employee;
+        });
 
-    // Buat schedule untuk setiap employee
-    foreach ($validated['employee_ids'] as $empId) {
-        Schedule::create([
-            'employee_id' => $empId,
-            'sub_section_id' => $manpowerRequest->sub_section_id,
-            'date' => $manpowerRequest->date,
-            'man_power_request_id' => $manpowerRequest->id,
+        return Inertia::render('ManpowerRequests/Fulfill', [
+            'request' => $manPowerRequest,
+            'employees' => $employees, // This now includes the calculated properties
         ]);
     }
-
-    return redirect()->route('manpower-requests.index')->with('success', 'Request berhasil dijadwalkan.');
-}
 }
