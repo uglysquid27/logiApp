@@ -91,9 +91,9 @@ export default function AuthenticatedLayout({ header, children }) {
                     </NavLink>
                     <NavLink
                         href={route('employee-attendance.index')}
-                        className="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 transition duration-150 ease-in-out"
+                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
                     >
-                        Ringkasan Kehadiran Pegawai
+                        <span className="pt-4 block">Employee work hour</span>
                     </NavLink>
                     <NavLink
                         href={route('shifts.index')}

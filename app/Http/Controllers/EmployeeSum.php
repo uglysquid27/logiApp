@@ -5,29 +5,82 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use Inertia\Inertia;
 use Inertia\Response;
+use Carbon\Carbon; // Import Carbon for date manipulation
 
 class EmployeeSum extends Controller
 {
     public function index(): Response
     {
-        // Eager load schedules and their nested manPowerRequest.shift to get shift hours
-        $employees = Employee::withCount('schedules') // Counts direct schedules
-                             ->with(['schedules.manPowerRequest.shift']) // Eager load schedules and their shifts
+        // Define the start and end of the last 7 days
+        $startDate = Carbon::now()->subDays(6)->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
+
+        $employees = Employee::withCount(['schedules' => function ($query) use ($startDate, $endDate) {
+                                // Count schedules only for the last 7 days
+                                $query->whereBetween('date', [$startDate, $endDate]);
+                            }])
+                            
+                             ->with(['schedules.manPowerRequest.shift'])
                              ->orderBy('name')
                              ->get()
                              ->map(function ($employee) {
-                                 // Calculate working_day_weight by summing hours from all assigned shifts
+                                 // Calculate total working hours from ALL assigned shifts (as per previous implementation)
+                                 // If this should also be weekly, you'd need to filter $employee->schedules here too.
                                  $totalWorkingHours = 0;
                                  foreach ($employee->schedules as $schedule) {
-                                     // Ensure manPowerRequest and shift exist before accessing hours
                                      if ($schedule->manPowerRequest && $schedule->manPowerRequest->shift) {
                                          $totalWorkingHours += $schedule->manPowerRequest->shift->hours;
                                      }
                                  }
-                                 $employee->working_day_weight = $totalWorkingHours;
 
-                                 // You can also keep schedules_count if you want to display both
-                                 // $employee->schedules_count = $employee->schedules_count; // This is already available from withCount
+                                 // --- Derive 'rating' based on weekly schedules_count (as requested) ---
+                                 // The schedules_count from withCount will now be the count for the last week.
+                                 $rating = 0; // Default rating
+                                 $weeklyScheduleCount = $employee->schedules_count; // This is now the count for the last week
+
+                                 // Apply the Excel formula logic directly to weeklyScheduleCount
+                                 if ($weeklyScheduleCount === 5) {
+                                     $rating = 5;
+                                 } elseif ($weeklyScheduleCount === 4) {
+                                     $rating = 4;
+                                 } elseif ($weeklyScheduleCount === 3) {
+                                     $rating = 3;
+                                 } elseif ($weeklyScheduleCount === 2) {
+                                     $rating = 2;
+                                 } elseif ($weeklyScheduleCount === 1) {
+                                     $rating = 1;
+                                 } elseif ($weeklyScheduleCount === 0) {
+                                     $rating = 0;
+                                 } else {
+                                     // If weeklyScheduleCount is > 5 (e.g., 6, 7, etc.), it falls into this else block.
+                                     // Based on your Excel formula's structure (exact matches for 0-5),
+                                     // any other value would result in a final '0' from the Excel formula's outer 'IF'.
+                                     // So, setting rating to 0 here aligns with that.
+                                     $rating = 0;
+                                 }
+
+                                 // --- Apply the Excel weighting formula using the derived 'rating' ---
+                                 $workingDayWeight = 0;
+                                 if ($rating === 5) {
+                                     $workingDayWeight = 15;
+                                 } elseif ($rating === 4) {
+                                     $workingDayWeight = 45;
+                                 } elseif ($rating === 3) {
+                                     $workingDayWeight = 75;
+                                 } elseif ($rating === 2) {
+                                     $workingDayWeight = 105;
+                                 } elseif ($rating === 1) {
+                                     $workingDayWeight = 135;
+                                 } elseif ($rating === 0) {
+                                     $workingDayWeight = 165;
+                                 } else {
+                                     $workingDayWeight = 0; // Fallback for unexpected rating, though should be covered by above
+                                 }
+
+                                 $employee->working_day_weight = $workingDayWeight;
+
+                                 // total_assigned_hours is still cumulative (total for all time)
+                                 $employee->total_assigned_hours = $totalWorkingHours;
 
                                  return $employee;
                              });

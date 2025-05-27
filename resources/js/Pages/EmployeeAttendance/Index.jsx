@@ -72,8 +72,8 @@ export default function Index() {
                     )}
                     {/* Total row */}
                     <tr className="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300">
-                      <td colSpan="3" className="px-6 py-3 text-right">Total Penugasan:</td> {/* Changed label here */}
-                      <td className="px-6 py-3 text-center">{totalSchedulesCount}</td> {/* Changed sum variable here */}
+                      <td colSpan="3" className="px-6 py-3 text-right">Total Penugasan:</td> 
+                      <td className="px-6 py-3 text-center">{totalSchedulesCount}</td> 
                     </tr>
                   </tbody>
                 </table>
