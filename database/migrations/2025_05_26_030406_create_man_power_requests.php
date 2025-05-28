@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('man_power_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sub_section_id')->constrained()->onDelete('cascade');
-            $table->foreignId('shift_id')->constrained()->onDelete('cascade'); // <--- IMPORTANT: Added this line
+            $table->foreignId('shift_id')->constrained()->onDelete('cascade');
             $table->date('date');
             $table->unsignedInteger('requested_amount');
             $table->enum('status', ['pending', 'fulfilled'])->default('pending');

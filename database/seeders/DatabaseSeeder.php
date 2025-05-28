@@ -17,13 +17,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            ShiftSeeder::class,
             EmployeeSeeder::class,
             SectionSeeder::class,
             SubSectionSeeder::class,
             EmployeeSubSectionSeeder::class,
             ManPowerRequestSeeder::class,
             ScheduleSeeder::class,
-            ShiftSeeder::class,
+            
         ]);
     }
 }

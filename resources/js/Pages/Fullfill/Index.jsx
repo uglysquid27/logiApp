@@ -1,21 +1,31 @@
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react'; // Import useMemo
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Fulfill({ request, employees }) {
-    // Sort employees by working_day_weight in ascending order (lower weight = higher priority)
-    const sortedEmployees = [...employees].sort((a, b) => {
-        // Handle cases where working_day_weight might be undefined or null
-        const weightA = a.working_day_weight !== undefined ? a.working_day_weight : Infinity;
-        const weightB = b.working_day_weight !== undefined ? b.working_day_weight : Infinity;
-        return weightA - weightB;
-    });
+    // Filter employees by the current request's sub_section_id first
+    // This ensures only relevant employees are considered for initial selection and display
+    const relevantEmployees = useMemo(() => {
+        return employees.filter(emp =>
+            emp.sub_sections && emp.sub_sections.some(ss => ss.id === request.sub_section_id)
+        );
+    }, [employees, request.sub_section_id]);
 
-    // Take the top 'requested_amount' employees from the sorted list
-    const initialSelectedEmployees = sortedEmployees.slice(0, request.requested_amount);
+    // Sort relevant employees by working_day_weight in DESCENDING order (higher weight = higher priority)
+    const sortedEmployeesForSelection = useMemo(() => {
+        return [...relevantEmployees].sort((a, b) => {
+            const weightA = a.working_day_weight !== undefined ? a.working_day_weight : -Infinity;
+            const weightB = b.working_day_weight !== undefined ? b.working_day_weight : -Infinity;
+            return weightB - weightA; // Changed to weightB - weightA for descending order
+        });
+    }, [relevantEmployees]);
+
+
+    // Take the top 'requested_amount' employees from the sorted relevant list
+    const initialSelectedEmployees = sortedEmployeesForSelection.slice(0, request.requested_amount);
     const initialSelectedEmployeeIds = initialSelectedEmployees.map((emp) => emp.id);
 
-    const { data, setData, post, processing } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         employee_ids: initialSelectedEmployeeIds, // Automatically select on initial load
     });
 
@@ -27,7 +37,24 @@ export default function Fulfill({ request, employees }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Form dikirim dengan data:', data);
-        post(route('manpower-requests.fulfill.store', request.id));
+
+        post(route('manpower-requests.fulfill.store', request.id), {
+            onSuccess: () => {
+                console.log('Form berhasil dikirim!');
+                // Optionally redirect or show success message
+            },
+            onError: (errors) => {
+                console.error('Ada kesalahan saat mengirim form:', errors);
+                if (errors.employee_ids) {
+                    alert('Kesalahan penugasan karyawan: ' + errors.employee_ids);
+                } else {
+                    alert('Terjadi kesalahan yang tidak diketahui. Silakan cek konsol.');
+                }
+            },
+            onFinish: () => {
+                console.log('Proses pengiriman form selesai.');
+            }
+        });
     };
 
     // Function to open the modal and set the index of the employee to change
@@ -57,9 +84,8 @@ export default function Fulfill({ request, employees }) {
         }
     };
 
-    // Helper to get employee details by ID for display
+    // Helper to get employee details by ID for display (from the full 'employees' list)
     const getEmployeeDetails = (id) => employees.find(emp => emp.id === id);
-    console.log(employees)
 
     return (
         <AuthenticatedLayout
@@ -76,6 +102,11 @@ export default function Fulfill({ request, employees }) {
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                    {/* Display validation errors if any */}
+                    {errors.employee_ids && (
+                        <div className="mb-4 text-red-600 text-sm">{errors.employee_ids}</div>
+                    )}
+
                     {/* Automatically Selected Employees Card */}
                     <div className="mb-6 p-4 bg-white rounded-lg shadow-md">
                         <h3 className="text-lg font-bold mb-3">Karyawan Terpilih Otomatis (Prioritas Tertinggi)</h3>
@@ -93,10 +124,11 @@ export default function Fulfill({ request, employees }) {
                                             />
                                             <span>
                                                 <strong>{employee?.name || 'N/A'}</strong> ({employee?.nik || 'N/A'})
-                                                {/* Display schedules_count, calculated_rating, and working_day_weight */}
+                                                {/* Display schedules_count (total), schedules_count_weekly, calculated_rating, and working_day_weight */}
                                                 {employee && (
                                                     <div className="text-xs text-gray-500 mt-1">
-                                                        <span>Penugasan Minggu Ini: {employee.schedules_count !== undefined ? employee.schedules_count : 'N/A'}</span>
+                                                        <span>Total Penugasan: {employee.schedules_count !== undefined ? employee.schedules_count : 'N/A'}</span>
+                                                        <span className="ml-2">Penugasan Minggu Ini: {employee.schedules_count_weekly !== undefined ? employee.schedules_count_weekly : 'N/A'}</span>
                                                         <span className="ml-2">Rating: {employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}</span>
                                                         <span className="ml-2">Bobot: {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}</span>
                                                     </div>
@@ -132,8 +164,8 @@ export default function Fulfill({ request, employees }) {
                     <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
                         <h3 className="text-xl font-bold mb-4">Pilih Karyawan Baru</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                            {/* Sort employees in the modal by weight as well, for consistent display */}
-                            {sortedEmployees.map((emp) => {
+                            {/* Sort ALL employees in the modal by weight for consistent display */}
+                            {sortedEmployeesForSelection.map((emp) => { // Use sortedEmployeesForSelection here
                                 const isSelected = data.employee_ids.includes(emp.id);
                                 const isAssigned = emp.status === 'assigned'; // Assuming 'assigned' status means already taken
                                 const isDisabled = isSelected || isAssigned;
@@ -153,10 +185,11 @@ export default function Fulfill({ request, employees }) {
                                         disabled={isDisabled}
                                     >
                                         <strong>{emp.name}</strong> ({emp.nik})
-                                        {/* Display schedules_count, calculated_rating, and working_day_weight */}
+                                        {/* Display schedules_count (total), schedules_count_weekly, calculated_rating, and working_day_weight */}
                                         {emp && (
                                             <div className="text-xs text-gray-500 mt-1">
-                                                <span>Penugasan Minggu Ini: {emp.schedules_count !== undefined ? emp.schedules_count : 'N/A'}</span>
+                                                <span>Total Penugasan: {emp.schedules_count !== undefined ? emp.schedules_count : 'N/A'}</span>
+                                                <span className="ml-2">Penugasan Minggu Ini: {emp.schedules_count_weekly !== undefined ? emp.schedules_count_weekly : 'N/A'}</span>
                                                 <span className="ml-2">Rating: {emp.calculated_rating !== undefined ? emp.calculated_rating : 'N/A'}</span>
                                                 <span className="ml-2">Bobot: {emp.working_day_weight !== undefined ? emp.working_day_weight : 'N/A'}</span>
                                             </div>
