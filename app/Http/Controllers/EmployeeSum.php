@@ -11,34 +11,31 @@ class EmployeeSum extends Controller
 {
     public function index(): Response
     {
-        // Define the start and end of the last 7 days
+        // Define the start and end of the last 7 days for weekly schedule count
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
-        $employees = Employee::withCount(['schedules' => function ($query) use ($startDate, $endDate) {
-                                // Count schedules only for the last 7 days
+        $employees = Employee::withCount('schedules') // This will be the TOTAL historical count
+                             ->withCount(['schedules as schedules_count_weekly' => function ($query) use ($startDate, $endDate) {
+                                // Count schedules only for the last 7 days for this specific count
                                 $query->whereBetween('date', [$startDate, $endDate]);
                             }])
-                             // Eager load ALL schedules and their shifts for 'total_assigned_hours' if it's still meant to be cumulative
-                             // If 'total_assigned_hours' should also be weekly, this 'with' clause needs to be filtered as well,
-                             // or a separate relationship/accessor is needed.
-                             ->with(['schedules.manPowerRequest.shift'])
+                             ->with(['schedules.manPowerRequest.shift']) // Eager load schedules and their shifts
                              ->orderBy('name')
                              ->get()
                              ->map(function ($employee) {
-                                 // Calculate total working hours from ALL assigned shifts (as per previous implementation)
-                                 // If this should also be weekly, you'd need to filter $employee->schedules here too.
+                                 // Calculate total working hours from ALL assigned shifts (cumulative)
                                  $totalWorkingHours = 0;
                                  foreach ($employee->schedules as $schedule) {
+                                     // Ensure manPowerRequest and shift exist before accessing hours
                                      if ($schedule->manPowerRequest && $schedule->manPowerRequest->shift) {
                                          $totalWorkingHours += $schedule->manPowerRequest->shift->hours;
                                      }
                                  }
 
-                                 // --- Derive 'rating' based on weekly schedules_count (as requested) ---
-                                 // The schedules_count from withCount will now be the count for the last week.
+                                 // --- Derive 'rating' based on weekly schedules_count ---
                                  $rating = 0; // Default rating
-                                 $weeklyScheduleCount = $employee->schedules_count; // This is now the count for the last week
+                                 $weeklyScheduleCount = $employee->schedules_count_weekly; // Use the new weekly count for rating
 
                                  // Apply the Excel formula logic directly to weeklyScheduleCount
                                  if ($weeklyScheduleCount === 5) {
@@ -55,14 +52,11 @@ class EmployeeSum extends Controller
                                      $rating = 0;
                                  } else {
                                      // If weeklyScheduleCount is > 5 (e.g., 6, 7, etc.), it falls into this else block.
-                                     // Based on your Excel formula's structure (exact matches for 0-5),
-                                     // any other value would result in a final '0' from the Excel formula's outer 'IF'.
-                                     // So, setting rating to 0 here aligns with that.
                                      $rating = 0;
                                  }
 
                                  // --- Add the calculated rating to the employee object ---
-                                 $employee->calculated_rating = $rating;
+                                 $employee->setAttribute('calculated_rating', $rating);
 
                                  // --- Apply the Excel weighting formula using the derived 'rating' ---
                                  $workingDayWeight = 0;
@@ -79,13 +73,11 @@ class EmployeeSum extends Controller
                                  } elseif ($rating === 0) {
                                      $workingDayWeight = 165;
                                  } else {
-                                     $workingDayWeight = 0; // Fallback for unexpected rating, though should be covered by above
+                                     $workingDayWeight = 0; // Fallback
                                  }
 
-                                 $employee->working_day_weight = $workingDayWeight;
-
-                                 // total_assigned_hours is still cumulative (total for all time)
-                                 $employee->total_assigned_hours = $totalWorkingHours;
+                                 $employee->setAttribute('working_day_weight', $workingDayWeight);
+                                 $employee->setAttribute('total_assigned_hours', $totalWorkingHours);
 
                                  return $employee;
                              });

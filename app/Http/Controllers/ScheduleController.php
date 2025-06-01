@@ -12,29 +12,39 @@ use Carbon\Carbon;
 
 class ScheduleController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response // Added Request $request
     {
-        $today = Carbon::today();
-        $tomorrow = Carbon::tomorrow();
-
-        // --- CRITICAL: Ensure all necessary relationships are eager loaded ---
-        // Now eager-loading:
-        // - employee
-        // - subSection (for schedule's direct sub_section) AND its nested section
-        // - manPowerRequest (for schedule's linked request) AND its nested shift
-        // - manPowerRequest's nested subSection AND its nested section
-        $schedules = Schedule::with([
+        $query = Schedule::with([
             'employee',
-            'subSection.section', // For direct subSection on schedule
-            'manPowerRequest.shift', // For shift details from the request
-            'manPowerRequest.subSection.section' // For subSection and Section details from the request
-        ])
-                             ->whereIn('date', [$today->toDateString(), $tomorrow->toDateString()])
-                             ->orderBy('date')
-                             ->get();
+            'subSection.section',
+            'manPowerRequest.shift'
+        ]);
+
+        // Get start and end dates from request, default to today and tomorrow if not provided
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        if ($startDate && $endDate) {
+            // If dates are provided, filter schedules within the given range
+            $query->whereBetween('date', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ]);
+        } else {
+            // Default to today and tomorrow if no date range is specified
+            $today = Carbon::today();
+            $tomorrow = Carbon::tomorrow();
+            $query->whereIn('date', [$today->toDateString(), $tomorrow->toDateString()]);
+        }
+
+        $schedules = $query->orderBy('date')->get();
 
         return Inertia::render('Schedules/Index', [
             'schedules' => $schedules,
+            'filters' => [ // Pass current filter values back to the frontend
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ]
         ]);
     }
 
