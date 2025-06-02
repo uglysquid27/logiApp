@@ -10,6 +10,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ManPowerRequestController;
 use App\Http\Controllers\ManPowerRequestFulfillmentController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\DashboardController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -19,9 +20,8 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/manpower-requests', [ManPowerRequestController::class, 'index'])->name('manpower-requests.index');
