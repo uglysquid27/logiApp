@@ -17,7 +17,8 @@ class ScheduleController extends Controller
         $query = Schedule::with([
             'employee',
             'subSection.section',
-            'manPowerRequest.shift'
+            'manPowerRequest.shift',
+            'manPowerRequest.subSection.section' // Ensure this is eager loaded for the modal
         ]);
 
         // Get start and end dates from request, default to today and tomorrow if not provided
@@ -38,6 +39,9 @@ class ScheduleController extends Controller
         }
 
         $schedules = $query->orderBy('date')->get();
+
+        // --- DEBUGGING LINE: UNCOMMENT THIS TEMPORARILY TO INSPECT DATA ---
+        // dd($schedules->toArray());
 
         return Inertia::render('Schedules/Index', [
             'schedules' => $schedules,
