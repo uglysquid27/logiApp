@@ -8,31 +8,48 @@ use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon; // Import Carbon for date manipulation
+use Illuminate\Support\Facades\DB; // Import DB for transactions
 
 class ManPowerRequestFulfillmentController extends Controller
 {
     public function create($id)
     {
-        $request = ManPowerRequest::with('subSection.section')->findOrFail($id);
+        $request = ManPowerRequest::with('subSection.section', 'shift')->findOrFail($id);
+
+        // If the request is already fulfilled, redirect or show a message
+        if ($request->status === 'fulfilled') {
+            return Inertia::render('Fullfill/Index', [
+                'request' => $request,
+                'employees' => [], // No employees to fulfill if already fulfilled
+                'message' => 'This request has already been fulfilled.',
+            ]);
+        }
 
         // Define the start and end of the last 7 days for schedule count and rating calculation
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
-        // Fetch ALL active employees, and eager load their subSections
-        $employees = Employee::where('status', 'aktif')
-            ->with('subSections') // Eager load subSections to filter in frontend
-            // 'schedules_count' will now be the TOTAL historical count for each employee
-            ->withCount('schedules') // Total historical count
-            // 'schedules_count_weekly' will be the count for the last 7 days for rating calculation
-            ->withCount(['schedules as schedules_count_weekly' => function ($query) use ($startDate, $endDate) {
+        // 1. Get IDs of employees already scheduled on the request date
+        $scheduledEmployeeIdsOnRequestDate = Schedule::whereDate('date', $request->date)
+                                                     ->pluck('employee_id')
+                                                     ->toArray();
+
+        // 2. Fetch all active employees relevant to the request's sub-section,
+        //    and who are NOT already scheduled on the request date.
+        $eligibleEmployees = Employee::where('status', 'aktif')
+            ->whereHas('subSections', function ($query) use ($request) {
+                $query->where('sub_sections.id', $request->sub_section_id);
+            })
+            ->whereNotIn('id', $scheduledEmployeeIdsOnRequestDate) // Exclude already scheduled employees
+            // Eager load relationships needed for display/calculations
+            ->withCount(['schedules' => function ($query) use ($startDate, $endDate) {
+                // Count schedules only for the last 7 days for 'schedules_count_weekly'
                 $query->whereBetween('date', [$startDate, $endDate]);
             }])
-            // Eager load ALL schedules and their shifts for total_assigned_hours (cumulative)
+            // Eager load ALL schedules and their shifts for 'total_assigned_hours' (cumulative)
             ->with(['schedules.manPowerRequest.shift'])
-            ->orderBy('name')
             ->get()
-            ->map(function ($employee) use ($request) {
+            ->map(function ($employee) {
                 // Calculate total working hours from ALL assigned schedules (cumulative)
                 $totalWorkingHours = 0;
                 foreach ($employee->schedules as $schedule) {
@@ -82,20 +99,27 @@ class ManPowerRequestFulfillmentController extends Controller
                 // Explicitly set the attributes on the employee model for serialization
                 $employee->setAttribute('calculated_rating', $rating);
                 $employee->setAttribute('working_day_weight', $workingDayWeight);
-                $employee->setAttribute('total_assigned_hours', $totalWorkingHours); // Still cumulative
-
-                // This flag can be used for frontend filtering if needed
-                $employee->setAttribute(
-                    'is_in_request_subsection',
-                    $employee->subSections->contains('id', $request->sub_section_id)
-                );
+                $employee->setAttribute('total_assigned_hours', $totalWorkingHours);
 
                 return $employee;
             });
 
-        return Inertia::render('Fullfill/Index', [ // Assuming your frontend path is 'Fullfill/Index'
+        // 3. Separate employees into 'bulanan' and 'harian'
+        $monthlyEmployees = $eligibleEmployees->filter(fn($employee) => $employee->type === 'bulanan');
+        $dailyEmployees = $eligibleEmployees->filter(fn($employee) => $employee->type === 'harian');
+
+        // 4. Sort 'harian' employees by working_day_weight (descending)
+        //    Lower working_day_weight means higher priority for daily employees.
+        $sortedDailyEmployees = $dailyEmployees->sortByDesc('working_day_weight')->values();
+
+        // 5. Combine: monthly employees first, then sorted daily employees
+        //    The ->values() call is important to re-index the collection after filtering/sorting
+        //    so that merge works correctly and the frontend receives a clean array.
+        $prioritizedEmployees = $monthlyEmployees->values()->merge($sortedDailyEmployees);
+
+        return Inertia::render('Fullfill/Index', [
             'request' => $request,
-            'employees' => $employees, // This now includes the calculated properties
+            'employees' => $prioritizedEmployees, // This now includes the calculated properties and is prioritized
         ]);
     }
 
@@ -107,31 +131,45 @@ class ManPowerRequestFulfillmentController extends Controller
         ]);
     
         $req = ManPowerRequest::findOrFail($id);
-    
-        foreach ($validated['employee_ids'] as $employeeId) {
-            $employee = Employee::where('id', $employeeId)
-                ->where('status', 'aktif') // sesuaikan dengan status di DB
-                ->whereDoesntHave('schedules', function ($query) use ($req) {
-                    $query->where('date', $req->date);
-                })
-                ->first();
-    
-            if (!$employee) {
-                return back()->withErrors(['employee_ids' => 'Salah satu karyawan sudah tidak tersedia.']);
-            }
-    
-            Schedule::create([
-                'employee_id' => $employeeId,
-                'sub_section_id' => $req->sub_section_id,
-                'man_power_request_id' => $req->id,
-                'date' => $req->date,
-            ]);
-    
-            // $employee->update(['status' => 'assigned']); // Consider if this status update is desired here
+
+        // Prevent fulfillment if the request is already fulfilled
+        if ($req->status === 'fulfilled') {
+            return back()->withErrors(['request_status' => 'This request has already been fulfilled.']);
         }
     
-        $req->status = 'fulfilled';
-        $req->save();
+        try {
+            DB::transaction(function () use ($validated, $req) {
+                foreach ($validated['employee_ids'] as $employeeId) {
+                    // Re-check employee availability and status before creating schedule
+                    // This is a crucial double-check to prevent race conditions or stale data
+                    $employee = Employee::where('id', $employeeId)
+                        ->where('status', 'aktif')
+                        ->whereDoesntHave('schedules', function ($query) use ($req) {
+                            $query->where('date', $req->date);
+                        })
+                        ->first();
+            
+                    if (!$employee) {
+                        // Instead of throwing a generic exception, return a specific error
+                        // This will be caught by the outer try-catch or Inertia's onError
+                        throw new \Exception("Karyawan ID {$employeeId} tidak tersedia atau tidak aktif untuk penjadwalan pada {$req->date->format('d M Y')}.");
+                    }
+            
+                    Schedule::create([
+                        'employee_id' => $employeeId,
+                        'sub_section_id' => $req->sub_section_id,
+                        'man_power_request_id' => $req->id,
+                        'date' => $req->date,
+                    ]);
+                }
+            
+                $req->status = 'fulfilled';
+                $req->save();
+            });
+        } catch (\Exception $e) {
+            // Catch the exception and return a back response with errors
+            return back()->withErrors(['fulfillment_error' => $e->getMessage()]);
+        }
     
         return redirect()->route('manpower-requests.index')->with('success', 'Request berhasil dipenuhi');
     }

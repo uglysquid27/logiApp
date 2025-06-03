@@ -28,7 +28,7 @@ export default function Fulfill({ request, employees, message }) {
     // Effect to update form data if the initial employees list changes (e.g., after a refresh)
     // This is important if the 'employees' prop itself changes after the component mounts
     useEffect(() => {
-        setData('employee_ids', initialSelectedEmployeeIds);
+        setData('employee_ids', employees.slice(0, request.requested_amount).map((emp) => emp.id));
         // Clear backend error when component mounts or props change
         setBackendError(null);
     }, [employees, request.requested_amount]); // Depend on employees and requested_amount
@@ -171,6 +171,9 @@ export default function Fulfill({ request, employees, message }) {
                     {/* Automatically Selected Employees Card */}
                     <div className="mb-6 p-4 bg-white rounded-lg shadow-md">
                         <h3 className="text-lg font-bold mb-3">Karyawan Terpilih Otomatis (Prioritas Tertinggi)</h3>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Sistem akan otomatis memilih karyawan "Bulanan" terlebih dahulu, diikuti oleh karyawan "Harian" yang memenuhi syarat dan memiliki bobot kerja terendah.
+                        </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Map through data.employee_ids, which holds the current selection */}
                             {Array.from({ length: request.requested_amount }).map((_, index) => {
