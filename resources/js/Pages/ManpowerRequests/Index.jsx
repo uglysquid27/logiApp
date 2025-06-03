@@ -1,8 +1,7 @@
-import { Link } from '@inertiajs/react'; // Ensure this is the ONLY Link import
+import { Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Index({ requests }) { // `requests` will now be a pagination object
-  // Helper function for status badges (customize colors as needed)
+export default function Index({ requests }) {
   const getStatusClasses = (status) => {
     switch (status.toLowerCase()) {
       case 'fulfilled':
@@ -25,11 +24,10 @@ export default function Index({ requests }) { // `requests` will now be a pagina
         day: 'numeric',
       });
     } catch (error) {
-      return dateString; // fallback to original if parsing fails
+      return dateString;
     }
   };
 
-  // Safely access requests.data, default to empty array if requests or requests.data is undefined
   const manpowerRequests = requests?.data || [];
   const paginationLinks = requests?.links || [];
 
@@ -50,7 +48,7 @@ export default function Index({ requests }) { // `requests` will now be a pagina
                   Daftar Request Man Power
                 </h1>
                 <Link
-                  href={route('manpower-requests.create')}
+                  href="/manpower-requests/create" 
                   className="inline-flex items-center bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150"
                 >
                   <svg className="w-5 h-5 mr-2 -ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"></path></svg>
@@ -58,7 +56,6 @@ export default function Index({ requests }) { // `requests` will now be a pagina
                 </Link>
               </div>
 
-              {/* Table Container for responsiveness and styling */}
               <div className="overflow-x-auto mt-6 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
@@ -95,7 +92,7 @@ export default function Index({ requests }) { // `requests` will now be a pagina
                               Belum ada request man power.
                             </p>
                             <Link
-                              href={route('manpower-requests.create')}
+                              href="/manpower-requests/create" 
                               className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
                             >
                               Buat request pertama Anda
@@ -126,18 +123,30 @@ export default function Index({ requests }) { // `requests` will now be a pagina
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
-                            {req.status !== 'fulfilled' ? (
-                              <Link
-                                href={route('manpower-requests.fulfill', req.id)}
-                                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 font-semibold"
-                              >
-                                Penuhi
-                              </Link>
-                            ) : (
+                            {req.status === 'pending' ? (
+                              <div className="flex justify-end items-center space-x-3">
+                                <Link
+                                  href={`/manpower-requests/${req.id}/edit`} 
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 font-semibold"
+                                >
+                                  Edit
+                                </Link>
+                                <Link
+                                  href={`/manpower-requests/${req.id}/fulfill`} 
+                                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 font-semibold"
+                                >
+                                  Penuhi
+                                </Link>
+                              </div>
+                            ) : req.status === 'fulfilled' ? (
                               <span className="text-green-600 dark:text-green-400 italic inline-flex items-center">
                                 <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
                                 Sudah dipenuhi
                               </span>
+                            ) : (
+                               <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusClasses(req.status)}`}>
+                                   {req.status.replace('_', ' ')}
+                               </span>
                             )}
                           </td>
                         </tr>
@@ -148,19 +157,19 @@ export default function Index({ requests }) { // `requests` will now be a pagina
               </div>
 
               {/* Pagination Links */}
-              {paginationLinks.length > 3 && ( // Check if there are actual pagination links to display
+              {paginationLinks.length > 3 && (
                 <div className="mt-6 flex justify-end flex-wrap gap-2">
                   {paginationLinks.map((link, index) => (
                     <Link
                       key={index}
-                      href={link.url || '#'} // Use '#' if url is null (for prev/next when on first/last page)
+                      href={link.url || '#'}
                       className={`px-3 py-1 rounded-md text-sm transition-all ${
                         link.active
                           ? 'bg-indigo-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      } ${!link.url && 'pointer-events-none opacity-50'}`} 
+                      } ${!link.url && 'pointer-events-none opacity-50'}`}
                       dangerouslySetInnerHTML={{ __html: link.label }}
-                      preserveScroll // Keep scroll position after navigation
+                      preserveScroll
                     />
                   ))}
                 </div>

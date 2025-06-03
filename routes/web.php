@@ -27,6 +27,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/manpower-requests', [ManPowerRequestController::class, 'index'])->name('manpower-requests.index');
     Route::get('/manpower-requests/create', [ManPowerRequestController::class, 'create'])->name('manpower-requests.create');
     Route::post('/manpower-requests', [ManPowerRequestController::class, 'store'])->name('manpower-requests.store');
+    Route::get('/manpower-requests/{manPowerRequest}/edit', [ManPowerRequestController::class, 'edit'])->name('manpower-requests.edit');
+    Route::put('/manpower-requests/{manPowerRequest}', [ManPowerRequestController::class, 'update'])->name('manpower-requests.update');
     Route::get('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'create'])->name('manpower-requests.fulfill');
     Route::post('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'store'])->name('manpower-requests.fulfill.store');
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
