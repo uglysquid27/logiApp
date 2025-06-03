@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { usePage, Link, router } from '@inertiajs/react'; // Import router
+import { usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Index() {
@@ -15,22 +15,34 @@ export default function Index() {
   // State for search term, initialized from props
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
 
+  // Helper function for status badges (customize colors as needed)
+  const getStatusClasses = (status) => {
+    switch (status.toLowerCase()) {
+      case 'available':
+        return 'bg-green-100 text-green-700'; // Green for available
+      case 'assigned':
+        return 'bg-blue-100 text-blue-700'; // Blue for assigned
+      default:
+        return 'bg-gray-100 text-gray-700'; // Fallback for any unexpected status
+    }
+  };
+
   // Function to apply filters by making a new Inertia request
   const applyFilters = (newFilters) => {
-    router.get(route('employee-attendance.index'), {
+    router.get(window.location.pathname, {
       status: newFilters.status !== 'All' ? newFilters.status : undefined,
       section: newFilters.section !== 'All' ? newFilters.section : undefined,
       sub_section: newFilters.sub_section !== 'All' ? newFilters.sub_section : undefined,
-      search: newFilters.search || undefined, // Include search term for name AND NIK
-      page: 1, // Reset to first page when filters or search change
+      search: newFilters.search || undefined,
+      page: 1,
     }, {
       preserveState: true,
       preserveScroll: true,
-      replace: true, // Replace history state to avoid clutter
+      replace: true,
     });
   };
 
-  // Handle filter changes
+  // Handle filter changes (unchanged logic)
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
     setFilterStatus(newStatus);
@@ -40,7 +52,7 @@ export default function Index() {
   const handleSectionChange = (e) => {
     const newSection = e.target.value;
     setFilterSection(newSection);
-    setFilterSubSection('All'); // Reset sub-section filter when section changes
+    setFilterSubSection('All');
     applyFilters({ status: filterStatus, section: newSection, sub_section: 'All', search: searchTerm });
   };
 
@@ -50,33 +62,29 @@ export default function Index() {
     applyFilters({ status: filterStatus, section: filterSection, sub_section: newSubSection, search: searchTerm });
   };
 
-  // Handle search term change
+  // Handle search term change (unchanged logic)
   const handleSearchChange = (e) => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
-    // Debounce the search input for better performance in a real application
-    // For now, it applies immediately on change.
     applyFilters({ status: filterStatus, section: filterSection, sub_section: filterSubSection, search: newSearchTerm });
   };
 
-  // Calculate the total historical schedules count for the CURRENTLY DISPLAYED (paginated and filtered) employees
+  // Calculate totals for current page (unchanged logic)
   const totalSchedulesCount = employees.reduce((sum, employee) => {
     return sum + (employee.schedules_count || 0);
   }, 0);
 
-  // Calculate the total weekly schedules count for the CURRENTLY DISPLAYED (paginated and filtered) employees
   const totalWeeklySchedulesCount = employees.reduce((sum, employee) => {
     return sum + (employee.schedules_count_weekly || 0);
   }, 0);
 
-  // Function to build pagination URL with current filters and search term
+  // Function to build pagination URL (unchanged logic)
   const buildPaginationUrl = (url) => {
-    if (!url) return '#'; // Return '#' for disabled links
+    if (!url) return '#';
 
     const urlObj = new URL(url);
     const params = urlObj.searchParams;
 
-    // Add current filters to URL parameters if they are not 'All'
     if (filterStatus !== 'All') {
       params.set('status', filterStatus);
     } else {
@@ -92,7 +100,6 @@ export default function Index() {
     } else {
       params.delete('sub_section');
     }
-    // Add search term to URL parameters if it's not empty
     if (searchTerm.trim() !== '') {
       params.set('search', searchTerm);
     } else {
@@ -102,7 +109,6 @@ export default function Index() {
     urlObj.search = params.toString();
     return urlObj.toString();
   };
-
 
   return (
     <AuthenticatedLayout
@@ -226,12 +232,15 @@ export default function Index() {
                       <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
                         Status
                       </th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                        Cuti
+                      </th> {/* NEW COLUMN FOR CUTI */}
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {employees.length === 0 ? (
                       <tr>
-                        <td colSpan="9" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
+                        <td colSpan="10" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center"> {/* Updated colspan */}
                           Tidak ada data pegawai dengan kriteria filter atau pencarian ini.
                         </td>
                       </tr>
@@ -268,8 +277,21 @@ export default function Index() {
                           <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">
                             {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}
                           </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
-                            {employee.status}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <span
+                              className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusClasses(employee.status)}`}
+                            >
+                              {employee.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"> {/* NEW CELL FOR CUTI */}
+                            <span
+                                className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${
+                                    employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'
+                                }`}
+                            >
+                                {employee.cuti}
+                            </span>
                           </td>
                         </tr>
                       ))
@@ -279,7 +301,7 @@ export default function Index() {
                       <td colSpan="5" className="px-6 py-3 text-right">Total Penugasan (Keseluruhan):</td>
                       <td className="px-6 py-3 text-center">{totalSchedulesCount}</td>
                       <td className="px-6 py-3 text-center">{totalWeeklySchedulesCount}</td>
-                      <td colSpan="2" className="px-6 py-3 text-center"></td>
+                      <td colSpan="3" className="px-6 py-3 text-center"></td> {/* Updated colspan */}
                     </tr>
                   </tbody>
                 </table>

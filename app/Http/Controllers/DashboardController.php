@@ -18,7 +18,10 @@ class DashboardController extends Controller
     public function index(): Response
     {
         // Get counts for employees
-        $activeEmployeesCount = Employee::where('status', 'aktif')->count();
+        // FIX: Updated definition of 'activeEmployeesCount'
+        $activeEmployeesCount = Employee::where('status', 'available')
+                                        ->where('cuti', 'no') // Ensure they are not on 'cuti'
+                                        ->count();
         $totalEmployeesCount = Employee::count();
 
         // Get counts for manpower requests
@@ -113,9 +116,6 @@ class DashboardController extends Controller
                                                 ->orderBy('date', 'desc') // Change to descending order for recent requests
                                                 ->limit(5)
                                                 ->get();
-
-        // --- DEBUGGING LINE: UNCOMMENT THIS TEMPORARILY TO INSPECT DATA ---
-        // dd($recentPendingRequests->toArray());
 
         // Upcoming Schedules (e.g., next 5 schedules from today onwards)
         $upcomingSchedules = Schedule::where('date', '>=', $today)

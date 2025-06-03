@@ -36,7 +36,9 @@ class ManPowerRequestFulfillmentController extends Controller
 
         // 2. Fetch all active employees relevant to the request's sub-section,
         //    and who are NOT already scheduled on the request date.
-        $eligibleEmployees = Employee::where('status', 'aktif')
+        // FIX: Changed status check from 'aktif' to 'available' and added 'cuti' check
+        $eligibleEmployees = Employee::where('status', 'available')
+            ->where('cuti', 'no') // Ensure employee is not on leave
             ->whereHas('subSections', function ($query) use ($request) {
                 $query->where('sub_sections.id', $request->sub_section_id);
             })
@@ -141,18 +143,18 @@ class ManPowerRequestFulfillmentController extends Controller
             DB::transaction(function () use ($validated, $req) {
                 foreach ($validated['employee_ids'] as $employeeId) {
                     // Re-check employee availability and status before creating schedule
-                    // This is a crucial double-check to prevent race conditions or stale data
+                    // FIX: Changed status check from 'aktif' to 'available' and added 'cuti' check
                     $employee = Employee::where('id', $employeeId)
-                        ->where('status', 'aktif')
+                        ->where('status', 'available') // Only assign if available
+                        ->where('cuti', 'no') // Only assign if not on cuti
                         ->whereDoesntHave('schedules', function ($query) use ($req) {
                             $query->where('date', $req->date);
                         })
                         ->first();
             
                     if (!$employee) {
-                        // Instead of throwing a generic exception, return a specific error
-                        // This will be caught by the outer try-catch or Inertia's onError
-                        throw new \Exception("Karyawan ID {$employeeId} tidak tersedia atau tidak aktif untuk penjadwalan pada {$req->date->format('d M Y')}.");
+                        // FIX: Updated error message to reflect new status/cuti checks
+                        throw new \Exception("Karyawan ID {$employeeId} tidak tersedia, sedang cuti, atau sudah dijadwalkan pada {$req->date->format('d M Y')}.");
                     }
             
                     Schedule::create([
@@ -161,6 +163,10 @@ class ManPowerRequestFulfillmentController extends Controller
                         'man_power_request_id' => $req->id,
                         'date' => $req->date,
                     ]);
+
+                    // NEW LOGIC: Update employee status to 'assigned'
+                    $employee->status = 'assigned';
+                    $employee->save();
                 }
             
                 $req->status = 'fulfilled';

@@ -21,17 +21,11 @@ class EmployeeSum extends Controller
                          ->withCount(['schedules as schedules_count_weekly' => function ($query) use ($startDate, $endDate) {
                              $query->whereBetween('date', [$startDate, $endDate]);
                          }])
-                         // --- NEW: Add counts for future/current and past schedules for status logic ---
-                         ->withCount(['schedules as current_or_future_schedules_count' => function ($query) {
-                             $query->where('date', '>=', Carbon::today());
-                         }])
-                         ->withCount(['schedules as past_only_schedules_count' => function ($query) {
-                             $query->where('date', '<', Carbon::today());
-                         }])
-                         // --- End NEW ---
+                         // REMOVED: withCount for current_or_future_schedules_count and past_only_schedules_count
                          ->with(['schedules.manPowerRequest.shift', 'subSections.section']);
 
         // --- Apply Filters from Request ---
+        // This will now filter directly on the database 'status' column
         if ($request->has('status') && $request->input('status') !== 'All') {
             $query->where('status', $request->input('status'));
         }
@@ -91,31 +85,26 @@ class EmployeeSum extends Controller
                                $employee->setAttribute('working_day_weight', $workingDayWeight);
                                $employee->setAttribute('total_assigned_hours', $totalWorkingHours);
 
-                               // --- NEW: Calculate Employee Status ---
-                               if ($employee->current_or_future_schedules_count > 0) {
-                                   $employee->status = 'assigned';
-                               } else if ($employee->past_only_schedules_count > 0) {
-                                   $employee->status = 'aktif';
-                               } else {
-                                   $employee->status = 'unassigned'; // Default for employees with no schedules at all
-                               }
-                               // --- End NEW ---
+                               // REMOVED: Status calculation logic here.
+                               // The 'employee->status' will now be directly from the database.
 
-                               // Remove the temporary count attributes from the model
+                               // Remove the large 'schedules' relation from the final JSON response
                                unset($employee->schedules);
-                               unset($employee->current_or_future_schedules_count);
-                               unset($employee->past_only_schedules_count);
+                               // REMOVED: Unsetting current_or_future_schedules_count and past_only_schedules_count
 
                                return $employee;
                            });
-        $allStatuses = ['All', 'assigned', 'aktif', 'unassigned']; // Define all possible statuses
+
+        // Fetch unique statuses, sections, and sub-sections for filter dropdowns.
+        // UPDATED: uniqueStatuses now reflect database enum values
+        $allStatuses = Employee::select('status')->distinct()->pluck('status')->toArray();
         $allSections = Section::select('name')->distinct()->pluck('name')->toArray();
         $allSubSections = SubSection::select('name')->distinct()->pluck('name')->toArray();
 
         return Inertia::render('EmployeeAttendance/Index', [
             'employees' => $employees,
             'filters' => $request->only(['status', 'section', 'sub_section', 'search']),
-            'uniqueStatuses' => $allStatuses, // Use the defined list for the dropdown
+            'uniqueStatuses' => array_merge(['All'], $allStatuses), // Include 'All'
             'uniqueSections' => array_merge(['All'], $allSections),
             'uniqueSubSections' => array_merge(['All'], $allSubSections),
         ]);
