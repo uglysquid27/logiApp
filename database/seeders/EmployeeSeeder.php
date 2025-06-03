@@ -16,8 +16,9 @@ class EmployeeSeeder extends Seeder
             Employee::create([
                 'nik'    => 'EMP' . str_pad($i, 4, '0', STR_PAD_LEFT), // e.g., EMP0001
                 'name'   => $faker->name(), // Use the $faker instance
-                'type' => $faker->randomElement(['harian', 'bulanan']), // Use the $faker instance
-                'status' => $faker->randomElement(['aktif', 'cuti', 'resign', 'assigned']), // Use the $faker instance
+                'type'   => $faker->randomElement(['harian', 'bulanan']), // Use the $faker instance
+                'status' => $faker->randomElement(['available', 'assigned']), // Updated to match new enum values
+                'cuti'   => $faker->randomElement(['yes', 'no']), // Added 'cuti' field
             ]);
         }
     }

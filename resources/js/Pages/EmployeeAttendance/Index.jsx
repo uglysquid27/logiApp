@@ -3,12 +3,8 @@ import { usePage, Link, router } from '@inertiajs/react'; // Import router
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Index() {
-  // `employees` prop will now be a pagination object
-  // `filters` prop will contain the current filter values
-  // `uniqueStatuses`, `uniqueSections`, `uniqueSubSections` will contain options for dropdowns
   const { employees: paginationData, filters, uniqueStatuses, uniqueSections, uniqueSubSections } = usePage().props;
 
-  // Extract the actual employee data array from the pagination object
   const employees = paginationData.data;
   const paginationLinks = paginationData.links;
 
@@ -16,6 +12,8 @@ export default function Index() {
   const [filterStatus, setFilterStatus] = useState(filters.status || 'All');
   const [filterSection, setFilterSection] = useState(filters.section || 'All');
   const [filterSubSection, setFilterSubSection] = useState(filters.sub_section || 'All');
+  // State for search term, initialized from props
+  const [searchTerm, setSearchTerm] = useState(filters.search || '');
 
   // Function to apply filters by making a new Inertia request
   const applyFilters = (newFilters) => {
@@ -23,7 +21,8 @@ export default function Index() {
       status: newFilters.status !== 'All' ? newFilters.status : undefined,
       section: newFilters.section !== 'All' ? newFilters.section : undefined,
       sub_section: newFilters.sub_section !== 'All' ? newFilters.sub_section : undefined,
-      page: 1, // Reset to first page when filters change
+      search: newFilters.search || undefined, // Include search term for name AND NIK
+      page: 1, // Reset to first page when filters or search change
     }, {
       preserveState: true,
       preserveScroll: true,
@@ -35,20 +34,29 @@ export default function Index() {
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
     setFilterStatus(newStatus);
-    applyFilters({ status: newStatus, section: filterSection, sub_section: filterSubSection });
+    applyFilters({ status: newStatus, section: filterSection, sub_section: filterSubSection, search: searchTerm });
   };
 
   const handleSectionChange = (e) => {
     const newSection = e.target.value;
     setFilterSection(newSection);
     setFilterSubSection('All'); // Reset sub-section filter when section changes
-    applyFilters({ status: filterStatus, section: newSection, sub_section: 'All' });
+    applyFilters({ status: filterStatus, section: newSection, sub_section: 'All', search: searchTerm });
   };
 
   const handleSubSectionChange = (e) => {
     const newSubSection = e.target.value;
     setFilterSubSection(newSubSection);
-    applyFilters({ status: filterStatus, section: filterSection, sub_section: newSubSection });
+    applyFilters({ status: filterStatus, section: filterSection, sub_section: newSubSection, search: searchTerm });
+  };
+
+  // Handle search term change
+  const handleSearchChange = (e) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+    // Debounce the search input for better performance in a real application
+    // For now, it applies immediately on change.
+    applyFilters({ status: filterStatus, section: filterSection, sub_section: filterSubSection, search: newSearchTerm });
   };
 
   // Calculate the total historical schedules count for the CURRENTLY DISPLAYED (paginated and filtered) employees
@@ -61,7 +69,7 @@ export default function Index() {
     return sum + (employee.schedules_count_weekly || 0);
   }, 0);
 
-  // Function to build pagination URL with current filters
+  // Function to build pagination URL with current filters and search term
   const buildPaginationUrl = (url) => {
     if (!url) return '#'; // Return '#' for disabled links
 
@@ -83,6 +91,12 @@ export default function Index() {
       params.set('sub_section', filterSubSection);
     } else {
       params.delete('sub_section');
+    }
+    // Add search term to URL parameters if it's not empty
+    if (searchTerm.trim() !== '') {
+      params.set('search', searchTerm);
+    } else {
+      params.delete('search');
     }
 
     urlObj.search = params.toString();
@@ -106,7 +120,7 @@ export default function Index() {
                 Ringkasan Penugasan Pegawai
               </h1>
 
-              {/* Filter Dropdowns */}
+              {/* Filter Dropdowns and Search Bar */}
               <div className="flex flex-wrap items-center gap-4 mb-4">
                 {/* Status Filter */}
                 <div className="flex items-center">
@@ -164,6 +178,21 @@ export default function Index() {
                     ))}
                   </select>
                 </div>
+
+                {/* Search Bar for Name and NIK */}
+                <div className="flex items-center">
+                  <label htmlFor="searchEmployee" className="block mr-2 font-medium text-gray-700 dark:text-gray-300 text-sm">
+                    Cari Nama Pegawai atau NIK:
+                  </label>
+                  <input
+                    type="text"
+                    id="searchEmployee"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    placeholder="Cari nama atau NIK..."
+                    className="block bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 focus:border-indigo-500 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 w-auto text-gray-900 dark:text-gray-100 sm:text-sm"
+                  />
+                </div>
               </div>
 
               <div className="bg-white dark:bg-gray-800 mt-6 border border-gray-200 dark:border-gray-700 rounded-md overflow-x-auto">
@@ -200,14 +229,14 @@ export default function Index() {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {employees.length === 0 ? ( // Use 'employees' (paginated data) here
+                    {employees.length === 0 ? (
                       <tr>
                         <td colSpan="9" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
-                          Tidak ada data pegawai dengan status ini atau kriteria filter lainnya.
+                          Tidak ada data pegawai dengan kriteria filter atau pencarian ini.
                         </td>
                       </tr>
                     ) : (
-                      employees.map((employee) => ( // Use 'employees' (paginated data) here
+                      employees.map((employee) => (
                         <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                           <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 text-sm whitespace-nowrap">
                             {employee.name}
@@ -257,19 +286,19 @@ export default function Index() {
               </div>
 
               {/* Pagination Links */}
-              {paginationLinks.length > 3 && ( // Check if there are actual pagination links to display
+              {paginationLinks.length > 3 && (
                 <div className="mt-6 flex justify-end flex-wrap gap-2">
                   {paginationLinks.map((link, index) => (
                     <Link
                       key={index}
-                      href={buildPaginationUrl(link.url)} // Use the new helper function here
+                      href={buildPaginationUrl(link.url)}
                       className={`px-3 py-1 rounded-md text-sm transition-all ${
                         link.active
                           ? 'bg-indigo-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                       } ${!link.url && 'pointer-events-none opacity-50'}`}
                       dangerouslySetInnerHTML={{ __html: link.label }}
-                      preserveScroll // Keep scroll position after navigation
+                      preserveScroll
                     />
                   ))}
                 </div>

@@ -14,6 +14,7 @@ class Employee extends Model
         'name',
         'type',
         'status',
+        'cuti'
     ];
 
     /**
