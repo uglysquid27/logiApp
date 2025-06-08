@@ -3,13 +3,14 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useEffect } from 'react';
 
 export default function Create({ subSections, shifts }) {
+  // Initialize timeSlots as an object with shift.id as keys
   const initialTimeSlots = {};
   if (shifts && Array.isArray(shifts)) {
     shifts.forEach(shift => {
       initialTimeSlots[shift.id] = {
         requested_amount: '',
-        start_time: shift.start_time || '',
-        end_time: shift.end_time || '',
+        start_time: shift.start_time || '', // Pre-fill with shift's default start time
+        end_time: shift.end_time || '',      // Pre-fill with shift's default end time
       };
     });
   }
@@ -17,10 +18,12 @@ export default function Create({ subSections, shifts }) {
   const { data, setData, post, processing, errors, reset } = useForm({
     sub_section_id: '',
     date: '',
-    time_slots: initialTimeSlots,
+    time_slots: initialTimeSlots, // Keeps it as an object keyed by shift.id
   });
 
   useEffect(() => {
+  // Hanya reset jika data.time_slots masih kosong
+  if (!data.time_slots || Object.keys(data.time_slots).length === 0) {
     const newInitialTimeSlots = {};
     if (shifts && Array.isArray(shifts)) {
       shifts.forEach(shift => {
@@ -32,115 +35,117 @@ export default function Create({ subSections, shifts }) {
       });
     }
     setData('time_slots', newInitialTimeSlots);
-  }, [shifts]);
+  }
+}, [shifts]);
 
-  const handleSlotChange = (shiftId, field, value) => {
-    setData('time_slots', {
-      ...data.time_slots,
+
+ const handleSlotChange = (shiftId, field, value) => {
+  setData(prevData => {
+    const newTimeSlots = {
+      ...prevData.time_slots,
       [shiftId]: {
-        ...data.time_slots[shiftId],
-        [field]: value,
+        ...prevData.time_slots[shiftId],
+        [field]: (field === 'start_time' || field === 'end_time') ? formatTimeToSeconds(value) : value,
       },
-    });
-  };
+    };
 
-  // Helper function to format time to HH:mm
-  const formatTime = (timeString) => {
-      if (!timeString) return ''; // Return empty string for null/undefined/empty input
-
-      // Use a regex to extract hours and minutes, ensuring leading zeros
-      const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(:([0-5]\d))?$/; // Matches HH:mm or HH:mm:ss
-      const match = timeString.match(timeRegex);
-
-      if (match) {
-          return `${match[1]}:${match[2]}`; // Return only HH:mm part
+    // Jika requested_amount dikosongkan atau diisi <= 0, reset waktu ke default
+    if (field === 'requested_amount') {
+      const amount = value === '' ? 0 : parseInt(value, 10);
+      if (amount <= 0) {
+        const originalShift = shifts.find(s => s.id === shiftId);
+        newTimeSlots[shiftId].start_time = originalShift?.start_time || '';
+        newTimeSlots[shiftId].end_time = originalShift?.end_time || '';
       }
-      return ''; // Return empty string if format is invalid
-  };
-
-  const submit = (e) => {
-    e.preventDefault();
-
-    // --- DEBUGGING: Log initial data.time_slots ---
-    console.log('Current data.time_slots before processing:', data.time_slots);
-
-    const submittedTimeSlots = Object.keys(data.time_slots)
-      .map(shiftId => {
-        // --- DEBUGGING: Log shiftId during map operation ---
-        console.log('Processing shiftId:', shiftId);
-        const slot = data.time_slots[shiftId];
-        const requestedAmount = slot.requested_amount === '' ? 0 : parseInt(slot.requested_amount, 10);
-
-        return {
-          shift_id: parseInt(shiftId, 10),
-          requested_amount: requestedAmount,
-          start_time: formatTime(slot.start_time), // Apply formatting
-          end_time: formatTime(slot.end_time),     // Apply formatting
-        };
-      })
-      .filter(slot => slot.requested_amount > 0); // Filter out slots where requested_amount is 0 or less.
-
-    // --- DEBUGGING: Log final submittedTimeSlots array ---
-    console.log('Submitted time_slots after filtering:', submittedTimeSlots);
-
-    if (submittedTimeSlots.length === 0) {
-      alert('Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.');
-      return;
     }
 
-    // --- NEW DEBUGGING: Log the full data object being sent to the backend ---
-    console.log('Data being sent to backend:', {
-      sub_section_id: data.sub_section_id,
-      date: data.date,
-      time_slots: submittedTimeSlots,
-    });
+    return {
+      ...prevData,
+      time_slots: newTimeSlots,
+    };
+  });
+};
 
-    post('/manpower-requests', {
-      data: {
-        sub_section_id: data.sub_section_id,
-        date: data.date,
-        time_slots: submittedTimeSlots,
-      },
-      onSuccess: () => reset(),
-      onError: (formErrors) => {
-        console.error('Validation Errors:', formErrors);
-        if (formErrors.time_slots) {
-            alert('Kesalahan data slot waktu: ' + formErrors.time_slots);
-        } else {
-            for (const key in formErrors) {
-                if (key.startsWith('time_slots.')) {
-                    alert(`Kesalahan pada slot waktu: ${formErrors[key]}`);
-                    break;
-                }
-            }
-        }
-      },
-    });
-  };
+
+
+  // NEW Helper function: Ensures time is always HH:mm:ss for backend
+// Helper function: ensures time is always HH:mm:ss for backend
+const formatTimeToSeconds = (timeString) => {
+  if (!timeString) return null; // Send null for empty strings
+
+  // If already HH:mm:ss, return as is
+  if (timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    return timeString;
+  }
+
+  // If HH:mm, append :00
+  if (timeString.match(/^\d{2}:\d{2}$/)) {
+    return `${timeString}:00`;
+  }
+
+  console.warn("Invalid time string format for formatting:", timeString);
+  return null;
+};
+
+
+
+  const submit = (e) => {
+  e.preventDefault();
+
+  const payloadTimeSlots = {};
+
+  Object.keys(data.time_slots).forEach(shiftId => {
+    const slot = data.time_slots[shiftId];
+    const requestedAmount = slot.requested_amount === '' ? 0 : parseInt(slot.requested_amount, 10);
+
+    if (requestedAmount > 0) {
+      payloadTimeSlots[shiftId] = {
+        requested_amount: requestedAmount,
+        start_time: formatTimeToSeconds(slot.start_time),
+        end_time: formatTimeToSeconds(slot.end_time),
+      };
+    }
+  });
+
+  if (Object.keys(payloadTimeSlots).length === 0) {
+    alert('Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.');
+    return;
+  }
+
+  post('/manpower-requests', {
+    sub_section_id: data.sub_section_id,
+    date: data.date,
+    time_slots: payloadTimeSlots,
+  }, {
+    onSuccess: () => reset(),
+    onError: (formErrors) => console.error('Validation Errors:', formErrors),
+  });
+};
+
 
   const today = new Date().toISOString().split('T')[0];
 
   return (
     <AuthenticatedLayout
       header={
-        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+        <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-xl leading-tight">
           Request Man Power
         </h2>
       }
     >
       <div className="py-8">
-        <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gray-800 overflow-hidden shadow-lg sm:rounded-lg">
+        <div className="mx-auto sm:px-6 lg:px-8 max-w-2xl">
+          <div className="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg overflow-hidden">
             <div className="p-6 md:p-8 text-gray-900 dark:text-gray-100">
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                <h1 className="font-bold text-gray-700 dark:text-gray-300 text-2xl">
                   Buat Request Man Power Baru
                 </h1>
                 <Link
                   href="/manpower-requests"
-                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 inline-flex items-center"
+                  className="inline-flex items-center text-indigo-600 hover:text-indigo-800 dark:hover:text-indigo-300 dark:text-indigo-400 text-sm"
                 >
-                  <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" > <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /> </svg>
+                  <svg className="mr-1 w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" > <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /> </svg>
                   Kembali ke Daftar
                 </Link>
               </div>
@@ -148,7 +153,7 @@ export default function Create({ subSections, shifts }) {
               <form onSubmit={submit} className="space-y-6">
                 {/* Sub Section Field */}
                 <div>
-                  <label htmlFor="sub_section_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="sub_section_id" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
                     Sub Section <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -166,12 +171,12 @@ export default function Create({ subSections, shifts }) {
                       </option>
                     ))}
                   </select>
-                  {errors.sub_section_id && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.sub_section_id}</p>}
+                  {errors.sub_section_id && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.sub_section_id}</p>}
                 </div>
 
                 {/* Date Field */}
                 <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label htmlFor="date" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
                     Tanggal Dibutuhkan <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -184,75 +189,86 @@ export default function Create({ subSections, shifts }) {
                     className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.date ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
                     required
                   />
-                  {errors.date && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date}</p>}
+                  {errors.date && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.date}</p>}
                 </div>
 
                 {/* Shift-based Manpower Slots */}
-                <div className="space-y-4 pt-4 border-t mt-4">
-                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200">
+                <div className="space-y-4 mt-4 pt-4 border-t">
+                  <h3 className="font-medium text-gray-800 dark:text-gray-200 text-lg">
                     Jumlah Man Power per Shift
                   </h3>
-                  {shifts && Array.isArray(shifts) && shifts.map((shift) => (
-                    <div key={shift.id} className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end p-4 border border-gray-200 dark:border-gray-700 rounded-md">
-                      <div className="col-span-2">
-                        <label htmlFor={`amount_${shift.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          {shift.name} (Jumlah)
-                        </label>
-                        <input
-                          type="number"
-                          id={`amount_${shift.id}`}
-                          min="0"
-                          value={data.time_slots[shift.id]?.requested_amount || ''}
-                          onChange={(e) => handleSlotChange(shift.id, 'requested_amount', e.target.value ? parseInt(e.target.value, 10) : '')}
-                          placeholder="Jumlah"
-                          className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.requested_amount`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                        />
-                        {errors[`time_slots.${shift.id}.requested_amount`] && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors[`time_slots.${shift.id}.requested_amount`]}</p>
-                        )}
+                  {shifts && Array.isArray(shifts) && shifts.map((shift) => {
+                    const slotData = data.time_slots[shift.id] || {};
+                    const requestedAmount = slotData.requested_amount;
+                    const startTime = slotData.start_time;
+                    const endTime = slotData.end_time;
+
+                    // Determine if the time fields are required based on requested_amount > 0
+                    const isTimeRequired = requestedAmount > 0;
+
+                    return (
+                      <div key={shift.id} className="items-end gap-4 grid grid-cols-1 md:grid-cols-6 p-4 border border-gray-200 dark:border-gray-700 rounded-md">
+                        <div className="col-span-2">
+                          <label htmlFor={`amount_${shift.id}`} className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
+                            {shift.name} (Jumlah)
+                          </label>
+                          <input
+                            type="number"
+                            id={`amount_${shift.id}`}
+                            min="0"
+                            value={requestedAmount}
+                            onChange={(e) => handleSlotChange(shift.id, 'requested_amount', e.target.value)}
+                            placeholder="Jumlah"
+                            className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.requested_amount`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
+                          />
+                          {errors[`time_slots.${shift.id}.requested_amount`] && (
+                            <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors[`time_slots.${shift.id}.requested_amount`]}</p>
+                          )}
+                        </div>
+                        <div className="col-span-2">
+                          <label htmlFor={`start_time_${shift.id}`} className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
+                            Waktu Mulai ({shift.name}) {isTimeRequired && <span className="text-red-500">*</span>}
+                          </label>
+                          <input
+                            type="time"
+                            id={`start_time_${shift.id}`}
+                            value={startTime || ''} // Display empty string for null
+                            onChange={(e) => handleSlotChange(shift.id, 'start_time', e.target.value)}
+                            className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.start_time`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
+                            required={isTimeRequired}
+                          />
+                          {errors[`time_slots.${shift.id}.start_time`] && (
+                            <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors[`time_slots.${shift.id}.start_time`]}</p>
+                          )}
+                        </div>
+                        <div className="col-span-2">
+                          <label htmlFor={`end_time_${shift.id}`} className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
+                            Waktu Selesai ({shift.name}) {isTimeRequired && <span className="text-red-500">*</span>}
+                          </label>
+                          <input
+                            type="time"
+                            id={`end_time_${shift.id}`}
+                            value={endTime || ''} // Display empty string for null
+                            onChange={(e) => handleSlotChange(shift.id, 'end_time', e.target.value)}
+                            className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.end_time`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
+                            required={isTimeRequired}
+                          />
+                          {errors[`time_slots.${shift.id}.end_time`] && (
+                            <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors[`time_slots.${shift.id}.end_time`]}</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="col-span-2">
-                        <label htmlFor={`start_time_${shift.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Waktu Mulai ({shift.name}) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="time"
-                          id={`start_time_${shift.id}`}
-                          value={data.time_slots[shift.id]?.start_time || ''}
-                          onChange={(e) => handleSlotChange(shift.id, 'start_time', e.target.value)}
-                          className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.start_time`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                          required={data.time_slots[shift.id]?.requested_amount > 0}
-                        />
-                        {errors[`time_slots.${shift.id}.start_time`] && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors[`time_slots.${shift.id}.start_time`]}</p>
-                        )}
-                      </div>
-                      <div className="col-span-2">
-                        <label htmlFor={`end_time_${shift.id}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Waktu Selesai ({shift.name}) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="time"
-                          id={`end_time_${shift.id}`}
-                          value={data.time_slots[shift.id]?.end_time || ''}
-                          onChange={(e) => handleSlotChange(shift.id, 'end_time', e.target.value)}
-                          className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.end_time`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                          required={data.time_slots[shift.id]?.requested_amount > 0}
-                        />
-                        {errors[`time_slots.${shift.id}.end_time`] && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors[`time_slots.${shift.id}.end_time`]}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {errors.time_slots && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.time_slots}</p>}
+                    );
+                  })}
+                  {/* General time_slots error, e.g., if array is empty */}
+                  {errors.time_slots && typeof errors.time_slots === 'string' && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.time_slots}</p>}
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex items-center justify-end pt-2">
+                <div className="flex justify-end items-center pt-2">
                   <button
                     type="submit"
-                    className="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 disabled:opacity-75 disabled:cursor-not-allowed"
+                    className="inline-flex justify-center bg-indigo-600 hover:bg-indigo-700 disabled:opacity-75 shadow-sm px-6 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 font-medium text-white text-sm disabled:cursor-not-allowed"
                     disabled={processing}
                   >
                     {processing ? 'Menyimpan...' : 'Submit Request'}

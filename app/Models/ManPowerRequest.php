@@ -12,7 +12,9 @@ class ManPowerRequest extends Model
     protected $fillable = [
         'sub_section_id',
         'date',
-        'shift_id', // Ensure this is in fillable if you're mass assigning
+        'shift_id', // Ensure this is in fillable
+        'start_time', // New field
+        'end_time',   // New field
         'requested_amount',
         'status',
     ];
@@ -26,7 +28,7 @@ class ManPowerRequest extends Model
         return $this->belongsTo(SubSection::class);
     }
 
-    public function shift() // Relationship to Shift
+    public function shift() // Relationship to Shift is maintained
     {
         return $this->belongsTo(Shift::class);
     }
@@ -34,7 +36,7 @@ class ManPowerRequest extends Model
     /**
      * Get the schedules associated with the man power request.
      */
-    public function schedules() // <-- ADDED THIS RELATIONSHIP
+    public function schedules()
     {
         return $this->hasMany(Schedule::class);
     }

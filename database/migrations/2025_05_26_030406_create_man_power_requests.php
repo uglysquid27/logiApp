@@ -14,12 +14,14 @@ return new class extends Migration
         Schema::create('man_power_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sub_section_id')->constrained('sub_sections')->onDelete('cascade');
-            // REMOVED: $table->foreignId('shift_id')->constrained('shifts')->onDelete('cascade');
+            // Re-added shift_id as per your requirement
+            $table->foreignId('shift_id')->constrained('shifts')->onDelete('cascade');
             $table->date('date');
-            $table->time('start_time'); // NEW: Start time for the requested slot
-            $table->time('end_time');   // NEW: End time for the requested slot
+            // Added start_time and end_time
+            $table->time('start_time');
+            $table->time('end_time');
             $table->unsignedInteger('requested_amount');
-            $table->enum('status', ['pending', 'fulfilled', 'rejected'])->default('pending');
+            $table->enum('status', ['pending', 'fulfilled', 'rejected'])->default('pending'); // Added 'rejected' for completeness
             $table->timestamps();
         });
     }
