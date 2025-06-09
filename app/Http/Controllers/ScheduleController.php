@@ -12,36 +12,36 @@ use Carbon\Carbon;
 
 class ScheduleController extends Controller
 {
-    public function index(Request $request): Response // Added Request $request
+    public function index(Request $request): Response
     {
+        
         $query = Schedule::with([
             'employee',
             'subSection.section',
             'manPowerRequest.shift',
-            'manPowerRequest.subSection.section' // Ensure this is eager loaded for the modal
+            'manPowerRequest.subSection.section'
         ]);
 
-        // Get start and end dates from request, default to today and tomorrow if not provided
+        // Get start and end dates from request
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
+        // Apply date filtering only if both start and end dates are provided
         if ($startDate && $endDate) {
-            // If dates are provided, filter schedules within the given range
             $query->whereBetween('date', [
                 Carbon::parse($startDate)->startOfDay(),
                 Carbon::parse($endDate)->endOfDay()
             ]);
-        } else {
-            // Default to today and tomorrow if no date range is specified
-            $today = Carbon::today();
-            $tomorrow = Carbon::tomorrow();
-            $query->whereIn('date', [$today->toDateString(), $tomorrow->toDateString()]);
         }
+        // If no dates are provided, or only one, no date filter is applied.
+        // This effectively shows ALL schedules if no dates are set.
+        // If you want a default range when no filters are set, consider:
+        // $query->whereBetween('date', [Carbon::today()->subMonths(1), Carbon::today()->addMonths(6)]);
+        // For now, removing the default 'today/tomorrow' logic to allow "all" when cleared.
 
         $schedules = $query->orderBy('date')->get();
 
-        // --- DEBUGGING LINE: UNCOMMENT THIS TEMPORARILY TO INSPECT DATA ---
-        // dd($schedules->toArray());
+        // dd($schedules->toArray()); // Uncomment for debugging Laravel side
 
         return Inertia::render('Schedules/Index', [
             'schedules' => $schedules,
