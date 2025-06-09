@@ -157,90 +157,136 @@ class ManPowerRequestController extends Controller
         ]);
     }
 
-    public function update(Request $request, ManPowerRequest $manPowerRequest)
+     /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, ManpowerRequest $manpowerRequest) // Assuming $manpowerRequest is the main request being updated (e.g., by ID)
     {
-        Log::info('Raw incoming ManPowerRequest update data: ', $request->all());
-
-        // FIX: Validation rules for update mirror store method's new approach
-        $validator = Validator::make($request->all(), [
-            'sub_section_id' => 'required|exists:sub_sections,id',
-            'date' => 'required|date|after_or_equal:today',
-            'time_slots' => 'required|array|min:1',
-            'time_slots.*.shift_id' => 'required|exists:shifts,id',
-            'time_slots.*.requested_amount' => 'required|integer|min:1',
-            'time_slots.*.start_time' => 'required|date_format:H:i:s,H:i', // Allow H:i:s format for input
-            'time_slots.*.end_time' => [
-                'required',
-                'date_format:H:i:s,H:i',
-                function ($attribute, $value, $fail) use ($request) {
-                    $parts = explode('.', $attribute);
-                    $index = $parts[1];
-                    $startTime = $request->input("time_slots.{$index}.start_time");
-
-                    try {
-                        $startCarbon = Carbon::parse($startTime);
-                        $endCarbon = Carbon::parse($value);
-
-                        if ($endCarbon->lt($startCarbon)) {
-                            return;
-                        }
-
-                        if (!$endCarbon->greaterThan($startCarbon)) {
-                            $fail('The ' . str_replace('_', ' ', $parts[2]) . ' field must be after its start time (or imply the next day if crossing midnight).');
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Time parsing error in custom validation (update): ' . $e->getMessage(), ['attribute' => $attribute, 'value' => $value, 'start_time' => $startTime]);
-                        $fail('The ' . str_replace('_', ' ', $parts[2]) . ' field has an invalid time format.');
-                    }
-                },
-            ],
-        ]);
-
-        if ($validator->fails()) {
-            Log::error('ManPowerRequest update validation errors:', $validator->errors()->toArray());
-            return redirect()->back()->withErrors($validator->errors());
-        }
-
-        $validated = $validator->validated();
-
-        if ($manPowerRequest->status === 'fulfilled') {
-            return back()->withErrors(['status' => 'Request yang sudah terpenuhi tidak dapat diubah.']);
-        }
-
-        $slotsToProcess = $validated['time_slots'];
-
-        DB::beginTransaction();
         try {
-            // Delete all existing ManPowerRequests for this specific date and sub_section
-            ManPowerRequest::where('date', $manPowerRequest->date)
-                ->where('sub_section_id', $manPowerRequest->sub_section_id)
-                ->delete();
+            // Consolidated Validation Block (same as store for relevant fields)
+            $request->validate([
+                'sub_section_id' => ['required', 'exists:sub_sections,id'],
+                'date' => ['required', 'date', 'after_or_equal:today'],
+                'time_slots' => ['nullable', 'array'], // Ensure time_slots is an array
 
-            // Recreate ManPowerRequest records based on the submitted validated data
-            foreach ($slotsToProcess as $slot) {
-                ManPowerRequest::create([
-                    'sub_section_id' => $validated['sub_section_id'],
-                    'date' => $validated['date'],
-                    'shift_id' => $slot['shift_id'],
-                    'start_time' => Carbon::parse($slot['start_time'])->format('H:i'), // Store as H:i
-                    'end_time' => Carbon::parse($slot['end_time'])->format('H:i'),     // Store as H:i
-                    'requested_amount' => $slot['requested_amount'],
-                    'status' => 'pending',
-                ]);
-            }
-            DB::commit();
-            Log::info('ManPowerRequest(s) successfully updated.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Database transaction failed for ManPowerRequest update: ' . $e->getMessage(), [
-                'exception' => $e,
-                'validated_data' => $validated,
+                'time_slots.*.requested_amount' => ['nullable', 'integer', 'min:0'],
+                'time_slots.*.start_time' => ['nullable', 'date_format:H:i:s', 'required_if:time_slots.*.requested_amount,>0'],
+                'time_slots.*.end_time' => [
+                    'nullable',
+                    'date_format:H:i:s',
+                    'required_if:time_slots.*.requested_amount,>0',
+                    new ShiftTimeOrder('start_time', 'time_slots.*.end_time'),
+                ],
+            ], [
+                // Custom validation messages (can be reused from store)
+                'sub_section_id.required' => 'Sub Section harus dipilih.',
+                'sub_section_id.exists' => 'Sub Section yang dipilih tidak valid.',
+                'date.required' => 'Tanggal dibutuhkan harus diisi.',
+                'date.date' => 'Format tanggal tidak valid.',
+                'date.after_or_equal' => 'Tanggal tidak boleh kurang dari hari ini.',
+                'time_slots.array' => 'Data slot waktu tidak valid.',
+
+                'time_slots.*.requested_amount.integer' => 'Jumlah yang diminta harus berupa angka.',
+                'time_slots.*.requested_amount.min' => 'Jumlah yang diminta minimal 0.',
+                'time_slots.*.start_time.date_format' => 'Format waktu mulai tidak valid (HH:mm atau HH:mm:ss).',
+                'time_slots.*.start_time.required_if' => 'Waktu mulai wajib diisi jika jumlah diminta lebih dari 0.',
+                'time_slots.*.end_time.date_format' => 'Format waktu selesai tidak valid (HH:mm atau HH:mm:ss).',
+                'time_slots.*.end_time.required_if' => 'Waktu selesai wajib diisi jika jumlah diminta lebih dari 0.',
             ]);
-            return redirect()->back()->withErrors(['database_error' => 'Terjadi kesalahan saat menyimpan perubahan. Mohon coba lagi.']);
+
+            DB::transaction(function () use ($request, $manpowerRequest) {
+                $subSectionId = $request->input('sub_section_id');
+                $date = $request->input('date');
+                $timeSlots = $request->input('time_slots', []); // All time slots, including those with 0 amount
+
+                // Get current related ManpowerRequest entries for this specific request ID and date
+                // IMPORTANT: If your `manpowerRequest` model represents ONE request (sub_section, date)
+                // and `time_slots_details` are its children (e.g., using a hasMany relationship to a pivot table),
+                // then you need to load the *children* related to `$manpowerRequest`.
+                // However, based on your `store` method, it seems each 'manpower_request' record
+                // itself represents a specific shift's request for a sub_section and date.
+                // So, we'll query for all related manpower requests for the *same sub_section and date*
+                // as the one currently being edited.
+                // Assuming `manpowerRequest` being passed is the one being edited,
+                // we need to update all records that match its sub_section_id and date.
+                // This means the `manpowerRequest` variable passed to `update` isn't the primary key
+                // of the overall request, but perhaps the ID of *one* of the shift requests.
+                // This is a crucial distinction.
+
+                // Let's assume the `update` method receives `manpowerRequest` as ONE of the ManpowerRequest records
+                // that we need to base our update logic on (e.g., to identify the sub_section_id and date).
+                // Or, if `manpowerRequest` is the *primary* ID of the overall request.
+                // Given your `store` creates multiple ManpowerRequest records, it's more likely
+                // `manpowerRequestData` in frontend represents the common parent attributes (sub_section_id, date)
+                // and the backend needs to operate on *all* ManpowerRequest records matching these.
+
+                // Let's refine the update logic based on the assumption that
+                // `manpowerRequest` (the route model bound parameter) represents
+                // *one of the records* associated with the group of shifts for a given sub_section_id and date.
+                // We need to query for all records for *that specific sub_section_id and date*.
+
+                $currentRequests = ManpowerRequest::where('sub_section_id', $subSectionId)
+                                                ->where('date', $date)
+                                                ->get()
+                                                ->keyBy('shift_id'); // Key by shift_id for easy lookup
+
+                $newOrUpdatedShiftIds = [];
+
+                foreach ($timeSlots as $shiftId => $slot) {
+                    $requestedAmount = $slot['requested_amount'] === '' ? 0 : (int) $slot['requested_amount'];
+                    $startTime = $slot['start_time'];
+                    $endTime = $slot['end_time'];
+
+                    // Check if a request for this shift_id already exists for this sub_section_id and date
+                    if ($existingRequest = $currentRequests->get($shiftId)) {
+                        if ($requestedAmount > 0) {
+                            // Update existing request
+                            $existingRequest->update([
+                                'requested_amount' => $requestedAmount,
+                                'start_time' => $startTime,
+                                'end_time' => $endTime,
+                                'status' => 'pending', // Or maintain current status if not 'pending'
+                            ]);
+                            $newOrUpdatedShiftIds[] = $shiftId;
+                        } else {
+                            // Amount is 0 or null, delete the existing request
+                            $existingRequest->delete();
+                        }
+                    } elseif ($requestedAmount > 0) {
+                        // Create new request if it doesn't exist and amount is > 0
+                        ManpowerRequest::create([
+                            'sub_section_id' => $subSectionId,
+                            'date' => $date,
+                            'shift_id' => $shiftId,
+                            'requested_amount' => $requestedAmount,
+                            'start_time' => $startTime,
+                            'end_time' => $endTime,
+                            'status' => 'pending',
+                        ]);
+                        $newOrUpdatedShiftIds[] = $shiftId;
+                    }
+                    // If existingRequest is null and requestedAmount is 0, do nothing (no request to update/create)
+                }
+
+                // Final check: if after processing, no shifts have requested_amount > 0,
+                // it implies the user submitted an empty or all-zero request.
+                // This scenario should result in a validation error.
+                if (empty($newOrUpdatedShiftIds)) {
+                     throw ValidationException::withMessages([
+                        'time_slots' => 'Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.',
+                    ]);
+                }
+            });
+
+            return redirect()->route('manpower-requests.index')->with('success', 'Manpower request updated successfully!');
+
+        } catch (ValidationException $e) {
+            Log::error('Manpower Request Validation Error:', $e->errors());
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Error updating Manpower Request:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return back()->with('error', 'Failed to update manpower request: ' . $e->getMessage());
         }
-
-
-        return redirect()->route('manpower-requests.index')->with('success', 'Request man power berhasil diperbarui.');
     }
 
     public function destroy(ManPowerRequest $manPowerRequest)
