@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, useForm } from '@inertiajs/react';
 import dayjs from 'dayjs'; // Import dayjs for date formatting
 import 'dayjs/locale/id'; // Import Indonesian locale
 
@@ -7,7 +7,19 @@ dayjs.locale('id'); // Set dayjs locale to Indonesian
 
 export default function EmployeeDashboard() {
     // Destructure auth and mySchedules from usePage().props
+    const { data, setData, post, processing } = useForm({ status: '', rejection_reason: '' });
+
+    const respond = (scheduleId) => {
+        post(route('employee.schedule.respond', scheduleId), {
+            preserveScroll: true,
+            onSuccess: () => setData('rejection_reason', ''),
+        });
+    };
+
     const { auth, mySchedules } = usePage().props;
+    console.log(auth)
+    console.log(mySchedules)
+    console.log(usePage().props);
 
     // Helper function to format dates for display
     const formatDate = (dateString) => {
@@ -57,6 +69,13 @@ export default function EmployeeDashboard() {
                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                                     Section
                                                 </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Status
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                                    Aksi
+                                                </th>
+
                                             </tr>
                                         </thead>
                                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -76,6 +95,48 @@ export default function EmployeeDashboard() {
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                                                         {schedule.sub_section?.section?.name || 'N/A'}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                                                        {schedule.status === 'accepted' ? (
+                                                            <span className="px-2 py-1 rounded text-xs font-semibold bg-green-200 text-green-800">
+                                                                Diterima
+                                                            </span>
+                                                        ) : schedule.status === 'rejected' ? (
+                                                            <span className="px-2 py-1 rounded text-xs font-semibold bg-red-200 text-red-800">
+                                                                Ditolak
+                                                            </span>
+                                                        ) : (
+                                                            // Belum direspon, maka tampilkan tombol aksi
+                                                            <div className="flex flex-col gap-1">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setData({ status: 'accepted', rejection_reason: '' });
+                                                                        respond(schedule.id);
+                                                                    }}
+                                                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                                                                    disabled={processing}
+                                                                >
+                                                                    Saya menerima
+                                                                </button>
+
+                                                                <button
+                                                                    onClick={() => {
+                                                                        const reason = prompt('Masukkan alasan kenapa tidak bisa hadir:');
+                                                                        if (!reason || reason.trim() === '') {
+                                                                            return alert('Alasan tidak boleh kosong!');
+                                                                        }
+
+                                                                        setData({ status: 'rejected', rejection_reason: reason });
+                                                                        respond(schedule.id);
+                                                                    }}
+                                                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
+                                                                    disabled={processing}
+                                                                >
+                                                                    Saya tidak bisa
+                                                                </button>
+                                                            </div>
+                                                        )}
+
                                                     </td>
                                                 </tr>
                                             ))}

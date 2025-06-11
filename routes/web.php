@@ -53,7 +53,12 @@ Route::get('/dashboard/requests/pending', [DashboardController::class, 'getPendi
 Route::get('/dashboard/requests/fulfilled', [DashboardController::class, 'getFulfilledRequests'])->name('dashboard.requests.fulfilled');
 Route::get('/dashboard/schedules/upcoming', [DashboardController::class, 'getUpcomingSchedules'])->name('dashboard.schedules.upcoming');
 
-    Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
+
+Route::middleware(['auth:employee'])->get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
+
+Route::middleware('auth:employee')->post('/employee/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('employee.schedule.respond');
+
+
 
 
 
@@ -85,18 +90,6 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/employee-attendance', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
 });
 
-
-// Routes protected by the 'employee' guard (for employee users)
-// This group requires an employee from the 'employees' table to be logged in.
-Route::middleware('auth:employee')->prefix('employee')->name('employee.')->group(function () {
-    // Employee-specific Dashboard
-    Route::get('/dashboard', function () {
-        return Inertia::render('EmployeeDashboard'); // Your employee-specific dashboard
-    })->name('dashboard');
-
-    // Add any other employee-specific routes here (e.g., viewing their own schedules)
-    // Route::get('/my-schedules', [EmployeeScheduleController::class, 'index'])->name('my-schedules');
-});
 
 // Include default authentication routes from Breeze/Jetstream if you're using it
 // Make sure this doesn't conflict with your unified login logic if you edit it.

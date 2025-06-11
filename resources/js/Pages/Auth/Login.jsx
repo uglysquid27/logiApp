@@ -15,49 +15,23 @@ export default function Login({ status, canResetPassword }) {
 
     const submit = (e) => {
         e.preventDefault();
-
-        // Determine if the credential looks like an NIK or an email
+    
+        // Optionally log for debugging
         const isNik = /^EMP\d+$/.test(data.credential) || /^\d+$/.test(data.credential);
-
-        // Create a payload object dynamically based on the type of login
-        let payload;
-        let targetRoute;
-
-        if (isNik) {
-            console.log('Attempting NIK login');
-            payload = {
-                nik: data.credential,
-                password: data.password,
-                remember: data.remember,
-            };
-            targetRoute = route('employee.login'); // Use the specific employee login route
-        } else {
-            console.log('Attempting Email login');
-            payload = {
-                email: data.credential,
-                password: data.password,
-                remember: data.remember,
-            };
-            targetRoute = route('login'); // Use the standard login route
-        }
-
-        console.log('Sending payload:', payload);
-        console.log('To route:', targetRoute);
-
-        // Use the post method directly with the crafted payload
-        // The second argument is the data to send, so no 'data: {}' wrapper needed here.
-        post(targetRoute, payload, {
+        const routeName = isNik ? 'employee.login' : 'login';
+    
+        console.log('Attempting login to:', routeName, 'with:', data);
+    
+        post(route(routeName), {
             onFinish: () => reset('password'),
             onError: (err) => {
-                // Show NIK or email errors under 'credential' field
-                if (err.nik) err.credential = err.nik;
-                if (err.email) err.credential = err.email;
-            
+                if (err.nik) errors.credential = err.nik;
+                if (err.email) errors.credential = err.email;
                 console.error("Login submission error:", err);
             }
-            
         });
     };
+    
 
     return (
         <GuestLayout>

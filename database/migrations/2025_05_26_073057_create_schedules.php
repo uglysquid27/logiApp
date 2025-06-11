@@ -20,6 +20,8 @@ return new class extends Migration
             // Ensure 'man_power_requests' table is created BEFORE this migration
             $table->foreignId('man_power_request_id')->constrained('man_power_requests')->onDelete('cascade');
             $table->date('date');
+            $table->enum('status', ['pending','accepted','rejected'])->default('pending');
+            $table->text('rejection_reason')->nullable();
             $table->timestamps();
         });
     }
