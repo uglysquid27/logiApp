@@ -8,7 +8,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
+        credential: '', // This will hold either NIK or Email
         password: '',
         remember: false,
     });
@@ -16,8 +16,46 @@ export default function Login({ status, canResetPassword }) {
     const submit = (e) => {
         e.preventDefault();
 
-        post(route('login'), {
+        // Determine if the credential looks like an NIK or an email
+        const isNik = /^EMP\d+$/.test(data.credential) || /^\d+$/.test(data.credential);
+
+        // Create a payload object dynamically based on the type of login
+        let payload;
+        let targetRoute;
+
+        if (isNik) {
+            console.log('Attempting NIK login');
+            payload = {
+                nik: data.credential,
+                password: data.password,
+                remember: data.remember,
+            };
+            targetRoute = route('employee.login'); // Use the specific employee login route
+        } else {
+            console.log('Attempting Email login');
+            payload = {
+                email: data.credential,
+                password: data.password,
+                remember: data.remember,
+            };
+            targetRoute = route('login'); // Use the standard login route
+        }
+
+        console.log('Sending payload:', payload);
+        console.log('To route:', targetRoute);
+
+        // Use the post method directly with the crafted payload
+        // The second argument is the data to send, so no 'data: {}' wrapper needed here.
+        post(targetRoute, payload, {
             onFinish: () => reset('password'),
+            onError: (err) => {
+                // Show NIK or email errors under 'credential' field
+                if (err.nik) err.credential = err.nik;
+                if (err.email) err.credential = err.email;
+            
+                console.error("Login submission error:", err);
+            }
+            
         });
     };
 
@@ -33,20 +71,21 @@ export default function Login({ status, canResetPassword }) {
 
             <form onSubmit={submit}>
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="credential" value="Email / NIK" />
 
                     <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
+                        id="credential"
+                        type="text"
+                        name="credential"
+                        value={data.credential}
                         className="mt-1 block w-full"
                         autoComplete="username"
                         isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
+                        onChange={(e) => setData('credential', e.target.value)}
                     />
 
-                    <InputError message={errors.email} className="mt-2" />
+                    {/* Display errors for credential (will be either email or nik error) */}
+                    <InputError message={errors.credential || errors.nik || errors.email} className="mt-2" />
                 </div>
 
                 <div className="mt-4">

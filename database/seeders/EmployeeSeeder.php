@@ -4,31 +4,42 @@ namespace Database\Seeders;
 
 use App\Models\Employee;
 use Illuminate\Database\Seeder;
-use Faker\Factory as Faker; // Ensure this line is present
+use Faker\Factory as Faker;
+use Illuminate\Support\Facades\Hash; // Don't forget to import Hash facade
 
 class EmployeeSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create(); // Create an instance of Faker
+        $faker = Faker::create();
 
         for ($i = 1; $i <= 100; $i++) {
             $isCuti = $faker->randomElement(['yes', 'no']);
-            $status = 'available'; // Default status if on cuti or randomly chosen if not
+            $status = 'available';
 
             if ($isCuti === 'no') {
-                // If the employee is NOT on 'cuti', their status can be 'available' or 'assigned'.
                 $status = $faker->randomElement(['available', 'assigned']);
             }
-            // If $isCuti is 'yes', $status remains 'available' as per the initial default.
 
             Employee::create([
                 'nik'    => 'EMP' . str_pad($i, 4, '0', STR_PAD_LEFT), // e.g., EMP0001
-                'name'   => $faker->name(), // Use the $faker instance
-                'type'   => $faker->randomElement(['harian', 'bulanan']), // Use the $faker instance
-                'status' => $status, // Use the conditionally determined status
-                'cuti'   => $isCuti, // Use the determined cuti value
+                'name'   => $faker->name(),
+                'type'   => $faker->randomElement(['harian', 'bulanan']),
+                'status' => $status,
+                'cuti'   => $isCuti,
+                'password' => Hash::make('password123'), // ADDED: A default hashed password for all employees
             ]);
         }
+
+        // OPTIONAL: Create one specific employee for easy testing
+        // This makes it easy to remember a specific NIK and password for login
+        Employee::create([
+            'nik' => '9999999999', // A distinct NIK for testing
+            'name' => 'Test Employee',
+            'type' => 'bulanan',
+            'status' => 'available',
+            'cuti' => 'no',
+            'password' => Hash::make('testpassword'), // A simple password for testing
+        ]);
     }
 }
