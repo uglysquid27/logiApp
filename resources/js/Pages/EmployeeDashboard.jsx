@@ -3,14 +3,53 @@ import { Head, usePage } from '@inertiajs/react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 import { router } from '@inertiajs/react';
+import { useState } from 'react'; // Import useState for modal state
 
 dayjs.locale('id'); // Set dayjs locale to Indonesian
 
 export default function EmployeeDashboard() {
     const { auth, mySchedules } = usePage().props;
 
+    // State for rejection modal
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [currentScheduleId, setCurrentScheduleId] = useState(null);
+    const [rejectionReasonInput, setRejectionReasonInput] = useState('');
+
+    // State for custom alert messages (replaces native alert())
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState('error'); // 'success' or 'error'
+
+    // Function to display a custom alert message
+    const showCustomAlert = (message, type = 'error') => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setShowAlert(true);
+        // Automatically hide the alert after 5 seconds
+        setTimeout(() => setShowAlert(false), 5000);
+    };
+
+    // Function to open the rejection modal
+    const openRejectModal = (scheduleId) => {
+        setCurrentScheduleId(scheduleId);
+        setRejectionReasonInput(''); // Clear previous reason
+        setShowRejectModal(true);
+    };
+
+    // Function to close the rejection modal
+    const closeRejectModal = () => {
+        setShowRejectModal(false);
+        setCurrentScheduleId(null);
+        setRejectionReasonInput('');
+    };
+
     // Function to handle schedule response (Accept/Reject)
     const respond = (scheduleId, status, reason = '') => {
+        if (status === 'rejected' && (!reason || reason.trim() === '')) {
+            showCustomAlert('Alasan tidak boleh kosong untuk penolakan!', 'error'); // Use custom alert
+            return;
+        }
+
         router.post(
             route('employee.schedule.respond', scheduleId),
             {
@@ -21,11 +60,17 @@ export default function EmployeeDashboard() {
                 preserveScroll: true,
                 onSuccess: () => {
                     console.log('Response berhasil!');
-                    router.reload({ preserveScroll: true });
+                    showCustomAlert('Status berhasil diperbarui.', 'success'); // Use custom alert
+                    router.reload({ preserveScroll: true }); // Reload schedules to reflect changes
+                    closeRejectModal(); // Close modal on success
                 },
                 onError: (errors) => {
                     console.error('Terjadi kesalahan saat merespon jadwal:', errors);
-                    alert('Gagal merespon jadwal. Silakan coba lagi. Cek konsol untuk detail.');
+                    let errorMessage = 'Gagal merespon jadwal. Silakan coba lagi.';
+                    if (errors && Object.keys(errors).length > 0) {
+                        errorMessage += '\nDetail: ' + Object.values(errors).join('\n');
+                    }
+                    showCustomAlert(errorMessage, 'error'); // Use custom alert
                 },
             }
         );
@@ -51,8 +96,22 @@ export default function EmployeeDashboard() {
         >
             <Head title="Employee Dashboard" />
 
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 sm:p-6 lg:p-8"> {/* Default light, dark: for dark */}
+            <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 sm:p-6 lg:p-8">
                 <div className="max-w-7xl mx-auto py-6">
+                    {/* Custom Alert Display */}
+                    {showAlert && (
+                        <div className={`mb-4 px-4 py-3 rounded-lg shadow-md text-sm
+                            ${alertType === 'success' ? 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-200' : 'bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-200'}`}>
+                            {alertMessage}
+                            <button
+                                onClick={() => setShowAlert(false)}
+                                className="ml-4 float-right font-bold"
+                            >
+                                &times;
+                            </button>
+                        </div>
+                    )}
+
                     {/* Welcome Section */}
                     <div className="bg-white dark:bg-gray-800 shadow-lg dark:shadow-2xl rounded-2xl p-6 sm:p-8 mb-8 text-gray-900 dark:text-white transform hover:scale-[1.01] transition-all duration-300 ease-in-out">
                         <h3 className="text-3xl sm:text-4xl font-extrabold mb-2 tracking-wide">
@@ -136,14 +195,9 @@ export default function EmployeeDashboard() {
                                                                 Terima
                                                             </button>
 
+                                                            {/* Updated to open modal instead of prompt */}
                                                             <button
-                                                                onClick={() => {
-                                                                    const reason = prompt('Masukkan alasan kenapa tidak bisa hadir:');
-                                                                    if (!reason || reason.trim() === '') {
-                                                                        return alert('Alasan tidak boleh kosong!');
-                                                                    }
-                                                                    respond(schedule.id, 'rejected', reason);
-                                                                }}
+                                                                onClick={() => openRejectModal(schedule.id)}
                                                                 className="flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-1.5 rounded-md text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
                                                             >
                                                                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
@@ -153,11 +207,11 @@ export default function EmployeeDashboard() {
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3 sm:px-6 text-sm">
-                                                    {schedule.status === 'accepted' ? (
-                                                      <p className="text-xs text-red-300 italic">"{schedule.rejection_reason || 'Tidak ada alasan'}"</p>
-                                                    ) : schedule.status === 'rejected' ? (
+                                                    {/* Corrected logic: only show rejection_reason for 'rejected' status */}
+                                                    {schedule.status === 'rejected' ? (
                                                         <p className="text-xs text-red-300 italic">"{schedule.rejection_reason || 'Tidak ada alasan'}"</p>
-
+                                                    ) : schedule.status === 'accepted' ? (
+                                                        <span className="inline-block text-sm text-gray-500 italic">Tidak ada alasan</span>
                                                     ) : (
                                                         <span className="inline-block text-sm text-gray-500 italic">Menunggu Respon</span>
                                                     )}
@@ -175,6 +229,48 @@ export default function EmployeeDashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Rejection Modal */}
+            {showRejectModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 sm:p-8 w-full max-w-md mx-auto transform transition-all duration-300 scale-100 opacity-100">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                            Tolak Penjadwalan
+                        </h3>
+                        <p className="text-gray-700 dark:text-gray-300 mb-6 text-sm">
+                            Mohon masukkan alasan mengapa Anda tidak dapat menghadiri penjadwalan ini. Alasan yang jelas akan membantu proses selanjutnya.
+                        </p>
+                        <div className="mb-6">
+                            <label htmlFor="rejection-reason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Alasan Penolakan <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                                id="rejection-reason"
+                                rows="4"
+                                className="block w-full px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-900 dark:text-gray-100 resize-y"
+                                placeholder="Misalnya: Saya sedang sakit, ada keperluan mendesak, dll."
+                                value={rejectionReasonInput}
+                                onChange={(e) => setRejectionReasonInput(e.target.value)}
+                            ></textarea>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={closeRejectModal}
+                                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={() => respond(currentScheduleId, 'rejected', rejectionReasonInput)}
+                                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-800 transition-colors duration-200"
+                            >
+                                Kirim
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Custom Scrollbar Styles */}
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar {
