@@ -32,20 +32,32 @@ class EmployeeDashboardController extends Controller
     }
 
     public function respond(Request $req, Schedule $schedule)
-{
-    $req->validate([
-        'status' => 'required|in:accepted,rejected',
-        'rejection_reason' => 'required_if:status,rejected|string|max:1000',
-    ]);
+    {
+        // dd($req->all());
 
-    // Pastikan schedule milik employee
-    $employee = Auth::guard('employee')->user();
-    abort_unless($schedule->employee_id === $employee->id, 403);
-
-    $schedule->update($req->only('status', 'rejection_reason'));
-
-    return back()->with('success', 'Status berhasil diperbarui.');
-}
+        $req->validate([
+            'status' => 'required|in:accepted,rejected',
+            'rejection_reason' => 'nullable|required_if:status,rejected|string|max:1000',
+        ]);
+    
+        // Pastikan schedule milik employee
+        $employee = Auth::guard('employee')->user();
+        abort_unless($schedule->employee_id === $employee->id, 403);
+    
+        $data = ['status' => $req->status];
+    
+        // Tambahkan alasan hanya jika ditolak
+        if ($req->status === 'rejected') {
+            $data['rejection_reason'] = $req->rejection_reason;
+        } else {
+            $data['rejection_reason'] = null; // reset if previously rejected
+        }
+    
+        $schedule->update($data);
+    
+        return back()->with('success', 'Status berhasil diperbarui.');
+    }
+    
 
 }
 

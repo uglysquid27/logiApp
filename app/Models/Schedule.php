@@ -14,6 +14,8 @@ class Schedule extends Model
         'sub_section_id',
         'man_power_request_id',
         'date',
+        'status',
+        'rejection_reason',
     ];
 
     protected $casts = [
