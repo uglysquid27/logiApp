@@ -1,16 +1,35 @@
-import { useForm, Link } from '@inertiajs/react';
+import { useForm, Link, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // <--- PASTIKAN useState DIIMPORT
+import { router } from '@inertiajs/react'; // <--- PASTIKAN router DIIMPORT
 
 export default function Edit({ manpowerRequestData, subSections, shifts }) {
-    // --- DEBUGGING: Initial Props Check ---
+    // --- DEBUGGING: Initial Props Check (Enhanced) ---
     console.log("--- Edit.jsx: Props Received ---");
     console.log("manpowerRequestData:", manpowerRequestData);
     console.log("subSections:", subSections);
     console.log("shifts (all available shifts):", shifts);
+    console.log("manpowerRequestData.id:", manpowerRequestData?.id); // Check ID explicitly
+    console.log("manpowerRequestData.time_slots:", manpowerRequestData?.time_slots); // Check time_slots explicitly
     console.log("----------------------------------");
 
-    // Helper function: ensures time is always HH:mm:ss for backend
+    const { flash } = usePage().props; // Mengambil objek flash dari Inertia
+
+    // State untuk tampilan peringatan kustom (menggantikan alert())
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState('error'); // Bisa 'success' atau 'error'
+
+    // Fungsi untuk menampilkan peringatan kustom
+    const showCustomAlert = (message, type = 'error') => {
+        setAlertMessage(message);
+        setAlertType(type);
+        setShowAlert(true);
+        // Sembunyikan peringatan secara otomatis setelah 5 detik
+        setTimeout(() => setShowAlert(false), 5000);
+    };
+
+    // Fungsi Pembantu: Memastikan format waktu HH:mm:ss untuk backend
     const formatTimeToSeconds = (timeString) => {
         if (!timeString) return null;
 
@@ -22,40 +41,37 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
             return `${timeString}:00`;
         }
         console.warn("formatTimeToSeconds: Invalid time string format (returning null):", timeString);
-        return null; // Return null for invalid formats
+        return null;
     };
 
-    // Helper function: ensures time is always HH:mm for HTML time input
+    // Fungsi Pembantu: Memastikan format waktu HH:mm untuk input HTML
     const formatTimeToMinutes = (timeString) => {
-        if (!timeString) return ''; // Return empty string for empty/null times
+        if (!timeString) return '';
 
         if (timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
-            return timeString.substring(0, 5); // Extract HH:mm
+            return timeString.substring(0, 5);
         }
         if (timeString.match(/^\d{2}:\d{2}$/)) {
-            return timeString; // Already HH:mm
+            return timeString;
         }
         console.warn("formatTimeToMinutes: Invalid time string format (returning empty string):", timeString);
-        return ''; // Return empty string for invalid formats
+        return '';
     };
 
-    // Initialize timeSlots based on existing data (manpowerRequestData.time_slots) and all available shifts
+    // Inisialisasi timeSlots berdasarkan data yang ada dan semua shift yang tersedia
     const initialTimeSlots = {};
     if (shifts && Array.isArray(shifts)) {
         shifts.forEach(shift => {
-            // Safely access existing slot data from the manpowerRequestData.time_slots object
-            // This object is keyed by shift.id from the backend.
-            const existingSlotData = manpowerRequestData.time_slots?.[shift.id];
+            // Mengakses data slot yang ada dari props backend dengan optional chaining
+            const existingSlotData = manpowerRequestData?.time_slots?.[shift.id];
 
             initialTimeSlots[shift.id] = {
-                // If existingSlotData, use its requested_amount, otherwise empty string
-                // Ensure null/undefined amounts become empty string for input field
+                // Gunakan jumlah yang diminta jika ada, jika tidak, string kosong untuk input
                 requested_amount: existingSlotData ? (existingSlotData.requested_amount !== null ? existingSlotData.requested_amount : '') : '',
-                // Use existing times, or default shift times, formatted for HH:mm:ss (for internal state)
+                // Gunakan waktu yang ada, atau waktu shift default, diformat untuk state internal (HH:mm:ss)
                 start_time: existingSlotData ? formatTimeToSeconds(existingSlotData.start_time) : formatTimeToSeconds(shift.start_time),
                 end_time: existingSlotData ? formatTimeToSeconds(existingSlotData.end_time) : formatTimeToSeconds(shift.end_time),
             };
-            // --- DEBUGGING: Individual Shift Initialization ---
             console.log(`--- Initializing Shift ID: ${shift.id} (${shift.name}) ---`);
             console.log("  existingSlotData found:", existingSlotData);
             console.log("  Default shift times:", shift.start_time, shift.end_time);
@@ -69,21 +85,21 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
 
 
     const { data, setData, put, processing, errors } = useForm({
-        sub_section_id: manpowerRequestData.sub_section_id || '',
-        date: manpowerRequestData.date || '',
-        time_slots: initialTimeSlots, // Use the structured initialTimeSlots
+        // Gunakan optional chaining di sini juga
+        sub_section_id: manpowerRequestData?.sub_section_id || '',
+        date: manpowerRequestData?.date || '',
+        time_slots: initialTimeSlots,
     });
 
-    // useEffect for re-initialization (less critical for edit, but good for consistency)
-    // This typically runs if the component's props change after the initial render.
+    // useEffect untuk re-initialization (kurang kritis untuk edit, tapi bagus untuk konsistensi)
     useEffect(() => {
-        // If data.time_slots is not fully populated for all shifts or doesn't match current shifts count
+        // Jika data.time_slots belum terisi penuh untuk semua shift atau tidak cocok dengan jumlah shift saat ini
         if (!data.time_slots || Object.keys(data.time_slots).length === 0 || Object.keys(data.time_slots).length !== shifts.length) {
             console.log("--- useEffect Triggered: Re-initializing time_slots ---");
             const newInitialTimeSlots = {};
             if (shifts && Array.isArray(shifts)) {
                 shifts.forEach(shift => {
-                    const existingSlotData = manpowerRequestData.time_slots?.[shift.id];
+                    const existingSlotData = manpowerRequestData?.time_slots?.[shift.id];
                     newInitialTimeSlots[shift.id] = {
                         requested_amount: existingSlotData ? (existingSlotData.requested_amount !== null ? existingSlotData.requested_amount : '') : '',
                         start_time: existingSlotData ? formatTimeToSeconds(existingSlotData.start_time) : formatTimeToSeconds(shift.start_time),
@@ -94,8 +110,7 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
             setData('time_slots', newInitialTimeSlots);
             console.log("--- useEffect: time_slots re-initialized ---");
         }
-    }, [shifts, manpowerRequestData]); // Depend on shifts and manpowerRequestData to re-run if they change
-
+    }, [shifts, manpowerRequestData]);
 
     const handleSlotChange = (shiftId, field, value) => {
         setData(prevData => {
@@ -103,25 +118,23 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
                 ...prevData.time_slots,
                 [shiftId]: {
                     ...prevData.time_slots[shiftId],
-                    // Always store HH:mm:ss in state for time fields for start_time/end_time
+                    // Selalu simpan HH:mm:ss dalam state untuk field waktu
                     [field]: (field === 'start_time' || field === 'end_time') ? formatTimeToSeconds(value) : value,
                 },
             };
 
-            // If requested_amount is cleared or set to <= 0, reset time to default shift times
+            // Jika requested_amount dikosongkan atau diatur <= 0, reset waktu ke waktu shift default
             if (field === 'requested_amount') {
                 const amount = value === '' ? 0 : parseInt(value, 10);
                 if (amount <= 0) {
                     const originalShift = shifts.find(s => s.id === shiftId);
-                    // Ensure default times are also formatted
+                    // Pastikan waktu default juga diformat
                     newTimeSlots[shiftId].start_time = formatTimeToSeconds(originalShift?.start_time || '');
                     newTimeSlots[shiftId].end_time = formatTimeToSeconds(originalShift?.end_time || '');
                 }
             }
-            // --- DEBUGGING: After Slot Change ---
             console.log(`handleSlotChange: Shift ${shiftId}, Field ${field}, Value ${value}`);
             console.log("  New time_slots for this shift:", newTimeSlots[shiftId]);
-            // --- DEBUGGING ---
             return {
                 ...prevData,
                 time_slots: newTimeSlots,
@@ -132,34 +145,43 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
     const submit = (e) => {
         e.preventDefault();
 
+        // --- PENTING DEBUGGING: Periksa ID sebelum pengiriman ---
+        if (!manpowerRequestData?.id) { // Gunakan optional chaining di sini
+            console.error("ERROR: manpowerRequestData.id is missing or undefined. Cannot submit form.");
+            showCustomAlert('ID Permintaan Man Power tidak ditemukan. Tidak dapat mengirimkan formulir.', 'error');
+            return; // Cegah pengiriman jika ID hilang
+        }
+        // --- AKHIR PENTING DEBUGGING ---
+
         const payloadTimeSlots = {};
-        let hasValidSlot = false; // Flag to check if at least one shift has amount > 0
+        let hasValidSlot = false; // Flag untuk memeriksa apakah setidaknya satu shift memiliki jumlah > 0
 
         Object.keys(data.time_slots).forEach(shiftId => {
             const slot = data.time_slots[shiftId];
-            // Treat empty string as 0 for submission logic
+            // Perlakukan string kosong sebagai 0 untuk logika pengiriman
             const requestedAmount = slot.requested_amount === '' ? 0 : parseInt(slot.requested_amount, 10);
 
-            // Always include all time slots in the payload, even if amount is 0.
+            // Selalu sertakan semua slot waktu dalam payload, meskipun jumlahnya 0.
+            // Backend akan menangani penghapusan untuk jumlah 0.
             payloadTimeSlots[shiftId] = {
                 requested_amount: requestedAmount,
-                start_time: formatTimeToSeconds(slot.start_time), // Ensure HH:mm:ss for backend
-                end_time: formatTimeToSeconds(slot.end_time),     // Ensure HH:mm:ss for backend
+                start_time: formatTimeToSeconds(slot.start_time), // Pastikan HH:mm:ss untuk backend
+                end_time: formatTimeToSeconds(slot.end_time),     // Pastikan HH:mm:ss untuk backend
             };
             if (requestedAmount > 0) {
                 hasValidSlot = true;
             }
         });
 
-        // Client-side validation: ensure at least one shift has an amount > 0
+        // Validasi sisi klien: pastikan setidaknya satu shift memiliki jumlah > 0
         if (!hasValidSlot) {
-            alert('Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.');
+            showCustomAlert('Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.');
             return;
         }
 
         const url = `/manpower-requests/${manpowerRequestData.id}`;
         console.log('--- Submitting Form ---');
-        console.log('Attempting to send PUT request to URL:', url);
+        console.log('Attempting to send PUT request to URL:', url); // Log URL yang dikirimkan
         console.log('Payload to be sent:', {
             sub_section_id: data.sub_section_id,
             date: data.date,
@@ -174,26 +196,31 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
         }, {
             onSuccess: () => {
                 console.log('Request berhasil diperbarui!');
-                window.location.href = '/manpower-requests';
+                // Gunakan Inertia router.visit untuk navigasi
+                router.visit('/manpower-requests', {
+                    onSuccess: () => {
+                        // Tampilkan pesan sukses setelah navigasi berhasil (opsional, pesan flash backend biasanya cukup)
+                        showCustomAlert('Manpower request berhasil diperbarui!', 'success');
+                    }
+                });
             },
             onError: (formErrors) => {
                 console.error('Ada kesalahan saat memperbarui request:', formErrors);
-                if (formErrors.time_slots) {
-                    alert('Kesalahan Man Power: ' + formErrors.time_slots);
+                if (formErrors.time_slots && typeof formErrors.time_slots === 'string') {
+                    showCustomAlert('Kesalahan Man Power: ' + formErrors.time_slots);
                 } else if (Object.keys(formErrors).length > 0) {
                     let errorMessages = 'Kesalahan validasi:\n';
                     for (const key in formErrors) {
                         if (key.startsWith('time_slots.')) {
-                            // Extract shift ID or relevant part if needed
-                            const shiftErrorPart = key.split('.')[2] || key.split('.')[1]; // Tries to get requested_amount, start_time, etc.
+                            const shiftErrorPart = key.split('.')[2] || key.split('.')[1];
                             errorMessages += `Shift Error (${shiftErrorPart}): ${formErrors[key]}\n`;
                         } else {
                             errorMessages += `${key}: ${formErrors[key]}\n`;
                         }
                     }
-                    alert(errorMessages);
+                    showCustomAlert(errorMessages);
                 } else {
-                    alert('Terjadi kesalahan yang tidak diketahui. Silakan cek konsol.');
+                    showCustomAlert('Terjadi kesalahan yang tidak diketahui. Silakan cek konsol.');
                 }
             },
             onFinish: () => {
@@ -214,6 +241,31 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
         >
             <div className="py-8">
                 <div className="mx-auto sm:px-6 lg:px-8 max-w-2xl">
+                    {/* Custom Alert Display */}
+                    {showAlert && (
+                        <div className={`mb-4 px-4 py-3 rounded-lg shadow-md text-sm
+                            ${alertType === 'success' ? 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-200' : 'bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-200'}`}>
+                            {alertMessage}
+                            <button
+                                onClick={() => setShowAlert(false)}
+                                className="ml-4 float-right font-bold"
+                            >
+                                &times;
+                            </button>
+                        </div>
+                    )}
+                    {/* Flash messages dari Inertia */}
+                    {flash?.success && ( // <-- Menggunakan optional chaining di sini
+                        <div className="mb-4 px-4 py-3 rounded-lg shadow-md text-sm bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-200">
+                            {flash.success}
+                        </div>
+                    )}
+                    {flash?.error && ( // <-- Menggunakan optional chaining di sini
+                        <div className="mb-4 px-4 py-3 rounded-lg shadow-md text-sm bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-200">
+                            {flash.error}
+                        </div>
+                    )}
+
                     <div className="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg overflow-hidden">
                         <div className="p-6 md:p-8 text-gray-900 dark:text-gray-100">
                             <div className="flex justify-between items-center mb-6">
@@ -277,20 +329,15 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
                                         Jumlah Man Power per Shift
                                     </h3>
                                     {shifts && Array.isArray(shifts) && shifts.map((shift) => {
-                                        // Safely access slotData from the form state
                                         const slotData = data.time_slots?.[shift.id];
 
-                                        // Ensure requestedAmount is handled for display (empty string for null/undefined)
                                         const requestedAmount = slotData ? (slotData.requested_amount !== null ? slotData.requested_amount : '') : '';
 
-                                        // Format for display in the time input field (HH:mm)
                                         const startTimeForDisplay = slotData ? formatTimeToMinutes(slotData.start_time) : '';
                                         const endTimeForDisplay = slotData ? formatTimeToMinutes(slotData.end_time) : '';
 
-                                        // Determine if the time fields are required based on requested_amount > 0
                                         const isTimeRequired = parseInt(requestedAmount, 10) > 0;
 
-                                        // --- DEBUGGING: Render Loop Values ---
                                         console.log(`--- Rendering Shift: ${shift.name} (ID: ${shift.id}) ---`);
                                         console.log("  Slot Data from form.data.time_slots:", slotData);
                                         console.log("  Requested Amount (for input value):", requestedAmount);
@@ -309,7 +356,7 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
                                                         type="number"
                                                         id={`amount_${shift.id}`}
                                                         min="0"
-                                                        value={requestedAmount} // Use the potentially empty string for display
+                                                        value={requestedAmount}
                                                         onChange={(e) => handleSlotChange(shift.id, 'requested_amount', e.target.value)}
                                                         placeholder="Jumlah"
                                                         className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.requested_amount`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
@@ -356,7 +403,7 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
                                     {errors.time_slots && typeof errors.time_slots === 'string' && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.time_slots}</p>}
                                 </div>
 
-                                {/* Submit Button */}
+                                {/* Tombol Submit */}
                                 <div className="flex justify-end items-center pt-2">
                                     <button
                                         type="submit"
