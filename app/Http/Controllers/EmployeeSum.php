@@ -9,6 +9,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // Pastikan DB facade diimport
+use Illuminate\Support\Facades\Log; // Pastikan Log facade diimport
 
 class EmployeeSum extends Controller
 {
@@ -21,7 +23,6 @@ class EmployeeSum extends Controller
                          ->withCount(['schedules as schedules_count_weekly' => function ($query) use ($startDate, $endDate) {
                              $query->whereBetween('date', [$startDate, $endDate]);
                          }])
-                         // REMOVED: withCount for current_or_future_schedules_count and past_only_schedules_count
                          ->with(['schedules.manPowerRequest.shift', 'subSections.section']);
 
         // --- Apply Filters from Request ---
@@ -85,28 +86,46 @@ class EmployeeSum extends Controller
                                $employee->setAttribute('working_day_weight', $workingDayWeight);
                                $employee->setAttribute('total_assigned_hours', $totalWorkingHours);
 
-                               // REMOVED: Status calculation logic here.
-                               // The 'employee->status' will now be directly from the database.
-
                                // Remove the large 'schedules' relation from the final JSON response
                                unset($employee->schedules);
-                               // REMOVED: Unsetting current_or_future_schedules_count and past_only_schedules_count
 
                                return $employee;
                            });
 
         // Fetch unique statuses, sections, and sub-sections for filter dropdowns.
-        // UPDATED: uniqueStatuses now reflect database enum values
         $allStatuses = Employee::select('status')->distinct()->pluck('status')->toArray();
         $allSections = Section::select('name')->distinct()->pluck('name')->toArray();
         $allSubSections = SubSection::select('name')->distinct()->pluck('name')->toArray();
 
-        return Inertia::render('EmployeeAttendance/Index', [
+        return Inertia::render('EmployeeAttendance/Index', [ // <--- JALUR TELAH DIKOREKSI DI SINI
             'employees' => $employees,
             'filters' => $request->only(['status', 'section', 'sub_section', 'search']),
             'uniqueStatuses' => array_merge(['All'], $allStatuses), // Include 'All'
             'uniqueSections' => array_merge(['All'], $allSections),
             'uniqueSubSections' => array_merge(['All'], $allSubSections),
         ]);
+    }
+
+    /**
+     * Resets the status of all employees to 'available' and 'cuti' to 'no'.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function resetAllStatuses(Request $request)
+    {
+        try {
+            DB::transaction(function () {
+                Employee::query()->update([
+                    'status' => 'available',
+                    'cuti' => 'no',
+                ]);
+            });
+
+            return redirect()->back()->with('success', 'Semua status karyawan berhasil direset.');
+        } catch (\Exception $e) {
+            Log::error('Error resetting all employee statuses: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', 'Gagal mereset status karyawan. Silakan coba lagi.');
+        }
     }
 }

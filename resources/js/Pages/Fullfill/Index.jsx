@@ -2,14 +2,15 @@ import { useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import dayjs from 'dayjs';
+import { router } from '@inertiajs/react';
 
 export default function Fulfill({ request, sameSubSectionEmployees, otherSubSectionEmployees, message }) {
     // 'sameSubSectionEmployees' dan 'otherSubSectionEmployees' sekarang berisi karyawan yang memenuhi syarat,
     // sudah diprioritaskan oleh backend.
 
-    // === Logika Pemilihan Awal Baru ===
-    // Secara otomatis pilih karyawan HANYA dari sub-bagian yang sama dengan request.
-    const initialSelectedEmployeeIds = sameSubSectionEmployees.slice(0, request.requested_amount).map((emp) => emp.id);
+    // === Logika Pemilihan Awal: Hanya isi otomatis dari sub-bagian yang sama ===
+    let selectedEmployeesInitial = sameSubSectionEmployees.slice(0, request.requested_amount);
+    const initialSelectedEmployeeIds = selectedEmployeesInitial.map((emp) => emp.id);
 
     const { data, setData, post, processing, errors } = useForm({
         employee_ids: initialSelectedEmployeeIds,
@@ -21,10 +22,11 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
 
     // Effect untuk memperbarui form data jika daftar karyawan awal berubah (misalnya, setelah refresh)
     useEffect(() => {
-        // Hanya inisialisasi dari sameSubSectionEmployees
-        setData('employee_ids', sameSubSectionEmployees.slice(0, request.requested_amount).map((emp) => emp.id));
+        // Hanya inisialisasi dari sameSubSectionEmployees untuk pengisian otomatis
+        let newSelectedEmployees = sameSubSectionEmployees.slice(0, request.requested_amount);
+        setData('employee_ids', newSelectedEmployees.map((emp) => emp.id));
         setBackendError(null);
-    }, [sameSubSectionEmployees, request.requested_amount]); // Bergantung pada sameSubSectionEmployees
+    }, [sameSubSectionEmployees, request.requested_amount]); // Bergantung hanya pada sameSubSectionEmployees
 
     // Effect untuk menangkap error backend yang diteruskan via Inertia's errors prop
     useEffect(() => {
@@ -49,7 +51,6 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
         post(route('manpower-requests.fulfill.store', request.id), {
             onSuccess: () => {
                 console.log('Form berhasil dikirim!');
-                // Menggunakan router.visit untuk navigasi Inertia
                 router.visit(route('manpower-requests.index'));
             },
             onError: (formErrors) => {
@@ -104,7 +105,6 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
     };
 
     // Helper untuk mendapatkan detail karyawan berdasarkan ID untuk tampilan
-    // Menggabungkan kedua daftar karyawan untuk pencarian
     const getEmployeeDetails = (id) => {
         return sameSubSectionEmployees.find(emp => emp.id === id) ||
                otherSubSectionEmployees.find(emp => emp.id === id);
@@ -120,7 +120,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                     <p className="mb-3 font-bold text-green-600 text-lg">Permintaan ini sudah terpenuhi!</p>
                     <p className="text-gray-700">Tidak ada tindakan lebih lanjut yang diperlukan untuk permintaan ini.</p>
                     <button
-                        onClick={() => router.visit(route('manpower-requests.index'))} // Menggunakan router.visit
+                        onClick={() => router.visit(route('manpower-requests.index'))}
                         className="bg-blue-600 hover:bg-blue-700 mt-4 px-4 py-2 rounded-lg text-white transition duration-300 ease-in-out"
                     >
                         Kembali ke Daftar Permintaan
@@ -133,6 +133,9 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
     // Gabungkan kedua daftar karyawan untuk ditampilkan di modal pemilihan
     const allEmployeesForModal = [...sameSubSectionEmployees, ...otherSubSectionEmployees];
 
+    // Hitung total karyawan yang memenuhi syarat dari sub bagian yang sama
+    const totalSameSubSectionEligible = sameSubSectionEmployees.length;
+
     return (
         <AuthenticatedLayout
             header={<h2 className="font-semibold text-gray-800 text-xl leading-tight">Penuhi Request Man Power</h2>}
@@ -141,7 +144,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                 {/* Request Details Card */}
                 <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
                     <h3 className="mb-3 font-bold text-lg">Detail Permintaan</h3>
-                    <p><strong>Tanggal:</strong> {dayjs(request.date).format('DD MMMM YYYY')}</p>
+                    <p><strong>Tanggal:</strong> {dayjs(request.date).format('DD MMMMYYYY')}</p>
                     <p><strong>Sub Section:</strong> {request.sub_section?.name}</p>
                     <p><strong>Section:</strong> {request.sub_section?.section?.name}</p>
                     <p><strong>Shift:</strong> {request.shift?.name}</p>
@@ -161,27 +164,26 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                         </div>
                     )}
 
-                    {/* Warning if not enough employees are available to meet the requested amount from the SAME sub-section */}
-                    {sameSubSectionEmployees.length < request.requested_amount && (
+                    {/* Warning: Not enough employees from the same sub-section (and remaining slots are empty) */}
+                    {totalSameSubSectionEligible < request.requested_amount && (
                         <div className="bg-yellow-100 mb-4 p-3 border border-yellow-400 rounded-lg text-yellow-700">
                             <p className="font-semibold">Peringatan:</p>
-                            <p>Hanya {sameSubSectionEmployees.length} karyawan dari **Sub Bagian yang sama** yang memenuhi syarat dan tersedia. Anda perlu menambahkan {request.requested_amount - sameSubSectionEmployees.length} karyawan lagi secara manual dari sub bagian lain jika diperlukan.</p>
+                            <p>Hanya {totalSameSubSectionEligible} karyawan dari **Sub Bagian yang sama** yang tersedia. Anda perlu menambahkan {request.requested_amount - totalSameSubSectionEligible} karyawan lagi secara manual dari sub bagian lain jika diperlukan.</p>
                         </div>
                     )}
 
                     {/* Automatically Selected Employees Card */}
                     <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
-                        <h3 className="mb-3 font-bold text-lg">Karyawan Terpilih Otomatis (Prioritas Tertinggi dari Sub Bagian yang Sama)</h3>
+                        <h3 className="mb-3 font-bold text-lg">Karyawan Terpilih Otomatis</h3>
                         <p className="mb-4 text-gray-600 text-sm">
-                            Sistem telah otomatis memilih karyawan dari sub bagian yang sama dengan request ini berdasarkan prioritas. Anda dapat mengubah pilihan ini secara manual atau mengisi slot kosong.
+                            Sistem telah otomatis memilih karyawan dari sub bagian yang sama dengan prioritas **bulanan** lalu **harian** dengan bobot kerja terendah. Slot kosong dapat diisi secara manual.
                         </p>
                         <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
                             {Array.from({ length: request.requested_amount }).map((_, index) => {
                                 const employeeId = data.employee_ids[index];
-                                const employee = getEmployeeDetails(employeeId); // Menggunakan fungsi getEmployeeDetails yang diperbarui
+                                const employee = getEmployeeDetails(employeeId);
                                 const isEmptySlot = !employeeId;
 
-                                // Tentukan apakah karyawan berasal dari sub-bagian yang berbeda dari request
                                 const isDifferentSubSection = employee && employee.sub_section?.id !== request.sub_section_id;
 
                                 return (
@@ -238,8 +240,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                     <div className="bg-white shadow-xl p-6 rounded-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
                         <h3 className="mb-4 font-bold text-xl">Pilih Karyawan Baru</h3>
                         <div className="gap-2 grid grid-cols-1 sm:grid-cols-2">
-                            {/* Iterate through ALL eligible employees (combined from both lists) */}
-                            {allEmployeesForModal.map((emp) => { // Menggunakan allEmployeesForModal
+                            {allEmployeesForModal.map((emp) => {
                                 const isSelected = data.employee_ids.includes(emp.id);
                                 const isDisabled = isSelected;
                                 const isFromRequestedSubSection = emp.sub_section?.id === request.sub_section_id;

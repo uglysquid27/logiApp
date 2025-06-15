@@ -10,7 +10,7 @@ export default function Create({ subSections, shifts }) {
       initialTimeSlots[shift.id] = {
         requested_amount: '',
         start_time: shift.start_time || '', // Pre-fill with shift's default start time
-        end_time: shift.end_time || '',      // Pre-fill with shift's default end time
+        end_time: shift.end_time || '',       // Pre-fill with shift's default end time
       };
     });
   }
@@ -22,105 +22,107 @@ export default function Create({ subSections, shifts }) {
   });
 
   useEffect(() => {
-  // Hanya reset jika data.time_slots masih kosong
-  if (!data.time_slots || Object.keys(data.time_slots).length === 0) {
-    const newInitialTimeSlots = {};
-    if (shifts && Array.isArray(shifts)) {
-      shifts.forEach(shift => {
-        newInitialTimeSlots[shift.id] = {
-          requested_amount: '',
-          start_time: shift.start_time || '',
-          end_time: shift.end_time || '',
-        };
-      });
+    // Hanya reset jika data.time_slots masih kosong atau tidak memiliki semua shift
+    // Ini penting agar input untuk setiap shift selalu ada
+    const currentShiftIds = Object.keys(data.time_slots).map(Number);
+    const allShiftIds = shifts.map(s => s.id);
+
+    if (!data.time_slots || allShiftIds.some(id => !currentShiftIds.includes(id))) {
+        const newInitialTimeSlots = {};
+        if (shifts && Array.isArray(shifts)) {
+            shifts.forEach(shift => {
+                newInitialTimeSlots[shift.id] = {
+                    requested_amount: '',
+                    start_time: shift.start_time || '',
+                    end_time: shift.end_time || '',
+                };
+            });
+        }
+        setData('time_slots', newInitialTimeSlots);
     }
-    setData('time_slots', newInitialTimeSlots);
-  }
 }, [shifts]);
 
 
- const handleSlotChange = (shiftId, field, value) => {
-  setData(prevData => {
-    const newTimeSlots = {
-      ...prevData.time_slots,
-      [shiftId]: {
-        ...prevData.time_slots[shiftId],
-        [field]: (field === 'start_time' || field === 'end_time') ? formatTimeToSeconds(value) : value,
-      },
-    };
+  const handleSlotChange = (shiftId, field, value) => {
+    setData(prevData => {
+      const newTimeSlots = {
+        ...prevData.time_slots,
+        [shiftId]: {
+          ...prevData.time_slots[shiftId],
+          [field]: (field === 'start_time' || field === 'end_time') ? formatTimeToSeconds(value) : value,
+        },
+      };
 
-    // Jika requested_amount dikosongkan atau diisi <= 0, reset waktu ke default
-    if (field === 'requested_amount') {
-      const amount = value === '' ? 0 : parseInt(value, 10);
-      if (amount <= 0) {
-        const originalShift = shifts.find(s => s.id === shiftId);
-        newTimeSlots[shiftId].start_time = originalShift?.start_time || '';
-        newTimeSlots[shiftId].end_time = originalShift?.end_time || '';
+      // Jika requested_amount dikosongkan atau diisi <= 0, reset waktu ke default
+      if (field === 'requested_amount') {
+        const amount = value === '' ? 0 : parseInt(value, 10);
+        if (amount <= 0) {
+          const originalShift = shifts.find(s => s.id === shiftId);
+          newTimeSlots[shiftId].start_time = originalShift?.start_time || '';
+          newTimeSlots[shiftId].end_time = originalShift?.end_time || '';
+        }
       }
+
+      return {
+        ...prevData,
+        time_slots: newTimeSlots,
+      };
+    });
+  };
+
+
+  // Helper function: ensures time is always HH:mm:ss for backend
+  const formatTimeToSeconds = (timeString) => {
+    if (!timeString) return null; // Send null for empty strings
+
+    // If already HH:mm:ss, return as is
+    if (timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
+      return timeString;
     }
 
-    return {
-      ...prevData,
-      time_slots: newTimeSlots,
-    };
-  });
-};
+    // If HH:mm, append :00
+    if (timeString.match(/^\d{2}:\d{2}$/)) {
+      return `${timeString}:00`;
+    }
 
-
-
-  // NEW Helper function: Ensures time is always HH:mm:ss for backend
-// Helper function: ensures time is always HH:mm:ss for backend
-const formatTimeToSeconds = (timeString) => {
-  if (!timeString) return null; // Send null for empty strings
-
-  // If already HH:mm:ss, return as is
-  if (timeString.match(/^\d{2}:\d{2}:\d{2}$/)) {
-    return timeString;
-  }
-
-  // If HH:mm, append :00
-  if (timeString.match(/^\d{2}:\d{2}$/)) {
-    return `${timeString}:00`;
-  }
-
-  console.warn("Invalid time string format for formatting:", timeString);
-  return null;
-};
-
+    console.warn("Invalid time string format for formatting:", timeString);
+    return null;
+  };
 
 
   const submit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const payloadTimeSlots = {};
+    const payloadTimeSlots = []; // UBAH: Ini sekarang adalah ARRAY
 
-  Object.keys(data.time_slots).forEach(shiftId => {
-    const slot = data.time_slots[shiftId];
-    const requestedAmount = slot.requested_amount === '' ? 0 : parseInt(slot.requested_amount, 10);
+    Object.keys(data.time_slots).forEach(shiftId => {
+      const slot = data.time_slots[shiftId];
+      const requestedAmount = slot.requested_amount === '' ? 0 : parseInt(slot.requested_amount, 10);
 
-    if (requestedAmount > 0) {
-      payloadTimeSlots[shiftId] = {
-        requested_amount: requestedAmount,
-        start_time: formatTimeToSeconds(slot.start_time),
-        end_time: formatTimeToSeconds(slot.end_time),
-      };
+      if (requestedAmount > 0) {
+        payloadTimeSlots.push({ // UBAH: Tambahkan objek ke dalam array
+          shift_id: parseInt(shiftId, 10), // Tambahkan shift_id sebagai properti
+          requested_amount: requestedAmount,
+          start_time: formatTimeToSeconds(slot.start_time),
+          end_time: formatTimeToSeconds(slot.end_time),
+        });
+      }
+    });
+
+    if (payloadTimeSlots.length === 0) { // Cek panjang array
+      alert('Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.');
+      return;
     }
-  });
 
-  if (Object.keys(payloadTimeSlots).length === 0) {
-    alert('Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.');
-    return;
-  }
-
-  post('/manpower-requests', {
-    sub_section_id: data.sub_section_id,
-    date: data.date,
-    time_slots: payloadTimeSlots,
-  }, {
-    onSuccess: () => reset(),
-    onError: (formErrors) => console.error('Validation Errors:', formErrors),
-  });
-};
+    post('/manpower-requests', {
+      sub_section_id: data.sub_section_id,
+      date: data.date,
+      time_slots: payloadTimeSlots, // Kirim array yang sudah diformat
+    }, {
+      onSuccess: () => reset(),
+      onError: (formErrors) => console.error('Validation Errors:', formErrors),
+    });
+  };
 
 
   const today = new Date().toISOString().split('T')[0];
@@ -197,6 +199,9 @@ const formatTimeToSeconds = (timeString) => {
                   <h3 className="font-medium text-gray-800 dark:text-gray-200 text-lg">
                     Jumlah Man Power per Shift
                   </h3>
+                  <p className="mb-4 text-gray-600 dark:text-gray-400 text-sm italic">
+                    Isi hanya shift yang Anda butuhkan *manpower*nya. Shift lain akan diabaikan.
+                  </p>
                   {shifts && Array.isArray(shifts) && shifts.map((shift) => {
                     const slotData = data.time_slots[shift.id] || {};
                     const requestedAmount = slotData.requested_amount;

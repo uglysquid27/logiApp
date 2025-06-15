@@ -80,6 +80,8 @@ Route::middleware('auth:web')->group(function () {
 
     // Employee Summary/Attendance
     Route::get('/employee-attendance', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
+    Route::post('/employee-attendance/reset-all-statuses', [App\Http\Controllers\EmployeeSum::class, 'resetAllStatuses'])
+        ->name('employee-attendance.reset-all-statuses');
 });
 
 

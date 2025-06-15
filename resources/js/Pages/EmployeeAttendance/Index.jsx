@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { usePage, Link, router } from '@inertiajs/react';
+import { usePage, Link, router } from '@inertiajs/react'; // Pastikan 'router' diimport
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Index() {
@@ -110,6 +110,22 @@ export default function Index() {
     return urlObj.toString();
   };
 
+  // --- NEW: Handle Reset All Employee Statuses ---
+  const handleResetAllStatuses = () => {
+    if (confirm('Apakah Anda yakin ingin mereset status semua karyawan menjadi "available" dan "cuti: no"? Tindakan ini tidak dapat dibatalkan.')) {
+      router.post(route('employee-attendance.reset-all-statuses'), {}, {
+        onSuccess: () => {
+          alert('Semua status karyawan berhasil direset.');
+          router.reload({ preserveState: false, preserveScroll: false }); // Reload entire page to reflect changes
+        },
+        onError: (errors) => {
+          console.error('Gagal mereset status karyawan:', errors);
+          alert('Terjadi kesalahan saat mereset status karyawan. Silakan coba lagi.');
+        },
+      });
+    }
+  };
+
   return (
     <AuthenticatedLayout
       header={
@@ -122,9 +138,18 @@ export default function Index() {
         <div className="mx-auto sm:px-6 lg:px-8 max-w-7xl">
           <div className="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg overflow-hidden">
             <div className="p-6 md:p-8 text-gray-900 dark:text-gray-100">
-              <h1 className="mb-6 font-bold text-gray-700 dark:text-gray-300 text-2xl">
-                Ringkasan Penugasan Pegawai
-              </h1>
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="mb-0 font-bold text-gray-700 dark:text-gray-300 text-2xl">
+                  Ringkasan Penugasan Pegawai
+                </h1>
+                {/* NEW: Reset All Statuses Button */}
+                <button
+                  onClick={handleResetAllStatuses}
+                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
+                >
+                  Reset Semua Status Karyawan
+                </button>
+              </div>
 
               {/* Filter Dropdowns and Search Bar */}
               <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -202,7 +227,7 @@ export default function Index() {
               </div>
 
               <div className="bg-white dark:bg-gray-800 mt-6 border border-gray-200 dark:border-gray-700 rounded-md overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <table className="divide-y divide-gray-200 dark:divide-gray-700 min-w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
                       <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
@@ -277,14 +302,14 @@ export default function Index() {
                           <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">
                             {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <td className="px-6 py-4 text-sm whitespace-nowrap">
                             <span
                               className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusClasses(employee.status)}`}
                             >
                               {employee.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300"> {/* NEW CELL FOR CUTI */}
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap"> {/* NEW CELL FOR CUTI */}
                             <span
                                 className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${
                                     employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'
@@ -309,7 +334,7 @@ export default function Index() {
 
               {/* Pagination Links */}
               {paginationLinks.length > 3 && (
-                <div className="mt-6 flex justify-end flex-wrap gap-2">
+                <div className="flex flex-wrap justify-end gap-2 mt-6">
                   {paginationLinks.map((link, index) => (
                     <Link
                       key={index}
