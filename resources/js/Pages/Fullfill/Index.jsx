@@ -253,9 +253,9 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
             {/* Employee Selection Modal */}
             {showModal && (
                 <div className="z-50 fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-75">
-                    <div className="bg-white shadow-xl p-6 rounded-lg w-full max-w-md max-h-[80vh] overflow-y-auto">
+                    <div className="bg-white shadow-xl p-6 rounded-lg w-full max-w-4xl max-h-[80vh] overflow-y-auto"> {/* Changed max-w-md to max-w-4xl */}
                         <h3 className="mb-4 font-bold text-xl">Pilih Karyawan Baru</h3>
-                        <div className="gap-2 grid grid-cols-1 sm:grid-cols-2">
+                        <div className="gap-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"> {/* Added more grid columns */}
                             {allEmployeesForModal.map((emp) => {
                                 const isSelected = data.employee_ids.includes(emp.id);
                                 const isDisabled = isSelected;
@@ -268,8 +268,9 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                                     bgColor = 'bg-blue-100';
                                     textColor = 'text-blue-700 opacity-70 cursor-not-allowed';
                                 } else if (!isFromRequestedSubSection) {
-                                    bgColor = 'bg-indigo-50 hover:bg-indigo-100';
-                                    textColor = 'text-indigo-800';
+                                    // Menggunakan warna yang lebih kontras: pink
+                                    bgColor = 'bg-pink-100 hover:bg-pink-200';
+                                    textColor = 'text-pink-800';
                                 }
 
                                 // --- CONSOLE LOG START ---
