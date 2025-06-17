@@ -56,6 +56,11 @@ export default function AuthenticatedLayout({ header, children }) {
         setIsDark(!isDark);
     };
 
+    // Determine user role based on available properties
+    // Using user.role for admin, and user.nik for employee.
+    const isAdmin = user && user.role === 'admin'; // Admin is identified by role 'admin'
+    const isEmployee = user && user.nik; // Employee is identified by NIK
+
     return (
         <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased">
             {/* Sidebar */}
@@ -68,55 +73,65 @@ export default function AuthenticatedLayout({ header, children }) {
 
                 {/* Main Navigation */}
                 <nav className="flex flex-col flex-grow p-3 space-y-2">
-                    <NavLink
-                        href={route('dashboard')}
-                        active={route().current('dashboard')}
-                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
-                    >
-                        <span className="pt-4 block">Dashboard</span>
-                    </NavLink>
-                    <NavLink
-                        href={route('manpower-requests.index')}
-                        active={route().current('manpower-requests.index')}
-                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
-                    >
-                        <span className="pt-4 block">Manpower Requests</span>
-                    </NavLink>
-                    <NavLink
-                        href={route('schedules.index')}
-                        active={route().current('schedules.index')}
-                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
-                    >
-                        <span className="pt-4 block">Schedules</span>
-                    </NavLink>
-                    <NavLink
-                        href={route('employee-attendance.index')}
-                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
-                    >
-                        <span className="pt-4 block">Employee</span>
-                    </NavLink>
-                    <NavLink
-                        href={route('shifts.index')}
-                        active={route().current('shifts.index')}
-                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
-                    >
-                        <span className="pt-4 block">Shifts</span>
-                    </NavLink>
-                    <NavLink
-                        href={route('profile.edit')}
-                        active={route().current('profile.edit')}
-                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
-                    >
-                        <span className="pt-4 block">Profile</span>
-                    </NavLink>
-                    <NavLink
-                        href={route('permits.index')}
-                        active={route().current('permits.index')}
-                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
-                    >
-                        <span className="pt-4 block">Leave Requests</span>
-                    </NavLink>
+                    {isAdmin && (
+                        <>
+                            <NavLink
+                                href={route('dashboard')}
+                                active={route().current('dashboard')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Admin Dashboard</span>
+                            </NavLink>
+                            <NavLink
+                                href={route('manpower-requests.index')}
+                                active={route().current('manpower-requests.index')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Manpower Requests</span>
+                            </NavLink>
+                            <NavLink
+                                href={route('schedules.index')}
+                                active={route().current('schedules.index')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Schedules</span>
+                            </NavLink>
+                            <NavLink
+                                href={route('employee-attendance.index')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Employees</span>
+                            </NavLink>
+                            <NavLink
+                                href={route('shifts.index')}
+                                active={route().current('shifts.index')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Shifts</span>
+                            </NavLink>
+                        </>
+                    )}
 
+                    {isEmployee && (
+                        <>
+                            <NavLink
+                                href={route('employee.dashboard')}
+                                active={route().current('employee.dashboard')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Employee Dashboard</span>
+                            </NavLink>
+                            <NavLink
+                                href={route('permits.index')}
+                                active={route().current('permits.index')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Leave Requests</span>
+                            </NavLink>
+                        </>
+                    )}
+
+                  
 
                     <div className="flex-grow"></div>
 
@@ -132,7 +147,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col space-y-3">
                     <div className="font-semibold text-gray-800 dark:text-gray-100">{user.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.email}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.email || user.nik}</div> {/* Display email or NIK */}
                 </div>
             </aside>
 
