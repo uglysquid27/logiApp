@@ -5,7 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
-use App\Http\Controllers\Auth\EmployeeLoginController;
+use App\Http\Controllers\PermitController;
 use App\Http\Controllers\EmployeeSum;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\ManPowerRequestController; // Make sure this is imported
@@ -51,21 +51,23 @@ Route::get('/dashboard/requests/pending', [DashboardController::class, 'getPendi
 Route::get('/dashboard/requests/fulfilled', [DashboardController::class, 'getFulfilledRequests'])->name('dashboard.requests.fulfilled');
 Route::get('/dashboard/schedules/upcoming', [DashboardController::class, 'getUpcomingSchedules'])->name('dashboard.schedules.upcoming');
 
-
-Route::middleware(['auth:employee'])->get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
-
-Route::middleware('auth:employee')->post('/employee/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('employee.schedule.respond');
+Route::get('/permits', [PermitController::class, 'index'])->name('permits.index');
+Route::post('/permits', [PermitController::class, 'store'])->name('permits.store');
 
 
-// Routes protected by the 'web' guard (for standard users/admins)
+Route::middleware(['auth:employee'])->group(function() {
+    Route::get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
+    Route::post('/employee/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('employee.schedule.respond');
+
+     Route::resource('permits', PermitController::class);
+});
+
 Route::middleware('auth:web')->group(function () {
-    // Profile management routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Manpower Request Management - This line correctly registers all RESTful routes
-    Route::resource('manpower-requests', ManpowerRequestController::class); // <-- This is the crucial line for update
+    Route::resource('manpower-requests', ManpowerRequestController::class); 
 
     Route::get('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'create'])->name('manpower-requests.fulfill');
     Route::post('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'store'])->name('manpower-requests.fulfill.store');
@@ -80,10 +82,9 @@ Route::middleware('auth:web')->group(function () {
 
     // Employee Summary/Attendance
     Route::get('/employee-attendance', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
-    Route::post('/employee-attendance/reset-all-statuses', [App\Http\Controllers\EmployeeSum::class, 'resetAllStatuses'])
-        ->name('employee-attendance.reset-all-statuses');
+    Route::post('/employee-attendance/reset-all-statuses', [App\Http\Controllers\EmployeeSum::class, 'resetAllStatuses'])->name('employee-attendance.reset-all-statuses');
+
 });
 
 
-// Include default authentication routes from Breeze/Jetstream if you're using it
 require __DIR__.'/auth.php';

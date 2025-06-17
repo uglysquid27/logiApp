@@ -109,6 +109,13 @@ export default function AuthenticatedLayout({ header, children }) {
                     >
                         <span className="pt-4 block">Profile</span>
                     </NavLink>
+                    <NavLink
+                        href={route('permits.index')}
+                        active={route().current('permits.index')}
+                        className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                    >
+                        <span className="pt-4 block">Leave Requests</span>
+                    </NavLink>
 
 
                     <div className="flex-grow"></div>
