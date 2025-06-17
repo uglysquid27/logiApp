@@ -6,16 +6,29 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { router } from '@inertiajs/react';
 import dayjs from 'dayjs'; // Make sure dayjs is imported for date formatting if needed
+import { useState, useEffect } from 'react'; // Import useState and useEffect
 
 export default function PermitCreate({ auth, employees, authenticatedEmployee }) { // Tambahkan authenticatedEmployee
     const { data, setData, post, processing, errors } = useForm({
-        // Set nilai awal employee_id berdasarkan authenticatedEmployee atau string kosong
         employee_id: authenticatedEmployee ? authenticatedEmployee.id : '',
         permit_type: '',
         start_date: '',
         end_date: '',
         reason: '',
+        photo: null, // <<< TAMBAHKAN INI UNTUK FILE PHOTO (AWALNYA null)
     });
+
+    const [isSickPermit, setIsSickPermit] = useState(data.permit_type === 'sakit');
+
+    // Update isSickPermit state when permit_type changes
+    useEffect(() => {
+        setIsSickPermit(data.permit_type === 'sakit');
+        // If changing away from 'sakit', clear the photo value
+        if (data.permit_type !== 'sakit' && data.photo !== null) {
+            setData('photo', null);
+        }
+    }, [data.permit_type]);
+
 
     // Options for permit_type, matching your database ENUM
     const permitTypes = [
@@ -29,7 +42,11 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
     const submit = (e) => {
         e.preventDefault();
         console.log('Mengirim data izin:', data);
+        // PENTING: Untuk mengirim file, Inertia secara otomatis akan mengirim sebagai FormData
+        // Anda mungkin perlu menambahkan `forceFormData: true` jika menghadapi masalah,
+        // tetapi biasanya Inertia menanganinya secara otomatis ketika ada objek File di data.
         post(route('permits.store'), {
+            forceFormData: true, // Pastikan ini true untuk upload file
             onSuccess: () => {
                 console.log('Izin berhasil diajukan!');
                 router.visit(route('permits.index')); // Redirect ke daftar izin
@@ -52,31 +69,27 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
-                            <form onSubmit={submit} className="space-y-6">
+                            {/* PENTING: Tambahkan encType="multipart/form-data" pada form */}
+                            <form onSubmit={submit} className="space-y-6" encType="multipart/form-data">
                                 {/* Employee Select */}
                                 <div>
                                     <InputLabel htmlFor="employee_id" value="Karyawan" />
-                                    {/* Select input for employee_id */}
                                     <select
                                         id="employee_id"
                                         name="employee_id"
                                         value={data.employee_id}
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         onChange={(e) => setData('employee_id', e.target.value)}
-                                        // Nonaktifkan jika ada authenticatedEmployee
-                                        disabled={!!authenticatedEmployee}
+                                        disabled={!!authenticatedEmployee} // Nonaktifkan jika ada authenticatedEmployee
                                         required
                                     >
-                                        {/* Tampilkan opsi "Pilih Karyawan" hanya jika tidak ada authenticatedEmployee */}
                                         {!authenticatedEmployee && <option value="">Pilih Karyawan</option>}
-                                        {/* Map melalui daftar karyawan. Jika ada authenticatedEmployee, pastikan dia yang pertama */}
                                         {employees.map((employee) => (
                                             <option key={employee.id} value={employee.id}>
                                                 {employee.name} ({employee.nik})
                                             </option>
                                         ))}
                                     </select>
-                                    {/* Tampilkan nama karyawan yang terpilih jika input dinonaktifkan */}
                                     {authenticatedEmployee && (
                                         <p className="mt-2 text-sm text-gray-600">
                                             Izin ini akan diajukan untuk: <strong>{authenticatedEmployee.name}</strong> ({authenticatedEmployee.nik})
@@ -148,6 +161,30 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
                                     ></textarea>
                                     <InputError message={errors.reason} className="mt-2" />
                                 </div>
+
+                                {/* Input File untuk Foto Surat Dokter (Kondisional) */}
+                                {isSickPermit && ( // Hanya tampilkan jika permit_type adalah 'sakit'
+                                    <div>
+                                        <InputLabel htmlFor="photo" value="Ambil Foto Surat Dokter (Wajib untuk tipe Sakit)" />
+                                        <input
+                                            id="photo"
+                                            type="file"
+                                            name="photo"
+                                            // Membatasi tipe file yang diterima ke gambar
+                                            accept="image/*"
+                                            // Menambahkan atribut capture agar browser memberikan opsi kamera/galeri
+                                            capture="user" // 'user' untuk kamera depan, 'environment' untuk kamera belakang, atau kosong untuk default
+                                            className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+                                            onChange={(e) => setData('photo', e.target.files[0])} // Mengambil file pertama
+                                            required={isSickPermit} // Wajib jika isSickPermit true
+                                        />
+                                        <p className="mt-1 text-sm text-gray-500">
+                                            Tekan untuk membuka opsi kamera atau memilih dari galeri Anda.
+                                        </p>
+                                        {/* Menampilkan pesan error khusus untuk foto, jika ada */}
+                                        {errors.photo && <InputError message={errors.photo} className="mt-2" />}
+                                    </div>
+                                )}
 
                                 <div className="flex items-center justify-end mt-4">
                                     <PrimaryButton className="ms-4" disabled={processing}>

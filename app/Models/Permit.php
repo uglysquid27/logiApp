@@ -10,16 +10,34 @@ class Permit extends Model
 {
     use HasFactory;
 
+    /**
+     * Atribut yang dapat diisi secara massal.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'employee_id',
-        'permit_type', // Ini akan menjadi string di PHP
+        'permit_type',
         'start_date',
         'end_date',
         'reason',
-        'status', // Ini akan menjadi string di PHP
+        'photo',
+        'status',
     ];
 
+    /**
+     * Atribut yang harus di-cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
 
+    /**
+     * Mendapatkan karyawan yang memiliki izin ini.
+     */
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);

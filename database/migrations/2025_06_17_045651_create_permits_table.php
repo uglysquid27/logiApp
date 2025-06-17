@@ -17,7 +17,9 @@ return new class extends Migration
             $table->enum('permit_type', ['sakit', 'cuti', 'izin_khusus', 'lainnya']); // Tipe izin menggunakan ENUM
             $table->date('start_date');    // Tanggal mulai izin
             $table->date('end_date')->nullable(); // Tanggal selesai izin (nullable jika izin satu hari)
-            $table->text('reason');        // Alasan pengajuan izin
+            $table->text('reason');        
+            $table->string('photo')->nullable();
+
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending'); // Status izin menggunakan ENUM
             $table->timestamps();          // Kolom created_at dan updated_at
         });
