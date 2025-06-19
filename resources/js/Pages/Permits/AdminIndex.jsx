@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, Link } from '@inertiajs/react';
 import moment from 'moment'; // Pastikan Anda telah menginstal moment.js (npm install moment)
@@ -6,7 +6,7 @@ import moment from 'moment'; // Pastikan Anda telah menginstal moment.js (npm in
 export default function AdminIndex({ auth, permits, filters }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         status: '',
-        // admin_notes field removed as per request
+        admin_notes: '', // Menambahkan field admin_notes
     });
 
     const [showRespondModal, setShowRespondModal] = useState(false);
@@ -20,9 +20,10 @@ export default function AdminIndex({ auth, permits, filters }) {
     // Fungsi untuk membuka modal respons
     const openRespondModal = (permit) => {
         setSelectedPermit(permit);
-        // Set initial status based on current permit status (using 'approved' instead of 'accepted')
+        // Set initial status and admin_notes based on current permit status
         setData({
             status: permit.status === 'approved' ? 'approved' : (permit.status === 'rejected' ? 'rejected' : (permit.status === 'cancelled' ? 'cancelled' : 'pending')),
+            admin_notes: permit.admin_notes || '', // Mengisi admin_notes dari data permit yang ada
         });
         setShowRespondModal(true);
     };
@@ -108,7 +109,7 @@ export default function AdminIndex({ auth, permits, filters }) {
                                     Ditolak
                                 </button>
                                 <button
-                                    onClick={() => handleFilterChange('cancelled')} 
+                                    onClick={() => handleFilterChange('cancelled')}
                                     className={`px-4 py-2 rounded-md text-sm font-medium ${filters.status === 'cancelled' ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                                 >
                                     Dibatalkan
@@ -169,7 +170,7 @@ export default function AdminIndex({ auth, permits, filters }) {
                                                             {permit.status.charAt(0).toUpperCase() + permit.status.slice(1)}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-xs overflow-hidden text-ellipsis"> {/* Added max-w-xs for potential long notes */}
                                                         {permit.admin_notes || '-'}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -269,6 +270,23 @@ export default function AdminIndex({ auth, permits, filters }) {
                                     <option value="cancelled">Dibatalkan</option> {/* Added cancelled option */}
                                 </select>
                                 {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
+                            </div>
+
+                            {/* Admin Notes Field */}
+                            <div className="mb-4">
+                                <label htmlFor="admin_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Catatan Admin
+                                </label>
+                                <textarea
+                                    id="admin_notes"
+                                    name="admin_notes"
+                                    rows="3"
+                                    value={data.admin_notes}
+                                    onChange={(e) => setData('admin_notes', e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    placeholder="Masukkan catatan untuk admin..."
+                                ></textarea>
+                                {errors.admin_notes && <p className="text-red-500 text-xs mt-1">{errors.admin_notes}</p>}
                             </div>
 
                             <div className="flex justify-end space-x-2">

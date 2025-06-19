@@ -90,8 +90,8 @@ export default function PermitIndex({ auth, permits, authenticatedEmployee }) {
                                                         Foto
                                                     </th>
                                                 )}
-                                                <th scope="col" className="relative px-6 py-3">
-                                                    <span className="sr-only">Aksi</span>
+                                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Catatan Admin
                                                 </th>
                                             </tr>
                                         </thead>
@@ -143,21 +143,14 @@ export default function PermitIndex({ auth, permits, authenticatedEmployee }) {
                                                             )}
                                                         </td>
                                                     )}
-                                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                        <Link
-                                                            // PERBAIKAN: Menggunakan nama route yang benar dengan 'employee.' prefix
-                                                            href={route('employee.permits.show', permit.id)}
-                                                            className="text-indigo-600 hover:text-indigo-900 mr-4"
-                                                        >
-                                                            Lihat
-                                                        </Link>
-                                                        {/* Tombol edit/hapus mungkin perlu disembunyikan untuk karyawan biasa */}
-                                                        {/* <Link
-                                                            href={route('employee.permits.edit', permit.id)} // Jika Anda ingin mengaktifkan edit, gunakan ini
-                                                            className="text-blue-600 hover:text-blue-900"
-                                                        >
-                                                            Edit
-                                                        </Link> */}
+                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {permit.admin_notes ? (
+                                                                <span>
+                                                                    {permit.admin_notes}
+                                                                </span>
+                                                            ) : (
+                                                                '-'
+                                                            )}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -171,9 +164,6 @@ export default function PermitIndex({ auth, permits, authenticatedEmployee }) {
                             {/* Pagination Links */}
                             <div className="mt-4 flex justify-center">
                                 {permits.links.map((link, index) => (
-                                    // PERHATIAN: Pastikan link paginasi juga menggunakan prefix 'employee.' jika URL-nya dihasilkan oleh backend
-                                    // Biasanya, Laravel secara otomatis menangani ini jika Anda menggunakan ->as('employee.') pada grup route
-                                    // Tetapi jika masih ada masalah, mungkin perlu penyesuaian di sini juga.
                                     <Link
                                         key={index}
                                         href={link.url || '#'}
