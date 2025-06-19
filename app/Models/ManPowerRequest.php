@@ -16,6 +16,8 @@ class ManPowerRequest extends Model
         'start_time', // New field
         'end_time',   // New field
         'requested_amount',
+        'male_count',
+        'female_count',
         'status',
     ];
 

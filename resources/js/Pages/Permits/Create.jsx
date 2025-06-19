@@ -5,32 +5,46 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { router } from '@inertiajs/react';
-import dayjs from 'dayjs'; // Pastikan dayjs diimpor untuk pemformatan tanggal jika diperlukan
-import { useState, useEffect } from 'react'; // Impor useState dan useEffect
+import dayjs from 'dayjs';
+import { useState, useEffect } from 'react';
 
-export default function PermitCreate({ auth, employees, authenticatedEmployee }) { // Tambahkan authenticatedEmployee
+export default function PermitCreate({ auth, employees, authenticatedEmployee }) {
     const { data, setData, post, processing, errors } = useForm({
         employee_id: authenticatedEmployee ? authenticatedEmployee.id : '',
         permit_type: '',
         start_date: '',
         end_date: '',
         reason: '',
-        photo: null, // Tambahkan ini untuk file foto (awalnya null)
+        photo: null,
+        male_count: 0,
+        female_count: 0,
+        total_requested: 1, // Default to 1 since this is for single employee permits
     });
 
     const [isSickPermit, setIsSickPermit] = useState(data.permit_type === 'sakit');
 
-    // Perbarui state isSickPermit ketika permit_type berubah
+    // Update sick permit status and photo requirement
     useEffect(() => {
         setIsSickPermit(data.permit_type === 'sakit');
-        // Jika berubah dari 'sakit', kosongkan nilai foto
         if (data.permit_type !== 'sakit' && data.photo !== null) {
             setData('photo', null);
         }
     }, [data.permit_type]);
 
+    // Calculate gender counts when employee changes
+    useEffect(() => {
+        if (data.employee_id) {
+            const selectedEmployee = employees.find(emp => emp.id == data.employee_id);
+            if (selectedEmployee) {
+                setData({
+                    ...data,
+                    male_count: selectedEmployee.gender === 'male' ? 1 : 0,
+                    female_count: selectedEmployee.gender === 'female' ? 1 : 0,
+                });
+            }
+        }
+    }, [data.employee_id]);
 
-    // Opsi untuk permit_type, sesuai dengan ENUM database Anda
     const permitTypes = [
         { value: '', label: 'Pilih Tipe Izin' },
         { value: 'sakit', label: 'Sakit' },
@@ -42,27 +56,19 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
     const submit = (e) => {
         e.preventDefault();
 
-        // Buat salinan data form untuk dimodifikasi sebelum dikirim
         let payload = { ...data };
-
-        // Logika untuk mengisi end_date jika kosong, sama dengan start_date
         if (!payload.end_date) {
             payload.end_date = payload.start_date;
         }
 
-        console.log('Mengirim data izin:', payload);
-        // PENTING: Untuk mengirim file, Inertia secara otomatis akan mengirim sebagai FormData
-        // Anda mungkin perlu menambahkan `forceFormData: true` jika menghadapi masalah,
-        // tetapi biasanya Inertia menanganinya secara otomatis ketika ada objek File di data.
         post(route('permits.store'), {
-            data: payload, // Kirim payload yang telah dimodifikasi
-            forceFormData: true, // Pastikan ini true untuk upload file
+            data: payload,
+            forceFormData: true,
             onSuccess: () => {
-                console.log('Izin berhasil diajukan!');
-                router.visit(route('employee.permits.index')); // Redirect ke daftar izin (gunakan 'employee.permits.index' sesuai diskusi sebelumnya)
+                router.visit(route('employee.permits.index'));
             },
             onError: (err) => {
-                console.error('Ada kesalahan saat mengajukan izin:', err);
+                console.error('Error submitting permit:', err);
             },
         });
     };
@@ -78,7 +84,6 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
                 <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
-                            {/* PENTING: Tambahkan encType="multipart/form-data" pada form */}
                             <form onSubmit={submit} className="space-y-6" encType="multipart/form-data">
                                 {/* Employee Select */}
                                 <div>
@@ -89,7 +94,7 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
                                         value={data.employee_id}
                                         className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
                                         onChange={(e) => setData('employee_id', e.target.value)}
-                                        disabled={!!authenticatedEmployee} // Nonaktifkan jika ada authenticatedEmployee
+                                        disabled={!!authenticatedEmployee}
                                         required
                                     >
                                         {!authenticatedEmployee && <option value="">Pilih Karyawan</option>}
@@ -105,6 +110,22 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
                                         </p>
                                     )}
                                     <InputError message={errors.employee_id} className="mt-2" />
+                                    
+                                    {/* Gender Breakdown */}
+                                    <div className="mt-4 grid grid-cols-3 gap-4">
+                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                            <p className="text-sm text-gray-600">Total Permintaan</p>
+                                            <p className="text-xl font-bold">{data.total_requested}</p>
+                                        </div>
+                                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                                            <p className="text-sm text-blue-800">Laki-laki</p>
+                                            <p className="text-xl font-bold">{data.male_count}</p>
+                                        </div>
+                                        <div className="bg-pink-50 p-3 rounded-lg border border-pink-200">
+                                            <p className="text-sm text-pink-800">Perempuan</p>
+                                            <p className="text-xl font-bold">{data.female_count}</p>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Permit Type Select */}
@@ -171,27 +192,24 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
                                     <InputError message={errors.reason} className="mt-2" />
                                 </div>
 
-                                {/* Input File untuk Foto Surat Dokter (Kondisional) */}
-                                {isSickPermit && ( // Hanya tampilkan jika permit_type adalah 'sakit'
+                                {/* Doctor's Note Photo (Conditional) */}
+                                {isSickPermit && (
                                     <div>
-                                        <InputLabel htmlFor="photo" value="Ambil Foto Surat Dokter (Wajib untuk tipe Sakit)" />
+                                        <InputLabel htmlFor="photo" value="Foto Surat Dokter (Wajib untuk tipe Sakit)" />
                                         <input
                                             id="photo"
                                             type="file"
                                             name="photo"
-                                            // Membatasi tipe file yang diterima ke gambar
                                             accept="image/*"
-                                            // Menambahkan atribut capture agar browser memberikan opsi kamera/galeri
-                                            capture="user" // 'user' untuk kamera depan, 'environment' untuk kamera belakang, atau kosong untuk default
+                                            capture="user"
                                             className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
-                                            onChange={(e) => setData('photo', e.target.files[0])} // Mengambil file pertama
-                                            required={isSickPermit} // Wajib jika isSickPermit true
+                                            onChange={(e) => setData('photo', e.target.files[0])}
+                                            required={isSickPermit}
                                         />
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Tekan untuk membuka opsi kamera atau memilih dari galeri Anda.
+                                            Unggah foto surat dokter yang valid
                                         </p>
-                                        {/* Menampilkan pesan error khusus untuk foto, jika ada */}
-                                        {errors.photo && <InputError message={errors.photo} className="mt-2" />}
+                                        <InputError message={errors.photo} className="mt-2" />
                                     </div>
                                 )}
 

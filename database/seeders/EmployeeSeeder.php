@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\Employee;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
-use Illuminate\Support\Facades\Hash; // Don't forget to import Hash facade
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeSeeder extends Seeder
 {
@@ -22,24 +22,35 @@ class EmployeeSeeder extends Seeder
             }
 
             Employee::create([
-                'nik'    => 'EMP' . str_pad($i, 4, '0', STR_PAD_LEFT), // e.g., EMP0001
-                'name'   => $faker->name(),
-                'type'   => $faker->randomElement(['harian', 'bulanan']),
-                'status' => $status,
-                'cuti'   => $isCuti,
-                'password' => Hash::make('password123'), // ADDED: A default hashed password for all employees
+                'nik'      => 'EMP' . str_pad($i, 4, '0', STR_PAD_LEFT),
+                'name'     => $faker->name(),
+                'type'     => $faker->randomElement(['harian', 'bulanan']),
+                'status'   => $status,
+                'cuti'     => $isCuti,
+                'gender'   => $faker->randomElement(['male', 'female']), // Random gender
+                'password' => Hash::make('password123'),
             ]);
         }
 
-        // OPTIONAL: Create one specific employee for easy testing
-        // This makes it easy to remember a specific NIK and password for login
+        // Create specific test employees
         Employee::create([
-            'nik' => '9999999999', // A distinct NIK for testing
-            'name' => 'Test Employee',
-            'type' => 'bulanan',
-            'status' => 'available',
-            'cuti' => 'no',
-            'password' => Hash::make('testpassword'), // A simple password for testing
+            'nik'      => '9999999999',
+            'name'     => 'Test Male Employee',
+            'type'     => 'bulanan',
+            'status'   => 'available',
+            'cuti'     => 'no',
+            'gender'   => 'male',
+            'password' => Hash::make('testpassword'),
+        ]);
+
+        Employee::create([
+            'nik'      => '8888888888',
+            'name'     => 'Test Female Employee',
+            'type'     => 'harian',
+            'status'   => 'available',
+            'cuti'     => 'no',
+            'gender'   => 'female',
+            'password' => Hash::make('testpassword'),
         ]);
     }
 }

@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('employees', function (Blueprint $table) {
@@ -17,17 +14,14 @@ return new class extends Migration
             $table->string('name');
             $table->string('password');
             $table->enum('type', ['harian', 'bulanan']);
-            // MENGUBAH BARIS INI: Menambahkan 'on leave' ke dalam daftar ENUM
             $table->enum('status', ['available', 'assigned', 'on leave'])->default('available');
             $table->enum('cuti', ['yes', 'no'])->default('no');
+            $table->enum('gender', ['male', 'female'])->default('male'); // Added gender field
             $table->rememberToken();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('employees');
