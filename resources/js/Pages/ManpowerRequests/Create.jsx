@@ -204,7 +204,7 @@ export default function Create({ subSections, shifts }) {
                       <div key={shift.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md space-y-3">
                         {/* Shift Name */}
                         <h4 className="font-medium text-gray-700 dark:text-gray-300">
-                          {shift.name} ({shift.start_time} - {shift.end_time})
+                          {shift.name} 
                         </h4>
 
                         {/* Requested Amount */}
