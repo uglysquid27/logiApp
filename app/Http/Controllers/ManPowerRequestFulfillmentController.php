@@ -14,121 +14,112 @@ use Illuminate\Support\Facades\Log;
 class ManPowerRequestFulfillmentController extends Controller
 {
     public function create($id)
-    {
-        $request = ManPowerRequest::with('subSection.section', 'shift')->findOrFail($id);
+{
+    $request = ManPowerRequest::with('subSection.section', 'shift')->findOrFail($id);
 
-        if ($request->status === 'fulfilled') {
-            return Inertia::render('Fullfill/Index', [
-                'request' => $request,
-                'sameSubSectionEmployees' => [],
-                'otherSubSectionEmployees' => [],
-                'message' => 'This request has already been fulfilled.',
-            ]);
-        }
-
-        $startDate = Carbon::now()->subDays(6)->startOfDay();
-        $endDate = Carbon::now()->endOfDay();
-
-        $scheduledEmployeeIdsOnRequestDate = Schedule::whereDate('date', $request->date)
-                                                    ->pluck('employee_id')
-                                                    ->toArray();
-        Log::debug('Scheduled Employee IDs on request date: ' . implode(', ', $scheduledEmployeeIdsOnRequestDate));
-
-        $eligibleEmployees = Employee::where('status', 'available')
-            ->where('cuti', 'no')
-            ->whereNotIn('id', $scheduledEmployeeIdsOnRequestDate)
-            ->with(['subSections.section']) // Tetap eager load untuk mendapatkan data di backend
-            ->withCount(['schedules' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
-            }])
-            ->with(['schedules.manPowerRequest.shift'])
-            ->get()
-            ->map(function ($employee) {
-                $totalWorkingHours = 0;
-                foreach ($employee->schedules as $schedule) {
-                    if ($schedule->manPowerRequest && $schedule->manPowerRequest->shift) {
-                        $totalWorkingHours += $schedule->manPowerRequest->shift->hours;
-                    }
-                }
-
-                $weeklyScheduleCount = $employee->schedules_count;
-
-                $rating = 0;
-                if ($weeklyScheduleCount === 5) { $rating = 5; }
-                elseif ($weeklyScheduleCount === 4) { $rating = 4; }
-                elseif ($weeklyScheduleCount === 3) { $rating = 3; }
-                elseif ($weeklyScheduleCount === 2) { $rating = 2; }
-                elseif ($weeklyScheduleCount === 1) { $rating = 1; }
-                elseif ($weeklyScheduleCount === 0) { $rating = 0; }
-                else { $rating = 0; }
-
-                $workingDayWeight = 0;
-                if ($rating === 5) { $workingDayWeight = 15; }
-                elseif ($rating === 4) { $workingDayWeight = 45; }
-                elseif ($rating === 3) { $workingDayWeight = 75; }
-                elseif ($rating === 2) { $workingDayWeight = 105; }
-                elseif ($rating === 1) { $workingDayWeight = 135; }
-                elseif ($rating === 0) { $workingDayWeight = 165; }
-                else { $workingDayWeight = 0; }
-
-                // Secara eksplisit mendefinisikan array karyawan untuk diserialisasi
-                // Ini mencegah properti relasi Eloquent asli (seperti 'sub_sections')
-                // muncul kembali secara otomatis jika tidak diinginkan.
-                $subSectionsData = $employee->subSections->map(function($subSection) {
-                    return [
-                        'id' => $subSection->id,
-                        'name' => $subSection->name,
-                        'section_id' => $subSection->section_id,
-                        'section' => $subSection->section ? $subSection->section->toArray() : null,
-                    ];
-                })->toArray();
-
-                return [
-                    'id' => $employee->id,
-                    'nik' => $employee->nik,
-                    'name' => $employee->name,
-                    'type' => $employee->type,
-                    'status' => $employee->status,
-                    'cuti' => $employee->cuti,
-                    'created_at' => $employee->created_at,
-                    'updated_at' => $employee->updated_at,
-                    'schedules_count' => $employee->schedules_count,
-                    'calculated_rating' => $rating,
-                    'working_day_weight' => $workingDayWeight,
-                    'total_assigned_hours' => $totalWorkingHours,
-                    'sub_sections_data' => $subSectionsData, // Ini adalah properti yang akan kita gunakan di frontend
-                    // 'schedules' => $employee->schedules->toArray(), // Aktifkan jika Anda perlu data jadwal di frontend
-                ];
-            });
-        Log::debug('Eligible Employees (before sub-section filtering): ' . $eligibleEmployees->pluck('id')->implode(', '));
-
-        $sortEmployees = function ($employees) {
-            return $employees->sortBy(function($employee) {
-                return $employee['type'] === 'bulanan' ? 0 : 1; // Akses sebagai array karena sudah di-map ke array
-            })->sortBy('working_day_weight')
-            ->values();
-        };
-
-        // Karena eligibleEmployees sekarang adalah array of arrays, kita filter sebagai array
-        $sameSubSectionEligible = $eligibleEmployees->filter(fn($employee) =>
-            collect($employee['sub_sections_data'])->contains('id', $request->sub_section_id)
-        );
-        $otherSubSectionEligible = $eligibleEmployees->filter(fn($employee) =>
-            !collect($employee['sub_sections_data'])->contains('id', $request->sub_section_id)
-        );
-
-        Log::debug('Same Sub-Section Eligible Employee IDs: ' . collect($sameSubSectionEligible)->pluck('id')->implode(', '));
-        Log::debug('Other Sub-Section Eligible Employee IDs: ' . collect($otherSubSectionEligible)->pluck('id')->implode(', '));
-
-        $sortedSameSubSectionEmployees = $sortEmployees($sameSubSectionEligible);
-        $sortedOtherSubSectionEmployees = $sortEmployees($otherSubSectionEligible);
-
+    if ($request->status === 'fulfilled') {
         return Inertia::render('Fullfill/Index', [
             'request' => $request,
-            'sameSubSectionEmployees' => $sortedSameSubSectionEmployees,
-            'otherSubSectionEmployees' => $sortedOtherSubSectionEmployees,
+            'sameSubSectionEmployees' => [],
+            'otherSubSectionEmployees' => [],
+            'message' => 'This request has already been fulfilled.',
         ]);
     }
+
+    $startDate = Carbon::now()->subDays(6)->startOfDay();
+    $endDate = Carbon::now()->endOfDay();
+
+    $scheduledEmployeeIdsOnRequestDate = Schedule::whereDate('date', $request->date)
+                                                ->pluck('employee_id')
+                                                ->toArray();
+
+    $eligibleEmployees = Employee::where('status', 'available')
+        ->where('cuti', 'no')
+        ->whereNotIn('id', $scheduledEmployeeIdsOnRequestDate)
+        ->with(['subSections.section'])
+        ->withCount(['schedules' => function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('date', [$startDate, $endDate]);
+        }])
+        ->with(['schedules.manPowerRequest.shift'])
+        ->get()
+        ->map(function ($employee) {
+            $totalWorkingHours = 0;
+            foreach ($employee->schedules as $schedule) {
+                if ($schedule->manPowerRequest && $schedule->manPowerRequest->shift) {
+                    $totalWorkingHours += $schedule->manPowerRequest->shift->hours;
+                }
+            }
+
+            $weeklyScheduleCount = $employee->schedules_count;
+
+            $rating = 0;
+            if ($weeklyScheduleCount === 5) { $rating = 5; }
+            elseif ($weeklyScheduleCount === 4) { $rating = 4; }
+            elseif ($weeklyScheduleCount === 3) { $rating = 3; }
+            elseif ($weeklyScheduleCount === 2) { $rating = 2; }
+            elseif ($weeklyScheduleCount === 1) { $rating = 1; }
+            elseif ($weeklyScheduleCount === 0) { $rating = 0; }
+            else { $rating = 0; }
+
+            $workingDayWeight = 0;
+            if ($rating === 5) { $workingDayWeight = 15; }
+            elseif ($rating === 4) { $workingDayWeight = 45; }
+            elseif ($rating === 3) { $workingDayWeight = 75; }
+            elseif ($rating === 2) { $workingDayWeight = 105; }
+            elseif ($rating === 1) { $workingDayWeight = 135; }
+            elseif ($rating === 0) { $workingDayWeight = 165; }
+            else { $workingDayWeight = 0; }
+
+            $subSectionsData = $employee->subSections->map(function($subSection) {
+                return [
+                    'id' => $subSection->id,
+                    'name' => $subSection->name,
+                    'section_id' => $subSection->section_id,
+                    'section' => $subSection->section ? $subSection->section->toArray() : null,
+                ];
+            })->toArray();
+
+            return [
+                'id' => $employee->id,
+                'nik' => $employee->nik,
+                'name' => $employee->name,
+                'type' => $employee->type,
+                'status' => $employee->status,
+                'cuti' => $employee->cuti,
+                'gender' => $employee->gender, 
+                'created_at' => $employee->created_at,
+                'updated_at' => $employee->updated_at,
+                'schedules_count' => $employee->schedules_count,
+                'calculated_rating' => $rating,
+                'working_day_weight' => $workingDayWeight,
+                'total_assigned_hours' => $totalWorkingHours,
+                'sub_sections_data' => $subSectionsData,
+            ];
+        });
+
+    $sortEmployees = function ($employees) {
+        return $employees->sortBy(function($employee) {
+            return $employee['type'] === 'bulanan' ? 0 : 1;
+        })->sortBy('working_day_weight')
+        ->values();
+    };
+
+    $sameSubSectionEligible = $eligibleEmployees->filter(fn($employee) =>
+        collect($employee['sub_sections_data'])->contains('id', $request->sub_section_id)
+    );
+    $otherSubSectionEligible = $eligibleEmployees->filter(fn($employee) =>
+        !collect($employee['sub_sections_data'])->contains('id', $request->sub_section_id)
+    );
+
+    $sortedSameSubSectionEmployees = $sortEmployees($sameSubSectionEligible);
+    $sortedOtherSubSectionEmployees = $sortEmployees($otherSubSectionEligible);
+
+    return Inertia::render('Fullfill/Index', [
+        'request' => $request,
+        'sameSubSectionEmployees' => $sortedSameSubSectionEmployees,
+        'otherSubSectionEmployees' => $sortedOtherSubSectionEmployees,
+    ]);
+}
 
     public function store(Request $request, $id)
     {

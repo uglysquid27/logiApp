@@ -234,6 +234,9 @@ export default function Index() {
                         Nama Pegawai
                       </th>
                       <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                        Gender
+                      </th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
                         NIK
                       </th>
                       <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
@@ -274,6 +277,9 @@ export default function Index() {
                         <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                           <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 text-sm whitespace-nowrap">
                             {employee.name}
+                          </td>
+                          <td className="x-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                            {employee.gender}
                           </td>
                           <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
                             {employee.nik}
