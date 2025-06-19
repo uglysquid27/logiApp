@@ -17,7 +17,10 @@ const MoonIcon = () => (
 );
 
 export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+    // Safely access user object, default to null if not available
+    const { auth } = usePage().props;
+    const user = auth && auth.user ? auth.user : null;
+
     // State for dark mode
     const [isDark, setIsDark] = useState(false); // Initialize with a default
 
@@ -29,10 +32,8 @@ export default function AuthenticatedLayout({ header, children }) {
 
             if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
                 setIsDark(true);
-                // document.documentElement.classList.add('dark'); // Handled by the next useEffect
             } else {
                 setIsDark(false);
-                // document.documentElement.classList.remove('dark'); // Handled by the next useEffect
             }
         }
     }, []); // Empty dependency array: runs only once on mount
@@ -57,9 +58,20 @@ export default function AuthenticatedLayout({ header, children }) {
     };
 
     // Determine user role based on available properties
-    // Using user.role for admin, and user.nik for employee.
-    const isAdmin = user && user.role === 'admin'; // Admin is identified by role 'admin'
-    const isEmployee = user && user.nik; // Employee is identified by NIK
+    // Admin is identified by role 'admin'
+    const isAdmin = user && user.role === 'admin';
+    // Employee is identified by the presence of a non-empty 'nik'
+    const isEmployee = user && typeof user.nik === 'string' && user.nik.trim() !== '';
+
+    // Debugging: Log the user object to see its structure
+    useEffect(() => {
+        console.log('--- AuthenticatedLayout Debugging ---');
+        console.log('Current User Object from Inertia props:', user);
+        console.log('Calculated isAdmin:', isAdmin);
+        console.log('Calculated isEmployee:', isEmployee);
+        console.log('-----------------------------------');
+    }, [user, isAdmin, isEmployee]);
+
 
     return (
         <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased">
@@ -109,10 +121,17 @@ export default function AuthenticatedLayout({ header, children }) {
                             >
                                 <span className="pt-4 block">Shifts</span>
                             </NavLink>
+                            <NavLink
+                                href={route('admin.permits.index')}
+                                active={route().current('admin.permits.index')}
+                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                            >
+                                <span className="pt-4 block">Admin Permits</span>
+                            </NavLink>
                         </>
                     )}
 
-                    {isEmployee && (
+                    {!isAdmin && (
                         <>
                             <NavLink
                                 href={route('employee.dashboard')}
@@ -122,16 +141,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <span className="pt-4 block">Employee Dashboard</span>
                             </NavLink>
                             <NavLink
-                                href={route('permits.index')}
-                                active={route().current('permits.index')}
+                                href={route('employee.permits.index')}
+                                active={route().current('employee.permits.index')}
                                 className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
                             >
                                 <span className="pt-4 block">Leave Requests</span>
                             </NavLink>
                         </>
                     )}
-
-                  
 
                     <div className="flex-grow"></div>
 
@@ -146,8 +163,9 @@ export default function AuthenticatedLayout({ header, children }) {
                 </nav>
 
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col space-y-3">
-                    <div className="font-semibold text-gray-800 dark:text-gray-100">{user.name}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{user.email || user.nik}</div> {/* Display email or NIK */}
+                    {/* PERBAIKAN: Tambahkan pengecekan user sebelum mengakses name dan email/nik */}
+                    <div className="font-semibold text-gray-800 dark:text-gray-100">{user ? user.name : 'Memuat...'}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{user ? (user.email || user.nik) : ''}</div>
                 </div>
             </aside>
 

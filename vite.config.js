@@ -16,7 +16,7 @@ export default defineConfig({
         port: 5173,
         cors: true,
         hmr: {
-            host: '192.168.1.16', // <--- Ganti ini dengan IP kamu (en0)
+            host: '192.168.1.37', // <--- Ganti ini dengan IP kamu (en0)
             protocol: 'ws',
         },
     },

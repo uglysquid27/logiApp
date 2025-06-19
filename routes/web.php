@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminPermitController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -55,12 +56,15 @@ Route::get('/permits', [PermitController::class, 'index'])->name('permits.index'
 Route::post('/permits', [PermitController::class, 'store'])->name('permits.store');
 
 
-Route::middleware(['auth:employee'])->group(function() {
-    Route::get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
-    Route::post('/employee/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('employee.schedule.respond');
+Route::middleware(['auth:employee'])
+    ->prefix('employee')
+    ->as('employee.')    
+    ->group(function() {
+        Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard'); // Nama 'employee.dashboard'
+        Route::post('/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('schedule.respond'); // Nama 'employee.schedule.respond'
 
-     Route::resource('permits', PermitController::class);
-});
+        Route::resource('permits', PermitController::class); // Ini akan menghasilkan 'employee.permits.index', 'employee.permits.create', dll.
+    });
 
 Route::middleware('auth:web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -83,6 +87,9 @@ Route::middleware('auth:web')->group(function () {
     // Employee Summary/Attendance
     Route::get('/employee-attendance', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
     Route::post('/employee-attendance/reset-all-statuses', [App\Http\Controllers\EmployeeSum::class, 'resetAllStatuses'])->name('employee-attendance.reset-all-statuses');
+
+    Route::get('/admin/permits', [AdminPermitController::class, 'index'])->name('admin.permits.index');
+    Route::post('/admin/permits/{permit}/respond', [AdminPermitController::class, 'respond'])->name('admin.permits.respond');
 
 });
 

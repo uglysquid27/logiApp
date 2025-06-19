@@ -47,7 +47,8 @@ export default function PermitIndex({ auth, permits, authenticatedEmployee }) {
                                 </h3>
                                 {/* Tombol untuk menambahkan izin baru */}
                                 <Link
-                                    href={route('permits.create')}
+                                    // PERBAIKAN: Menggunakan nama route yang benar dengan 'employee.' prefix
+                                    href={route('employee.permits.create')}
                                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                                 >
                                     Ajukan Izin Baru
@@ -144,14 +145,15 @@ export default function PermitIndex({ auth, permits, authenticatedEmployee }) {
                                                     )}
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <Link
-                                                            href={route('permits.show', permit.id)}
+                                                            // PERBAIKAN: Menggunakan nama route yang benar dengan 'employee.' prefix
+                                                            href={route('employee.permits.show', permit.id)}
                                                             className="text-indigo-600 hover:text-indigo-900 mr-4"
                                                         >
                                                             Lihat
                                                         </Link>
                                                         {/* Tombol edit/hapus mungkin perlu disembunyikan untuk karyawan biasa */}
                                                         {/* <Link
-                                                            href={route('permits.edit', permit.id)}
+                                                            href={route('employee.permits.edit', permit.id)} // Jika Anda ingin mengaktifkan edit, gunakan ini
                                                             className="text-blue-600 hover:text-blue-900"
                                                         >
                                                             Edit
@@ -169,6 +171,9 @@ export default function PermitIndex({ auth, permits, authenticatedEmployee }) {
                             {/* Pagination Links */}
                             <div className="mt-4 flex justify-center">
                                 {permits.links.map((link, index) => (
+                                    // PERHATIAN: Pastikan link paginasi juga menggunakan prefix 'employee.' jika URL-nya dihasilkan oleh backend
+                                    // Biasanya, Laravel secara otomatis menangani ini jika Anda menggunakan ->as('employee.') pada grup route
+                                    // Tetapi jika masih ada masalah, mungkin perlu penyesuaian di sini juga.
                                     <Link
                                         key={index}
                                         href={link.url || '#'}

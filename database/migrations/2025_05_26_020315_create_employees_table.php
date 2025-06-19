@@ -17,7 +17,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('password');
             $table->enum('type', ['harian', 'bulanan']);
-            $table->enum('status', ['available', 'assigned']);
+            // MENGUBAH BARIS INI: Menambahkan 'on leave' ke dalam daftar ENUM
+            $table->enum('status', ['available', 'assigned', 'on leave'])->default('available');
             $table->enum('cuti', ['yes', 'no'])->default('no');
             $table->rememberToken();
             $table->timestamps();

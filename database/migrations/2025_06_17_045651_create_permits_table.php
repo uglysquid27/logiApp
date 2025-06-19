@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('end_date')->nullable(); // Tanggal selesai izin (nullable jika izin satu hari)
             $table->text('reason');        
             $table->string('photo')->nullable();
-
+            $table->string('admin_notes', 500)->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending'); // Status izin menggunakan ENUM
             $table->timestamps();          // Kolom created_at dan updated_at
         });
