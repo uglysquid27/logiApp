@@ -12,15 +12,49 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
     console.log('Other Sub Section Employees (Raw Prop):', otherSubSectionEmployees);
     // --- CONSOLE LOG END ---
 
-    // Langsung gabungkan dan pastikan properti 'subSections' di frontend
+    // Gabungkan dan pastikan properti 'subSections' di frontend
     // merujuk ke 'sub_sections_data' dari backend.
-    const allSortedEligibleEmployees = [
+    // Lakukan penggabungan dan transformasi data di awal
+    const combinedEmployees = [
         ...sameSubSectionEmployees.map(emp => ({ ...emp, subSections: emp.sub_sections_data || [] })),
         ...otherSubSectionEmployees.map(emp => ({ ...emp, subSections: emp.sub_sections_data || [] }))
     ];
 
+    // --- NEW SORTING LOGIC START ---
+    const allSortedEligibleEmployees = combinedEmployees.sort((a, b) => {
+        // 1. Prioritaskan karyawan dari sub bagian yang sama dengan permintaan
+        const aIsSameSubSection = a.subSections.some(ss => ss.id === request.sub_section_id);
+        const bIsSameSubSection = b.subSections.some(ss => ss.id === request.sub_section_id);
+
+        if (aIsSameSubSection && !bIsSameSubSection) return -1;
+        if (!aIsSameSubSection && bIsSameSubSection) return 1;
+
+        // 2. Prioritaskan 'bulanan' sebelum 'harian'
+        if (a.type === 'bulanan' && b.type === 'harian') return -1;
+        if (a.type === 'harian' && b.type === 'bulanan') return 1;
+
+        // 3. Jika keduanya 'harian', prioritaskan 'bobot kerja' tertinggi
+        if (a.type === 'harian' && b.type === 'harian') {
+            // Asumsi working_day_weight lebih tinggi lebih baik
+            if (a.working_day_weight > b.working_day_weight) return -1;
+            if (a.working_day_weight < b.working_day_weight) return 1;
+        }
+
+        // 4. Jika keduanya 'bulanan' atau jika bobot kerja sama, prioritaskan rating tertinggi
+        if (a.calculated_rating > b.calculated_rating) return -1;
+        if (a.calculated_rating < b.calculated_rating) return 1;
+
+        // 5. Jika rating sama, prioritaskan schedules_count terendah (paling sedikit penugasan minggu ini)
+        if (a.schedules_count < b.schedules_count) return -1;
+        if (a.schedules_count > b.schedules_count) return 1;
+
+        // Jika semua kriteria sama, jaga urutan asli (atau urutan stabil jika tidak ada perubahan)
+        return 0;
+    });
+    // --- NEW SORTING LOGIC END ---
+
     // --- CONSOLE LOG START ---
-    console.log('All Sorted Eligible Employees (After Frontend Transformation):', allSortedEligibleEmployees);
+    console.log('All Sorted Eligible Employees (After Frontend Transformation & Sorting):', allSortedEligibleEmployees);
     // --- CONSOLE LOG END ---
 
     const initialSelectedEmployees = allSortedEligibleEmployees.slice(0, request.requested_amount);
@@ -36,10 +70,11 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
 
     useEffect(() => {
         // Ketika props karyawan berubah, perbarui data form
+        // Gunakan allSortedEligibleEmployees yang sudah diurutkan
         const newSelectedEmployees = allSortedEligibleEmployees.slice(0, request.requested_amount);
         setData('employee_ids', newSelectedEmployees.map((emp) => emp.id));
         setBackendError(null); // Reset backend error on prop change
-    }, [sameSubSectionEmployees, otherSubSectionEmployees, request.requested_amount]); // Dependencies untuk useEffect
+    }, [allSortedEligibleEmployees, request.requested_amount]); // Dependencies untuk useEffect
 
     useEffect(() => {
         if (errors.fulfillment_error) {
@@ -134,10 +169,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
     }
 
     // `allEmployeesForModal` juga dibuat langsung dari props
-    const allEmployeesForModal = [
-        ...sameSubSectionEmployees.map(emp => ({ ...emp, subSections: emp.sub_sections_data || [] })),
-        ...otherSubSectionEmployees.map(emp => ({ ...emp, subSections: emp.sub_sections_data || [] }))
-    ];
+    const allEmployeesForModal = allSortedEligibleEmployees; // Modal juga harus menggunakan data yang sudah disortir
     const totalSameSubSectionEligible = sameSubSectionEmployees.length;
 
     return (
@@ -148,7 +180,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                 {/* Request Details Card */}
                 <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
                     <h3 className="mb-3 font-bold text-lg">Detail Permintaan</h3>
-                    <p><strong>Tanggal:</strong> {dayjs(request.date).format('DD MMMM,"%Y"')}</p>
+                    <p><strong>Tanggal:</strong> {dayjs(request.date).format('DD MMMM YYYY')}</p> {/* Corrected format string */}
                     <p><strong>Sub Section:</strong> {request.sub_section?.name}</p>
                     <p><strong>Section:</strong> {request.sub_section?.section?.name}</p>
                     <p><strong>Shift:</strong> {request.shift?.name}</p>
@@ -177,7 +209,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                     <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
                         <h3 className="mb-3 font-bold text-lg">Karyawan Terpilih Otomatis</h3>
                         <p className="mb-4 text-gray-600 text-sm">
-                            Sistem telah otomatis memilih karyawan sesuai jumlah diminta, memprioritaskan dari sub bagian yang sama, lalu dari sub bagian lain, dengan prioritas **bulanan** lalu **harian** dengan bobot kerja terendah.
+                            Sistem telah otomatis memilih karyawan sesuai jumlah diminta, memprioritaskan dari sub bagian yang sama, lalu dari sub bagian lain, dengan prioritas **bulanan** lalu **harian** dengan bobot kerja tertinggi, kemudian rating, dan penugasan terendah.
                         </p>
                         <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
                             {Array.from({ length: request.requested_amount }).map((_, index) => {

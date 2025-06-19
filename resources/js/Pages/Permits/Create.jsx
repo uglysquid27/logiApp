@@ -5,8 +5,8 @@ import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { router } from '@inertiajs/react';
-import dayjs from 'dayjs'; // Make sure dayjs is imported for date formatting if needed
-import { useState, useEffect } from 'react'; // Import useState and useEffect
+import dayjs from 'dayjs'; // Pastikan dayjs diimpor untuk pemformatan tanggal jika diperlukan
+import { useState, useEffect } from 'react'; // Impor useState dan useEffect
 
 export default function PermitCreate({ auth, employees, authenticatedEmployee }) { // Tambahkan authenticatedEmployee
     const { data, setData, post, processing, errors } = useForm({
@@ -15,22 +15,22 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
         start_date: '',
         end_date: '',
         reason: '',
-        photo: null, // <<< TAMBAHKAN INI UNTUK FILE PHOTO (AWALNYA null)
+        photo: null, // Tambahkan ini untuk file foto (awalnya null)
     });
 
     const [isSickPermit, setIsSickPermit] = useState(data.permit_type === 'sakit');
 
-    // Update isSickPermit state when permit_type changes
+    // Perbarui state isSickPermit ketika permit_type berubah
     useEffect(() => {
         setIsSickPermit(data.permit_type === 'sakit');
-        // If changing away from 'sakit', clear the photo value
+        // Jika berubah dari 'sakit', kosongkan nilai foto
         if (data.permit_type !== 'sakit' && data.photo !== null) {
             setData('photo', null);
         }
     }, [data.permit_type]);
 
 
-    // Options for permit_type, matching your database ENUM
+    // Opsi untuk permit_type, sesuai dengan ENUM database Anda
     const permitTypes = [
         { value: '', label: 'Pilih Tipe Izin' },
         { value: 'sakit', label: 'Sakit' },
@@ -41,19 +41,28 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
 
     const submit = (e) => {
         e.preventDefault();
-        console.log('Mengirim data izin:', data);
+
+        // Buat salinan data form untuk dimodifikasi sebelum dikirim
+        let payload = { ...data };
+
+        // Logika untuk mengisi end_date jika kosong, sama dengan start_date
+        if (!payload.end_date) {
+            payload.end_date = payload.start_date;
+        }
+
+        console.log('Mengirim data izin:', payload);
         // PENTING: Untuk mengirim file, Inertia secara otomatis akan mengirim sebagai FormData
         // Anda mungkin perlu menambahkan `forceFormData: true` jika menghadapi masalah,
         // tetapi biasanya Inertia menanganinya secara otomatis ketika ada objek File di data.
         post(route('permits.store'), {
+            data: payload, // Kirim payload yang telah dimodifikasi
             forceFormData: true, // Pastikan ini true untuk upload file
             onSuccess: () => {
                 console.log('Izin berhasil diajukan!');
-                router.visit(route('permits.index')); // Redirect ke daftar izin
+                router.visit(route('employee.permits.index')); // Redirect ke daftar izin (gunakan 'employee.permits.index' sesuai diskusi sebelumnya)
             },
             onError: (err) => {
                 console.error('Ada kesalahan saat mengajukan izin:', err);
-                // Errors from backend will automatically populate the 'errors' object from useForm
             },
         });
     };
