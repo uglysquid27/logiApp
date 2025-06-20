@@ -19,26 +19,26 @@ const ShiftDetailModal = ({ shift, onClose }) => {
     if (!shift) return null;
 
     return (
-        <div className="z-50 fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-50 p-4">
-            <div className="relative bg-white dark:bg-gray-800 shadow-xl p-6 rounded-lg w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50 p-4">
+            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
                 <button
                     onClick={onClose}
-                    className="top-3 right-3 absolute text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-400"
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     aria-label="Close"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-                <h3 className="mb-4 font-bold text-gray-900 dark:text-gray-100 text-2xl">Detail Shift: {shift.name}</h3>
+                <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Shift: {shift.name}</h3>
                 <div className="space-y-2 text-gray-700 dark:text-gray-300">
                     <p><strong>Nama Shift:</strong> {shift.name}</p>
                     <p><strong>Waktu Mulai:</strong> {shift.start_time}</p>
                     <p><strong>Waktu Selesai:</strong> {shift.end_time}</p>
                     <p><strong>Total Jam:</strong> {shift.hours} jam</p>
                 </div>
-                <div className="flex justify-end mt-6">
+                <div className="mt-6 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white"
+                        className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
                     >
                         Tutup
                     </button>
@@ -62,16 +62,16 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
     };
 
     return (
-        <div className="z-50 fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-50 p-4">
-            <div className="relative bg-white dark:bg-gray-800 shadow-xl p-6 rounded-lg w-full max-w-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50 p-4">
+            <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
                 <button
                     onClick={onClose}
-                    className="top-3 right-3 absolute text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-400"
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     aria-label="Close"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-                <h3 className="mb-4 font-bold text-gray-900 dark:text-gray-100 text-2xl">Detail Man Power Request</h3>
+                <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">Detail Man Power Request</h3>
                 <div className="space-y-2 text-gray-700 dark:text-gray-300">
                     <p><strong>Tanggal Dibutuhkan:</strong> {formatDate(request.date)}</p>
                     <p><strong>Sub Section:</strong> {request.sub_section?.name || 'N/A'}</p>
@@ -80,9 +80,9 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
                     <p><strong>Jumlah Diminta:</strong> {request.requested_amount}</p>
                     <p><strong>Status:</strong> {request.status}</p>
 
-                    <h4 className="mt-4 font-semibold text-gray-800 dark:text-gray-200 text-lg">Pegawai Ditugaskan:</h4>
+                    <h4 className="mt-4 text-lg font-semibold text-gray-800 dark:text-gray-200">Pegawai Ditugaskan:</h4>
                     {assignedEmployees && assignedEmployees.length > 0 ? (
-                        <ul className="space-y-1 list-disc list-inside">
+                        <ul className="list-inside list-disc space-y-1">
                             {assignedEmployees.map((empItem, index) => (
                                 <li key={index} className="text-gray-700 dark:text-gray-300">
                                     {empItem.name} (NIK: {empItem.nik})
@@ -90,13 +90,13 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
                             ))}
                         </ul>
                     ) : (
-                        <p className="text-gray-600 dark:text-gray-400 italic">Belum ada pegawai yang ditugaskan untuk request ini.</p>
+                        <p className="italic text-gray-600 dark:text-gray-400">Belum ada pegawai yang ditugaskan untuk request ini.</p>
                     )}
                 </div>
-                <div className="flex justify-end mt-6">
+                <div className="mt-6 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white"
+                        className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
                     >
                         Tutup
                     </button>
@@ -107,71 +107,71 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
 };
 
 const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModal }) => (
-    <div className="flex-1 bg-white dark:bg-gray-800 shadow-md mb-8 p-6 rounded-lg min-w-80">
-        <h2 className="mb-4 font-semibold text-gray-800 dark:text-gray-100 text-xl">{title}</h2>
+    <div className="mb-8 min-w-full flex-1 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800 md:min-w-80">
+        <h2 className="mb-4 text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>
         {Object.keys(schedulesBySubSection).length === 0 ? (
-            <p className="text-gray-600 dark:text-gray-400 italic">Tidak ada penjadwalan di bagian ini.</p>
+            <p className="italic text-gray-600 dark:text-gray-400">Tidak ada penjadwalan di bagian ini.</p>
         ) : (
             Object.entries(schedulesBySubSection).map(([subSectionName, employeesWithDetails]) => (
-                <div key={subSectionName} className="mb-6 pb-4 last:pb-0 border-gray-200 dark:border-gray-700 border-b last:border-b-0">
-                    <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-medium text-blue-700 dark:text-blue-400 text-lg">{subSectionName}</h3>
+                <div key={subSectionName} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0 dark:border-gray-700">
+                    <div className="mb-3 flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-blue-700 dark:text-blue-400">{subSectionName}</h3>
                         {employeesWithDetails[0]?.man_power_request && (
                             <button
                                 onClick={() => openManPowerRequestModal(
                                     employeesWithDetails[0].man_power_request,
                                     employeesWithDetails.map(item => item.employee)
                                 )}
-                                className="flex-shrink-0 bg-blue-500 hover:bg-blue-600 ml-2 p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white transition-colors duration-150"
+                                className="ml-2 flex-shrink-0 rounded-full bg-blue-500 p-1 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:bg-blue-600 dark:focus:ring-offset-gray-800"
                                 title={`Lihat detail Request untuk ${subSectionName}`}
                             >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </button>
                         )}
                     </div>
-                    <div className="shadow-sm rounded-lg overflow-x-auto">
-                        <table className="divide-y divide-gray-200 dark:divide-gray-700 min-w-full table-fixed">
+                    <div className="overflow-x-auto shadow-sm rounded-lg">
+                        <table className="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th scope="col" className="px-6 py-3 w-1/6 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                         Nama Pegawai
                                     </th>
-                                    <th scope="col" className="px-6 py-3 w-1/6 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                         NIK
                                     </th>
-                                    <th scope="col" className="px-6 py-3 w-1/6 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                         Tipe
                                     </th>
-                                    <th scope="col" className="px-6 py-3 w-1/6 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                         Status
                                     </th>
-                                    <th scope="col" className="px-6 py-3 w-1/6 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                         Sub-Section
                                     </th>
-                                    <th scope="col" className="px-6 py-3 w-1/6 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                         Section
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                 {employeesWithDetails.map((item, index) => (
                                     <tr key={index}>
-                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 text-sm whitespace-nowrap">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                                             {item.employee.name || 'Nama Pegawai Tidak Diketahui'}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                             {item.employee.nik || '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                             {item.employee.type || '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                             {item.employee.status || '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                             {item.sub_section?.name || '-'}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                             {item.sub_section?.section?.name || '-'}
                                         </td>
                                     </tr>
@@ -199,53 +199,53 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
     };
 
     return (
-        <div className="z-50 fixed inset-0 flex justify-center items-center bg-gray-600 bg-opacity-50 p-4">
-            <div className="relative bg-white dark:bg-gray-800 shadow-xl p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50 p-4">
+            <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800">
                 <button
                     onClick={onClose}
-                    className="top-3 right-3 absolute text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-400"
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                     aria-label="Close"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
-                <h3 className="mb-4 font-bold text-gray-900 dark:text-gray-100 text-2xl">{title}</h3>
-                <div className="shadow-sm border border-gray-200 dark:border-gray-700 rounded-lg overflow-x-auto">
-                    <table className="divide-y divide-gray-200 dark:divide-gray-700 min-w-full">
+                <h3 className="mb-4 text-2xl font-bold text-gray-900 dark:text-gray-100">{title}</h3>
+                <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm dark:border-gray-700">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                     Tanggal
                                 </th>
-                                <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                     Nama Pegawai
                                 </th>
-                                <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                     NIK
                                 </th>
-                                <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                     Shift
                                 </th>
-                                <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                     Sub-Section
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:divide-gray-700">
                             {schedules.map((scheduleItem) => (
                                 <tr key={scheduleItem.id}>
-                                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                         {formatDate(scheduleItem.date)}
                                     </td>
-                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 text-sm whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                                         {scheduleItem.employee?.name || 'N/A'}
                                     </td>
-                                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                         {scheduleItem.employee?.nik || 'N/A'}
                                     </td>
-                                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                         {scheduleItem.man_power_request?.shift?.name || 'N/A'}
                                     </td>
-                                    <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
+                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                         {scheduleItem.sub_section?.name || 'N/A'}
                                     </td>
                                 </tr>
@@ -253,10 +253,10 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
                         </tbody>
                     </table>
                 </div>
-                <div className="flex justify-end mt-6">
+                <div className="mt-6 flex justify-end">
                     <button
                         onClick={onClose}
-                        className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white"
+                        className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
                     >
                         Tutup
                     </button>
@@ -400,54 +400,61 @@ const Index = () => {
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-xl leading-tight">
+                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
                     Agenda Penjadwalan
                 </h2>
             }
         >
-            <div className="mx-auto mt-10 p-4 max-w-5xl">
-                <h1 className="mb-8 font-extrabold text-gray-900 dark:text-gray-100 text-3xl text-center">Agenda Penjadwalan</h1>
+            <div className="mx-auto mt-10 max-w-5xl p-4">
+                <h1 className="mb-8 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">Agenda Penjadwalan</h1>
 
                 {/* Date Filter Section */}
-                <div className="flex sm:flex-row flex-col items-center sm:space-x-4 space-y-4 sm:space-y-0 bg-white dark:bg-gray-800 shadow-md mb-8 p-4 rounded-lg">
-                    <label htmlFor="startDate" className="block font-medium text-gray-700 dark:text-gray-300 text-sm">
-                        Dari Tanggal:
-                    </label>
-                    <input
-                        type="date"
-                        id="startDate"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="block bg-white dark:bg-gray-700 shadow-sm mt-1 px-3 py-2 border border-gray-300 focus:border-indigo-500 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 w-full sm:w-auto text-gray-900 dark:text-gray-100 sm:text-sm"
-                    />
+                <div className="mb-8 flex flex-col items-center space-y-4 rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:flex-row sm:space-x-4 sm:space-y-0">
+                    <div className="flex w-full flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+                        <div className="flex-1">
+                            <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Dari Tanggal:
+                            </label>
+                            <input
+                                type="date"
+                                id="startDate"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                            />
+                        </div>
 
-                    <label htmlFor="endDate" className="block font-medium text-gray-700 dark:text-gray-300 text-sm">
-                        Sampai Tanggal:
-                    </label>
-                    <input
-                        type="date"
-                        id="endDate"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="block bg-white dark:bg-gray-700 shadow-sm mt-1 px-3 py-2 border border-gray-300 focus:border-indigo-500 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 w-full sm:w-auto text-gray-900 dark:text-gray-100 sm:text-sm"
-                    />
-
-                    <button
-                        onClick={applyFilters}
-                        className="bg-indigo-600 hover:bg-indigo-700 ml-0 sm:ml-4 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white transition-colors duration-150"
-                    >
-                        Filter
-                    </button>
-                    <button
-                        onClick={clearFilters}
-                        className="bg-gray-500 hover:bg-gray-600 ml-0 sm:ml-2 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white transition-colors duration-150"
-                    >
-                        Clear Filter
-                    </button>
+                        <div className="flex-1">
+                            <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Sampai Tanggal:
+                            </label>
+                            <input
+                                type="date"
+                                id="endDate"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex w-full flex-col space-y-2 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0">
+                        <button
+                            onClick={applyFilters}
+                            className="w-full rounded-md bg-indigo-600 px-4 py-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800 sm:w-auto"
+                        >
+                            Filter
+                        </button>
+                        <button
+                            onClick={clearFilters}
+                            className="w-full rounded-md bg-gray-500 px-4 py-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 hover:bg-gray-600 dark:focus:ring-offset-gray-800 sm:w-auto"
+                        >
+                            Clear Filter
+                        </button>
+                    </div>
                 </div>
 
                 {Object.keys(groupedSchedulesByDateShiftSubSection).length === 0 ? (
-                    <div className="bg-blue-100 dark:bg-blue-900 p-4 border-blue-500 dark:border-blue-700 border-l-4 rounded-md text-blue-700 dark:text-blue-200" role="alert">
+                    <div className="rounded-md border-l-4 border-blue-500 bg-blue-100 p-4 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-200" role="alert">
                         <p className="font-bold">Informasi:</p>
                         <p>Tidak ada penjadwalan dalam rentang tanggal yang dipilih.</p>
                     </div>
@@ -465,14 +472,14 @@ const Index = () => {
                         return (
                             <React.Fragment key={dateKey}>
                                 <div className="mb-10">
-                                    <h2 className="bg-gray-100 dark:bg-gray-700 shadow-sm mb-6 p-4 rounded-lg font-bold text-gray-800 dark:text-gray-100 text-2xl">
+                                    <h2 className="mb-6 rounded-lg bg-gray-100 p-4 text-2xl font-bold text-gray-800 shadow-sm dark:bg-gray-700 dark:text-gray-100">
                                         {dateData.displayDate}
                                     </h2>
                                     {/* Wrap shifts in a flex container for horizontal display */}
-                                    <div className="flex md:flex-row flex-col md:space-x-4 pb-4 overflow-x-auto">
+                                    <div className="flex flex-col space-y-8 pb-4 md:flex-row md:space-x-4 md:space-y-0 lg:overflow-x-visible overflow-x-auto">
                                         {sortedShiftsForDate.map(shiftName => (
-                                            <div key={`${dateKey}-${shiftName}`} className="flex-1 min-w-80">
-                                                <div className="flex justify-between items-center mb-4">
+                                            <div key={`${dateKey}-${shiftName}`} className="flex w-full flex-col">
+                                                <div className="mb-4 flex items-center justify-between">
                                                     {/* ScheduleSection now only renders the sub-sections and employees */}
                                                     <ScheduleSection
                                                         title={`Shift ${shiftName}`}
@@ -481,40 +488,40 @@ const Index = () => {
                                                     />
                                                     <button
                                                         onClick={() => openShiftModal(shiftsForDate[shiftName].details)}
-                                                        className="flex-shrink-0 bg-indigo-500 hover:bg-indigo-600 ml-2 p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 text-white transition-colors duration-150"
+                                                        className="ml-2 flex-shrink-0 rounded-full bg-indigo-500 p-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-600 dark:focus:ring-offset-gray-800"
                                                         title={`Lihat detail Shift ${shiftName}`}
                                                     >
-                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                                     </button>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-                                <hr className="my-10 border-gray-200 dark:border-gray-700 border-t-2" />
+                                <hr className="my-10 border-t-2 border-gray-200 dark:border-gray-700" />
                             </React.Fragment>
                         );
                     })
                 )}
 
                 {/* Summary Section */}
-                <div className="bg-white dark:bg-gray-800 shadow-md mt-8 p-6 rounded-lg">
-                    <h3 className="mb-4 font-bold text-gray-800 dark:text-gray-100 text-xl">Ringkasan Penjadwalan</h3>
-                    <div className="gap-4 grid grid-cols-1 md:grid-cols-2 text-gray-700 dark:text-gray-300">
-                        <p className="flex justify-between items-center">
+                <div className="mt-8 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
+                    <h3 className="mb-4 text-xl font-bold text-gray-800 dark:text-gray-100">Ringkasan Penjadwalan</h3>
+                    <div className="grid grid-cols-1 gap-4 text-gray-700 dark:text-gray-300 md:grid-cols-2">
+                        <p className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
                             <strong>Total Penjadwalan Ditampilkan:</strong> {totalSchedulesDisplayed}
                             <button
                                 onClick={() => setShowDisplayedDetails(!showDisplayedDetails)}
-                                className="bg-blue-500 hover:bg-blue-600 ml-2 px-3 py-1 rounded-md text-white text-xs transition-colors duration-150"
+                                className="mt-2 ml-0 w-full rounded-md bg-blue-500 px-3 py-1 text-xs text-white transition-colors duration-150 hover:bg-blue-600 sm:ml-2 sm:mt-0 sm:w-auto"
                             >
                                 {showDisplayedDetails ? 'Sembunyikan Detail' : 'Lihat Detail'}
                             </button>
                         </p>
-                        <p className="flex justify-between items-center">
+                        <p className="flex flex-col items-start justify-between sm:flex-row sm:items-center">
                             <strong>Total Penjadwalan Minggu Ini:</strong> {totalSchedulesThisWeek}
                             <button
                                 onClick={() => setShowWeeklyDetails(!showWeeklyDetails)}
-                                className="bg-blue-500 hover:bg-blue-600 ml-2 px-3 py-1 rounded-md text-white text-xs transition-colors duration-150"
+                                className="mt-2 ml-0 w-full rounded-md bg-blue-500 px-3 py-1 text-xs text-white transition-colors duration-150 hover:bg-blue-600 sm:ml-2 sm:mt-0 sm:w-auto"
                             >
                                 {showWeeklyDetails ? 'Sembunyikan Detail' : 'Lihat Detail'}
                             </button>

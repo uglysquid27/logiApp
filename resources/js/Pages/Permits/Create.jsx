@@ -111,21 +111,7 @@ export default function PermitCreate({ auth, employees, authenticatedEmployee })
                                     )}
                                     <InputError message={errors.employee_id} className="mt-2" />
                                     
-                                    {/* Gender Breakdown */}
-                                    <div className="mt-4 grid grid-cols-3 gap-4">
-                                        <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                            <p className="text-sm text-gray-600">Total Permintaan</p>
-                                            <p className="text-xl font-bold">{data.total_requested}</p>
-                                        </div>
-                                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                                            <p className="text-sm text-blue-800">Laki-laki</p>
-                                            <p className="text-xl font-bold">{data.male_count}</p>
-                                        </div>
-                                        <div className="bg-pink-50 p-3 rounded-lg border border-pink-200">
-                                            <p className="text-sm text-pink-800">Perempuan</p>
-                                            <p className="text-xl font-bold">{data.female_count}</p>
-                                        </div>
-                                    </div>
+                        
                                 </div>
 
                                 {/* Permit Type Select */}
