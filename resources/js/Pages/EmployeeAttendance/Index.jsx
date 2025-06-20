@@ -230,109 +230,54 @@ export default function Index() {
                 <table className="divide-y divide-gray-200 dark:divide-gray-700 min-w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Nama Pegawai
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Gender
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        NIK
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Tipe
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Sub Section
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Section
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Total Penugasan (Keseluruhan)
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Total Penugasan (Minggu Ini)
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Total Workload
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">
-                        Cuti
-                      </th> {/* NEW COLUMN FOR CUTI */}
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Nama Pegawai</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Gender</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">NIK</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Tipe</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Sub Section</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Section</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Total Penugasan (Keseluruhan)</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Total Penugasan (Minggu Ini)</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Total Workload</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Status</th>
+                      <th scope="col" className="px-6 py-3 font-medium text-gray-500 dark:text-gray-300 text-xs text-left uppercase tracking-wider">Cuti</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {employees.length === 0 ? (
                       <tr>
-                        <td colSpan="10" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center"> {/* Updated colspan */}
-                          Tidak ada data pegawai dengan kriteria filter atau pencarian ini.
-                        </td>
+                        <td colSpan="11" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">Tidak ada data pegawai dengan kriteria filter atau pencarian ini.</td>
                       </tr>
                     ) : (
                       employees.map((employee) => (
                         <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                          <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 text-sm whitespace-nowrap">
-                            {employee.name}
-                          </td>
-                          <td className="x-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
-                            {employee.gender}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
-                            {employee.nik}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
-                            {employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
-                            {/* Display all sub-sections, comma-separated */}
-                            {employee.sub_sections && employee.sub_sections.length > 0
-                              ? employee.sub_sections.map(ss => ss.name).join(', ')
-                              : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">
-                            {/* Display all parent sections, comma-separated, ensuring uniqueness */}
-                            {employee.sub_sections && employee.sub_sections.length > 0
-                              ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ')
-                              : 'N/A'}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">
-                            {employee.schedules_count}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">
-                            {employee.schedules_count_weekly}
-                          </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">
-                            {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}
-                          </td>
+                          <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 text-sm whitespace-nowrap">{employee.name}</td>
+                          <td className="x-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">{employee.gender}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">{employee.nik}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">{employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">{employee.sub_sections && employee.sub_sections.length > 0 ? employee.sub_sections.map(ss => ss.name).join(', ') : 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap">{employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">{employee.schedules_count}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">{employee.schedules_count_weekly}</td>
+                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm text-center whitespace-nowrap">{employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}</td>
                           <td className="px-6 py-4 text-sm whitespace-nowrap">
-                            <span
-                              className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusClasses(employee.status)}`}
-                            >
+                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusClasses(employee.status)}`}>
                               {employee.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm whitespace-nowrap"> {/* NEW CELL FOR CUTI */}
-                            <span
-                                className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${
-                                    employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'
-                                }`}
-                            >
-                                {employee.cuti}
+                          <td className="px-6 py-4 text-sm whitespace-nowrap">
+                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'}`}>
+                              {employee.cuti}
                             </span>
                           </td>
                         </tr>
                       ))
                     )}
-                    {/* Total row - these totals now reflect only the current page's data */}
                     <tr className="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300">
-                      <td colSpan="5" className="px-6 py-3 text-right">Total Penugasan (Keseluruhan):</td>
+                      <td colSpan="6" className="px-6 py-3 text-right">Total Penugasan (Keseluruhan):</td>
                       <td className="px-6 py-3 text-center">{totalSchedulesCount}</td>
                       <td className="px-6 py-3 text-center">{totalWeeklySchedulesCount}</td>
-                      <td colSpan="3" className="px-6 py-3 text-center"></td> {/* Updated colspan */}
+                      <td colSpan="3" className="px-6 py-3 text-center"></td>
                     </tr>
                   </tbody>
                 </table>
@@ -345,11 +290,10 @@ export default function Index() {
                     <Link
                       key={index}
                       href={buildPaginationUrl(link.url)}
-                      className={`px-3 py-1 rounded-md text-sm transition-all ${
-                        link.active
+                      className={`px-3 py-1 rounded-md text-sm transition-all ${link.active
                           ? 'bg-indigo-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      } ${!link.url && 'pointer-events-none opacity-50'}`}
+                        } ${!link.url && 'pointer-events-none opacity-50'}`}
                       dangerouslySetInnerHTML={{ __html: link.label }}
                       preserveScroll
                     />
