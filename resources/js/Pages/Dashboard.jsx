@@ -18,6 +18,35 @@ dayjs.locale('id');
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
+// Chart Options Definitions
+const manpowerRequestChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'top',
+        },
+        title: {
+            display: true,
+            text: 'Jumlah Request Manpower (7 Hari Terakhir)',
+        },
+    },
+};
+
+const employeeAssignmentChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: 'top',
+        },
+        title: {
+            display: true,
+            text: 'Jumlah Penugasan Pegawai (7 Hari Terakhir)',
+        },
+    },
+};
+
 // Reusable Modal Component
 const DetailModal = ({ isOpen, onClose, title, data, columns, formatDate, onFilterOrPaginate }) => {
     if (!isOpen) return null;
@@ -28,16 +57,13 @@ const DetailModal = ({ isOpen, onClose, title, data, columns, formatDate, onFilt
 
     const [filterValues, setFilterValues] = useState({});
 
-    // Populate filter values from URL on initial open or data change
-    // This ensures filters persist across pagination and are set if coming from a direct filtered link
     useEffect(() => {
         if (isOpen && data && data.path) {
             const url = new URL(data.path);
             const params = new URLSearchParams(url.search);
             const newFilterValues = {};
             columns.forEach(col => {
-                const filterKey = col.filterField || col.field; // Use filterField if specified, else field
-
+                const filterKey = col.filterField || col.field;
                 if (col.filterable) {
                     if (col.filterType === 'date_range') {
                         if (params.has(`filter_${filterKey}_from`)) {
@@ -64,23 +90,20 @@ const DetailModal = ({ isOpen, onClose, title, data, columns, formatDate, onFilt
     const applyFilters = () => {
         const params = new URLSearchParams();
         Object.entries(filterValues).forEach(([key, value]) => {
-            // Ensure values are not empty strings or null before appending
             if (value !== '' && value !== null) {
                 params.append(`filter_${key}`, value);
             }
         });
-        // Call the parent function to re-fetch data with filters (and effectively reset page to 1)
         onFilterOrPaginate(data.path, params.toString());
     };
 
     const resetFilters = () => {
         setFilterValues({});
-        onFilterOrPaginate(data.path, ''); // Re-fetch with no filters
+        onFilterOrPaginate(data.path, '');
     };
 
     const handlePaginationClick = (url) => {
         if (!url) return;
-        // The pagination link already contains the existing filters from Laravel's withQueryString()
         onFilterOrPaginate(url);
     };
 
@@ -105,9 +128,7 @@ const DetailModal = ({ isOpen, onClose, title, data, columns, formatDate, onFilt
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {columns.map((col, index) => {
                             if (col.filterable) {
-                                // Determine the key for filterValues state
                                 const filterKey = col.filterField || col.field;
-
                                 return (
                                     <div key={index} className="flex flex-col">
                                         <label htmlFor={`filter-${col.field}`} className="block text-sm font-medium text-gray-700 mb-1">
@@ -240,7 +261,6 @@ const DetailModal = ({ isOpen, onClose, title, data, columns, formatDate, onFilt
     );
 };
 
-
 export default function Dashboard() {
     const {
         summary,
@@ -263,11 +283,9 @@ export default function Dashboard() {
 
     const handleModalDataFetch = async (url, queryString = '') => {
         const fullUrl = queryString ? `${url}?${queryString}` : url;
-        console.log('Fetching modal data from URL:', fullUrl); // Important debug log
         try {
             const response = await fetch(fullUrl);
             if (!response.ok) {
-                // If the response is not OK, try to read the error body
                 const errorBody = await response.text();
                 throw new Error(`HTTP error! Status: ${response.status}. Response: ${errorBody}`);
             }
@@ -275,44 +293,35 @@ export default function Dashboard() {
             setModalData(data);
         } catch (error) {
             console.error("Failed to fetch modal data:", error);
-            // You might want to show a user-friendly error message here
-            setModalData(null); // Clear data if fetch fails
+            setModalData(null);
         }
     };
 
     const openDetailModal = (url, title, columns) => {
-        console.log('openDetailModal called for:', title, 'URL:', url); // Important debug log
         setModalTitle(title);
         setModalColumns(columns);
-        setModalFetchUrl(url); // Store the base URL for filtering/pagination
-        handleModalDataFetch(url); // Initial fetch without filters
+        setModalFetchUrl(url);
+        handleModalDataFetch(url);
         setModalOpen(true);
     };
 
-    // --- Filter Options Data ---
-    // Make sure these values (e.g., 1, 2, 3) match the actual IDs in your database!
-    // Ideally, these would be fetched from your Laravel controller (e.g., SubSection::all())
-    // and passed as Inertia props to ensure they are always up-to-date.
+    // Filter Options Data
     const employeeTypes = [{value: 'bulanan', label: 'Bulanan'}, {value: 'harian', label: 'Harian'}];
     const employeeStatuses = [{value: 'available', label: 'Tersedia'}, {value: 'unavailable', label: 'Tidak Tersedia'}];
     const cutiOptions = [{value: 'yes', label: 'Ya'}, {value: 'no', label: 'Tidak'}];
-
     const sampleSubSectionOptions = [
         { value: 1, label: 'Produksi' },
         { value: 2, label: 'Quality Control' },
         { value: 3, label: 'Logistik' },
-        { value: 4, label: 'HRD' }, // Example: Add more if applicable
-        // ... add more based on your actual database SubSection records
+        { value: 4, label: 'HRD' },
     ];
     const sampleShiftOptions = [
         { value: 1, label: 'Shift Pagi' },
         { value: 2, label: 'Shift Sore' },
         { value: 3, label: 'Shift Malam' },
-        // ... add more based on your actual database Shift records
     ];
 
-
-    // --- Column Definitions with Filter Metadata ---
+    // Column Definitions with Filter Metadata
     const activeEmployeesColumns = [
         { header: 'NIK', field: 'nik', filterable: true, filterType: 'text' },
         { header: 'Nama Pegawai', field: 'name', filterable: true, filterType: 'text' },
@@ -327,7 +336,7 @@ export default function Dashboard() {
         { header: 'Sub Bagian', field: 'sub_section', render: (item) => item.sub_section?.name || 'N/A', filterable: true, filterType: 'select', filterOptions: sampleSubSectionOptions, filterField: 'sub_section_id' },
         { header: 'Shift', field: 'shift', render: (item) => item.shift?.name || 'N/A', filterable: true, filterType: 'select', filterOptions: sampleShiftOptions, filterField: 'shift_id' },
         { header: 'Jumlah Diminta', field: 'requested_amount', filterable: true, filterType: 'number' },
-        { header: 'Status', field: 'status' }, // Backend already filters by 'pending', so not directly filterable in UI
+        { header: 'Status', field: 'status' },
     ];
 
     const fulfilledRequestsColumns = [
@@ -335,180 +344,160 @@ export default function Dashboard() {
         { header: 'Sub Bagian', field: 'sub_section', render: (item) => item.sub_section?.name || 'N/A', filterable: true, filterType: 'select', filterOptions: sampleSubSectionOptions, filterField: 'sub_section_id' },
         { header: 'Shift', field: 'shift', render: (item) => item.shift?.name || 'N/A', filterable: true, filterType: 'select', filterOptions: sampleShiftOptions, filterField: 'shift_id' },
         { header: 'Jumlah Diminta', field: 'requested_amount', filterable: true, filterType: 'number' },
-        { header: 'Status', field: 'status' }, // Backend already filters by 'fulfilled', so not directly filterable in UI
+        { header: 'Status', field: 'status' },
     ];
 
     const upcomingSchedulesColumns = [
         { header: 'Tanggal', field: 'date', render: (item, fmt) => fmt(item.date), filterable: true, filterType: 'date_range' },
-        { header: 'Nama Pegawai', field: 'employee', render: (item) => item.employee?.name || 'N/A', filterable: true, filterType: 'text', filterField: 'employee_name' }, // 'employee_name' is a conceptual filter field for a relationship
+        { header: 'Nama Pegawai', field: 'employee', render: (item) => item.employee?.name || 'N/A', filterable: true, filterType: 'text', filterField: 'employee_name' },
         { header: 'Sub Bagian', field: 'sub_section', render: (item) => item.sub_section?.name || 'N/A', filterable: true, filterType: 'select', filterOptions: sampleSubSectionOptions, filterField: 'sub_section_id' },
-        { header: 'Shift', field: 'man_power_request_shift', render: (item) => item.man_power_request?.shift?.name || 'N/A', filterable: true, filterType: 'select', filterOptions: sampleShiftOptions, filterField: 'shift_id' }, // Filters via man_power_request's shift_id
+        { header: 'Shift', field: 'man_power_request_shift', render: (item) => item.man_power_request?.shift?.name || 'N/A', filterable: true, filterType: 'select', filterOptions: sampleShiftOptions, filterField: 'shift_id' },
     ];
-
-    // Chart options (assuming these are defined elsewhere or need to be defined here)
-    const manpowerRequestChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-            },
-            title: {
-                display: true,
-                text: 'Jumlah Request Manpower (7 Hari Terakhir)',
-            },
-        },
-    };
-
-    const employeeAssignmentChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-            },
-            title: {
-                display: true,
-                text: 'Jumlah Penugasan Pegawai (7 Hari Terakhir)',
-            },
-        },
-    };
 
     return (
         <AuthenticatedLayout
             header={
-                <h2 className="text-2xl font-semibold text-gray-800">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-gray-200">
                     Dashboard
                 </h2>
             }
         >
             <Head title="Dashboard" />
 
-            <div className="p-4 bg-gray-100 min-h-screen">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="p-2 sm:p-4 bg-gray-100 dark:bg-gray-900 min-h-screen">
+                <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-6">
                     {/* Summary Cards Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
                         {/* Active Employees Card */}
                         <div
-                            className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-105"
+                            className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4 md:p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02]"
                             onClick={() => openDetailModal(route('dashboard.employees.active'), 'Daftar Pegawai Aktif', activeEmployeesColumns)}
                         >
-                            <h3 className="text-lg font-semibold text-gray-700 mb-2">Pegawai Aktif</h3>
-                            <p className="text-5xl font-extrabold text-indigo-600">
+                            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Pegawai Aktif</h3>
+                            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-indigo-600 dark:text-indigo-400">
                                 {summary.activeEmployeesCount}
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">dari {summary.totalEmployeesCount} Total</p>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">dari {summary.totalEmployeesCount} Total</p>
                         </div>
 
                         {/* Pending Manpower Requests Card */}
                         <div
-                            className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-105"
-                            // **CRITICAL: Ensure 'dashboard.requests.pending' matches your routes/web.php**
+                            className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4 md:p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02]"
                             onClick={() => openDetailModal(route('dashboard.requests.pending'), 'Daftar Request Pending', pendingRequestsColumns)}
                         >
-                            <h3 className="text-lg font-semibold text-gray-700 mb-2">Request Pending</h3>
-                            <p className="text-5xl font-extrabold text-yellow-600">
+                            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Request Pending</h3>
+                            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-yellow-600 dark:text-yellow-400">
                                 {summary.pendingRequestsCount}
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">dari {summary.totalRequestsCount} Total</p>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">dari {summary.totalRequestsCount} Total</p>
                         </div>
 
                         {/* Fulfilled Manpower Requests Card */}
                         <div
-                            className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-105"
-                            // **CRITICAL: Ensure 'dashboard.requests.fulfilled' matches your routes/web.php**
+                            className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4 md:p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02]"
                             onClick={() => openDetailModal(route('dashboard.requests.fulfilled'), 'Daftar Request Terpenuhi', fulfilledRequestsColumns)}
                         >
-                            <h3 className="text-lg font-semibold text-gray-700 mb-2">Request Terpenuhi</h3>
-                            <p className="text-5xl font-extrabold text-green-600">
+                            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Request Terpenuhi</h3>
+                            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-green-600 dark:text-green-400">
                                 {summary.fulfilledRequestsCount}
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">dari {summary.totalRequestsCount} Total</p>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">dari {summary.totalRequestsCount} Total</p>
                         </div>
 
                         {/* Schedules This Week Card */}
                         <div
-                            className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-105"
-                            // **CRITICAL: Ensure 'dashboard.schedules.upcoming' matches your routes/web.php**
+                            className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4 md:p-6 flex flex-col items-center justify-center text-center cursor-pointer transition duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02]"
                             onClick={() => openDetailModal(route('dashboard.schedules.upcoming'), 'Daftar Penjadwalan Mendatang', upcomingSchedulesColumns)}
                         >
-                            <h3 className="text-lg font-semibold text-gray-700 mb-2">Penjadwalan Minggu Ini</h3>
-                            <p className="text-5xl font-extrabold text-blue-600">
+                            <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Penjadwalan Minggu Ini</h3>
+                            <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-blue-600 dark:text-blue-400">
                                 {summary.thisWeekSchedulesCount}
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">dari {summary.totalSchedulesCount} Total</p>
+                            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">dari {summary.totalSchedulesCount} Total</p>
                         </div>
                     </div>
 
-                    {/* Charts Section (unchanged) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-                        <div className="bg-white shadow-lg rounded-lg p-6 h-96">
-                            <Bar data={manpowerRequestChartData} options={manpowerRequestChartOptions} />
+                    {/* Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
+                        <div className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4 h-64 sm:h-80 md:h-96">
+                            <Bar 
+                                data={manpowerRequestChartData} 
+                                options={manpowerRequestChartOptions} 
+                            />
                         </div>
-                        <div className="bg-white shadow-lg rounded-lg p-6 h-96">
-                            <Bar data={employeeAssignmentChartData} options={employeeAssignmentChartOptions} />
+                        <div className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4 h-64 sm:h-80 md:h-96">
+                            <Bar 
+                                data={employeeAssignmentChartData} 
+                                options={employeeAssignmentChartOptions} 
+                            />
                         </div>
                     </div>
 
-                    {/* Recent Pending Requests and Upcoming Schedules Tables (unchanged) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <div className="bg-white shadow-lg rounded-lg p-6">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4">5 Request Manpower Pending Terbaru</h3>
+                    {/* Recent Tables Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+                        {/* Recent Pending Requests */}
+                        <div className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4">
+                            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                                5 Request Manpower Pending Terbaru
+                            </h3>
                             {recentPendingRequests && recentPendingRequests.length > 0 ? (
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead className="bg-gray-50 dark:bg-gray-700">
                                             <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sub Bagian</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Diminta</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tanggal</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sub Bagian</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Shift</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Jumlah</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
+                                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                             {recentPendingRequests.map((request) => (
-                                                <tr key={request.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(request.date)}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.sub_section?.name || 'N/A'}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.shift?.name || 'N/A'}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{request.requested_amount}</td>
+                                                <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{formatDate(request.date)}</td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{request.sub_section?.name || 'N/A'}</td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{request.shift?.name || 'N/A'}</td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{request.requested_amount}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
                             ) : (
-                                <p className="text-gray-600 italic">Tidak ada request pending terbaru.</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 italic py-4">Tidak ada request pending terbaru.</p>
                             )}
                         </div>
 
-                        <div className="bg-white shadow-lg rounded-lg p-6">
-                            <h3 className="text-xl font-semibold text-gray-800 mb-4">5 Penjadwalan Mendatang Terbaru</h3>
+                        {/* Upcoming Schedules */}
+                        <div className="bg-white dark:bg-gray-800 shadow-md sm:shadow-lg rounded-lg p-3 sm:p-4">
+                            <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
+                                5 Penjadwalan Mendatang Terbaru
+                            </h3>
                             {upcomingSchedules && upcomingSchedules.length > 0 ? (
                                 <div className="overflow-x-auto">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                        <thead className="bg-gray-50 dark:bg-gray-700">
                                             <tr>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pegawai</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sub Bagian</th>
-                                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tanggal</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Pegawai</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sub Bagian</th>
+                                                <th scope="col" className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Shift</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
+                                        <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                             {upcomingSchedules.map((schedule) => (
-                                                <tr key={schedule.id}>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(schedule.date)}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.employee?.name || 'N/A'}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.sub_section?.name || 'N/A'}</td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{schedule.man_power_request?.shift?.name || 'N/A'}</td>
+                                                <tr key={schedule.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{formatDate(schedule.date)}</td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{schedule.employee?.name || 'N/A'}</td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{schedule.sub_section?.name || 'N/A'}</td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-900 dark:text-gray-100">{schedule.man_power_request?.shift?.name || 'N/A'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
                             ) : (
-                                <p className="text-gray-600 italic">Tidak ada penjadwalan mendatang.</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 italic py-4">Tidak ada penjadwalan mendatang.</p>
                             )}
                         </div>
                     </div>

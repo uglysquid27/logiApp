@@ -17,16 +17,14 @@ const MoonIcon = () => (
 );
 
 export default function AuthenticatedLayout({ header, children }) {
-    // Safely access user object, default to null if not available
     const { auth } = usePage().props;
     const user = auth && auth.user ? auth.user : null;
+    const [isDark, setIsDark] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // State for dark mode
-    const [isDark, setIsDark] = useState(false); // Initialize with a default
-
-    // Effect to initialize theme based on localStorage or system preference
+    // Effect to initialize theme
     useEffect(() => {
-        if (typeof window !== 'undefined') { // Ensure window is defined (for SSR safety)
+        if (typeof window !== 'undefined') {
             const storedTheme = localStorage.getItem('theme');
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -36,11 +34,11 @@ export default function AuthenticatedLayout({ header, children }) {
                 setIsDark(false);
             }
         }
-    }, []); // Empty dependency array: runs only once on mount
+    }, []);
 
-    // Effect to apply dark mode class to <html> and save preference
+    // Effect to apply dark mode class
     useEffect(() => {
-        if (typeof window !== 'undefined') { // Ensure window is defined
+        if (typeof window !== 'undefined') {
             const root = window.document.documentElement;
             if (isDark) {
                 root.classList.add('dark');
@@ -50,83 +48,115 @@ export default function AuthenticatedLayout({ header, children }) {
                 localStorage.setItem('theme', 'light');
             }
         }
-    }, [isDark]); // Runs whenever isDark changes
+    }, [isDark]);
 
-    // Function to toggle dark mode
     const toggleDarkMode = () => {
         setIsDark(!isDark);
     };
 
-    // Determine user role based on available properties
-    // Admin is identified by role 'admin'
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
     const isAdmin = user && user.role === 'admin';
-    // Employee is identified by the presence of a non-empty 'nik'
     const isEmployee = user && typeof user.nik === 'string' && user.nik.trim() !== '';
 
-    // Debugging: Log the user object to see its structure
-    useEffect(() => {
-        console.log('--- AuthenticatedLayout Debugging ---');
-        console.log('Current User Object from Inertia props:', user);
-        console.log('Calculated isAdmin:', isAdmin);
-        console.log('Calculated isEmployee:', isEmployee);
-        console.log('-----------------------------------');
-    }, [user, isAdmin, isEmployee]);
-
-
     return (
-        <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased">
-            {/* Sidebar */}
-            <aside className="w-64 bg-gray-100 dark:bg-gray-800 flex flex-col shadow-lg pt-8">
-                <div className="flex h-20 items-center justify-center px-4">
-                    <Link href="/dashboard" className="flex items-center space-x-2">
-                        <ApplicationLogo className="h-10 w-auto fill-current text-indigo-600 dark:text-indigo-400" />
+        <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased">
+            {/* Mobile Header - Simplified without logo */}
+            <header className="md:hidden bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center">
+                <button 
+                    onClick={toggleMobileMenu}
+                    className="text-gray-600 dark:text-gray-300 focus:outline-none transition-transform hover:scale-110"
+                    aria-label="Toggle menu"
+                >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                
+                <label htmlFor="theme-toggle-checkbox" className="flex items-center cursor-pointer transition-transform hover:scale-110" title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+                    <div className="relative">
+                        <input
+                            type="checkbox"
+                            id="theme-toggle-checkbox"
+                            className="sr-only"
+                            checked={isDark}
+                            onChange={toggleDarkMode}
+                        />
+                        <div className="block bg-gray-300 dark:bg-gray-700 w-12 h-7 rounded-full transition-colors duration-300 ease-in-out"></div>
+                        <div className={`dot absolute left-1 top-1 bg-white dark:bg-gray-300 w-5 h-5 rounded-full transition-all duration-300 ease-in-out transform ${isDark ? 'translate-x-full' : ''} flex items-center justify-center shadow-md`}>
+                            {isDark ? <MoonIcon /> : <SunIcon />}
+                        </div>
+                    </div>
+                </label>
+            </header>
+
+            {/* Sidebar - Animated sliding menu */}
+            <aside className={`fixed md:static inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 w-64 bg-gray-100 dark:bg-gray-800 flex flex-col shadow-lg pt-4 md:pt-8 z-40 transition-transform duration-300 ease-in-out`}>
+                {/* Close button for mobile */}
+                <div className="md:hidden flex justify-end p-4">
+                    <button 
+                        onClick={toggleMobileMenu}
+                        className="text-gray-600 dark:text-gray-300 focus:outline-none transition-transform hover:scale-110"
+                        aria-label="Close menu"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div className="flex h-16 md:h-20 items-center justify-center px-4 transition-opacity duration-200">
+                    <Link href="/dashboard" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+                        <ApplicationLogo className="h-8 md:h-10 w-auto fill-current text-indigo-600 dark:text-indigo-400" />
                     </Link>
                 </div>
 
                 {/* Main Navigation */}
-                <nav className="flex flex-col flex-grow p-3 space-y-2">
+                <nav className="flex flex-col flex-grow p-3 space-y-2 overflow-y-auto">
                     {isAdmin && (
                         <>
                             <NavLink
                                 href={route('dashboard')}
                                 active={route().current('dashboard')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Admin Dashboard</span>
+                                <span className="block">Admin Dashboard</span>
                             </NavLink>
                             <NavLink
                                 href={route('manpower-requests.index')}
                                 active={route().current('manpower-requests.index')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Manpower Requests</span>
+                                <span className="block">Manpower Requests</span>
                             </NavLink>
                             <NavLink
                                 href={route('schedules.index')}
                                 active={route().current('schedules.index')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Schedules</span>
+                                <span className="block">Schedules</span>
                             </NavLink>
                             <NavLink
                                 href={route('employee-attendance.index')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Employees</span>
+                                <span className="block">Employees</span>
                             </NavLink>
                             <NavLink
                                 href={route('shifts.index')}
                                 active={route().current('shifts.index')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Shifts</span>
+                                <span className="block">Shifts</span>
                             </NavLink>
                             <NavLink
                                 href={route('admin.permits.index')}
                                 active={route().current('admin.permits.index')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Admin Permits</span>
+                                <span className="block">Admin Permits</span>
                             </NavLink>
                         </>
                     )}
@@ -136,16 +166,16 @@ export default function AuthenticatedLayout({ header, children }) {
                             <NavLink
                                 href={route('employee.dashboard')}
                                 active={route().current('employee.dashboard')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Employee Dashboard</span>
+                                <span className="block">Employee Dashboard</span>
                             </NavLink>
                             <NavLink
                                 href={route('employee.permits.index')}
                                 active={route().current('employee.permits.index')}
-                                className="block py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-center"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="pt-4 block">Leave Requests</span>
+                                <span className="block">Leave Requests</span>
                             </NavLink>
                         </>
                     )}
@@ -156,38 +186,45 @@ export default function AuthenticatedLayout({ header, children }) {
                         href={route('logout')}
                         method="post"
                         as="button"
-                        className="w-full text-left py-6 px-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-700 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-colors"
+                        className="w-full text-left py-4 md:py-6 px-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-700 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-all duration-200 ease-in-out"
                     >
                         Log Out
                     </Link>
                 </nav>
 
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col space-y-3">
-                    {/* PERBAIKAN: Tambahkan pengecekan user sebelum mengakses name dan email/nik */}
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col space-y-3 transition-colors duration-200">
                     <div className="font-semibold text-gray-800 dark:text-gray-100">{user ? user.name : 'Memuat...'}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">{user ? (user.email || user.nik) : ''}</div>
                 </div>
             </aside>
 
+            {/* Overlay for mobile menu - Animated fade */}
+            {isMobileMenuOpen && (
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden transition-opacity duration-300 ease-in-out opacity-100"
+                    onClick={toggleMobileMenu}
+                ></div>
+            )}
+
             <div className="flex-1 flex flex-col">
                 {header && (
-                    <header className="bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:px-16 pt-4 ">
-                        <div className="p-4 shadow-md rounded-md bg-white dark:bg-gray-800 flex justify-between items-center">
+                    <header className="hidden md:block bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:px-16 pt-4">
+                        <div className="p-4 shadow-md rounded-md bg-white dark:bg-gray-800 flex justify-between items-center transition-colors duration-200">
                             <div className="flex-grow">
                                 {header}
                             </div>
 
-                            <label htmlFor="theme-toggle-checkbox" className="flex items-center cursor-pointer ml-4" title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+                            <label htmlFor="theme-toggle-checkbox" className="flex items-center cursor-pointer ml-4 transition-transform hover:scale-110" title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
                                 <div className="relative">
                                     <input
                                         type="checkbox"
                                         id="theme-toggle-checkbox"
                                         className="sr-only"
-                                        checked={isDark} // Use isDark state
-                                        onChange={toggleDarkMode} // Use the updated toggle function
+                                        checked={isDark}
+                                        onChange={toggleDarkMode}
                                     />
                                     <div className="block bg-gray-300 dark:bg-gray-700 w-12 h-7 sm:w-14 sm:h-8 rounded-full transition-colors duration-300 ease-in-out"></div>
-                                    <div className={`dot absolute left-1 top-1 bg-white dark:bg-gray-300 w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-transform duration-300 ease-in-out transform ${isDark ? 'translate-x-full sm:translate-x-6' : ''} flex items-center justify-center shadow-md`}>
+                                    <div className={`dot absolute left-1 top-1 bg-white dark:bg-gray-300 w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-all duration-300 ease-in-out transform ${isDark ? 'translate-x-full sm:translate-x-6' : ''} flex items-center justify-center shadow-md`}>
                                         {isDark ? <MoonIcon /> : <SunIcon />}
                                     </div>
                                 </div>
@@ -195,7 +232,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
                     </header>
                 )}
-                <main className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto">
+                <main className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto p-4 md:p-6 transition-all duration-200">
                     {children}
                 </main>
             </div>

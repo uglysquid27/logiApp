@@ -62,7 +62,6 @@ class ManPowerRequestController extends Controller
                 'date.required' => 'Tanggal dibutuhkan harus diisi.',
                 'time_slots.*.male_count.min' => 'Jumlah laki-laki tidak boleh negatif.',
                 'time_slots.*.female_count.min' => 'Jumlah perempuan tidak boleh negatif.',
-                // ... other validation messages
             ]);
 
             DB::transaction(function () use ($validated) {
@@ -104,6 +103,12 @@ class ManPowerRequestController extends Controller
     public function edit(string $id): Response
     {
         $manPowerRequest = ManPowerRequest::findOrFail($id);
+        
+        // Only allow editing if status is pending or revision_requested
+        if (!in_array($manPowerRequest->status, ['pending', 'revision_requested'])) {
+            abort(403, 'Permintaan ini tidak dapat diedit karena statusnya ' . $manPowerRequest->status);
+        }
+
         $relatedRequests = ManPowerRequest::where('date', $manPowerRequest->date)
             ->where('sub_section_id', $manPowerRequest->sub_section_id)
             ->with('shift')
@@ -127,6 +132,7 @@ class ManPowerRequestController extends Controller
                 'sub_section_id' => $manPowerRequest->sub_section_id,
                 'date' => $manPowerRequest->date->format('Y-m-d'),
                 'time_slots' => $timeSlots,
+                'status' => $manPowerRequest->status,
             ],
             'subSections' => SubSection::with('section')->get(),
             'shifts' => Shift::all(),
@@ -136,6 +142,11 @@ class ManPowerRequestController extends Controller
     public function update(Request $request, ManPowerRequest $manpowerRequest)
     {
         try {
+            // Only allow updating if status is pending or revision_requested
+            if (!in_array($manpowerRequest->status, ['pending', 'revision_requested'])) {
+                abort(403, 'Permintaan ini tidak dapat diperbarui karena statusnya ' . $manpowerRequest->status);
+            }
+
             $validated = $request->validate([
                 'sub_section_id' => ['required', 'exists:sub_sections,id'],
                 'date' => ['required', 'date', 'after_or_equal:today'],
@@ -179,6 +190,7 @@ class ManPowerRequestController extends Controller
                                 'female_count' => $femaleCount,
                                 'start_time' => $slot['start_time'],
                                 'end_time' => $slot['end_time'],
+                                'status' => 'pending', // Reset status to pending when updated
                             ]);
                         } else {
                             ManPowerRequest::create([
@@ -236,4 +248,62 @@ class ManPowerRequestController extends Controller
             return back()->with('error', 'Gagal menghapus permintaan. Silakan coba lagi.');
         }
     }
+
+    public function fulfill(ManPowerRequest $manPowerRequest)
+    {
+        try {
+            $manPowerRequest->update(['status' => 'fulfilled']);
+            return back()->with('success', 'Permintaan telah dipenuhi!');
+        } catch (\Exception $e) {
+            Log::error('Error fulfilling manpower request: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memenuhi permintaan. Silakan coba lagi.');
+        }
+    }
+
+    public function requestRevision(ManPowerRequest $manPowerRequest)
+    {
+        try {
+            DB::transaction(function () use ($manPowerRequest) {
+                // Find all related requests by date and sub_section_id
+                // Assuming 'fulfilled' requests are grouped this way.
+                // If each row in your table UI is a distinct ManPowerRequest model,
+                // then you might just need to update $manPowerRequest directly.
+                // However, based on your previous discussion, you group them.
+                $relatedRequests = ManPowerRequest::where('date', $manPowerRequest->date)
+                    ->where('sub_section_id', $manPowerRequest->sub_section_id)
+                    ->get();
+
+                if ($relatedRequests->isEmpty()) {
+                    // This shouldn't happen if $manPowerRequest exists, but good for robustness
+                    throw new \Exception("No related requests found for revision.");
+                }
+
+                foreach ($relatedRequests as $req) {
+                    // Only process if it's currently fulfilled, or any other status you allow to initiate revision
+                    if ($req->status === 'fulfilled') {
+                        // Delete related schedules (if they exist)
+                        $req->schedules()->delete();
+                        Log::info("Schedules for ManPowerRequest ID: {$req->id} deleted due to revision request.");
+
+                        // Update the status
+                        $req->update(['status' => 'revision_requested']);
+                        Log::info("ManPowerRequest ID: {$req->id} status updated to 'revision_requested'.");
+                    }
+                    // If the request is already 'revision_requested', we don't need to do anything.
+                    // If it's 'pending' or 'rejected', you might want to handle that logic here too,
+                    // but for "Revisi" from 'fulfilled', this check is crucial.
+                }
+            });
+
+            // After the transaction commits, return a response.
+            // Inertia will then handle the client-side redirect in onSuccess.
+            return response()->json(['message' => 'Revision initiated successfully. Status changed to revision_requested.']);
+
+        } catch (\Exception $e) {
+            Log::error('Error in requestRevision: ' . $e->getMessage(), ['manpower_request_id' => $manPowerRequest->id]);
+            return response()->json(['message' => 'Failed to initiate revision.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+  
 }
