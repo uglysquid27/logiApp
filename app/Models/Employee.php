@@ -5,10 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Foundation\Auth\User as Authenticatable; 
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
-// use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 
 class Employee extends Authenticatable
 {
@@ -43,7 +42,18 @@ class Employee extends Authenticatable
         return $this->hasMany(Schedule::class, 'employee_id');
     }
 
-    public function permits() {
+    public function permits()
+    {
         return $this->hasMany(Permit::class);
+    }
+
+    /**
+     * Check if the employee is assigned to any schedule today.
+     */
+    public function isAssignedToday(): bool
+    {
+        return $this->schedules()
+            ->whereDate('date', Carbon::today())
+            ->exists();
     }
 }

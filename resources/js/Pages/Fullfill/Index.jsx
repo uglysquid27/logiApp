@@ -172,9 +172,20 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
         employee_ids: initialSelectedIds,
     });
 
+    const [selectedIds, setSelectedIds] = useState(initialSelectedIds);
     const [showModal, setShowModal] = useState(false);
     const [changingEmployeeIndex, setChangingEmployeeIndex] = useState(null);
     const [backendError, setBackendError] = useState(null);
+
+    // Sync selectedIds with Inertia's form data
+    useEffect(() => {
+        setData('employee_ids', selectedIds);
+    }, [selectedIds]);
+
+    // Reset selection when initialSelectedIds changes (e.g., when request changes)
+    useEffect(() => {
+        setSelectedIds(initialSelectedIds);
+    }, [initialSelectedIds]);
 
     // Calculate gender statistics
     const genderStats = useMemo(() => {
@@ -190,7 +201,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
             required_female: request.female_count || 0
         };
 
-        data.employee_ids.forEach(id => {
+        selectedIds.forEach(id => {
             const emp = allSortedEligibleEmployees.find(e => e.id === id);
             if (emp) {
                 stats.total++;
@@ -206,20 +217,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
 
         console.log('Gender Statistics:', stats);
         return stats;
-    }, [data.employee_ids, allSortedEligibleEmployees, request.male_count, request.female_count]);
-
-    // Update selection when dependencies change
-    const updateSelectedEmployees = useCallback(() => {
-        const newSelection = initialSelectedIds;
-        if (JSON.stringify(newSelection) !== JSON.stringify(data.employee_ids)) {
-            setData('employee_ids', newSelection);
-        }
-    }, [initialSelectedIds, data.employee_ids, setData]);
-
-    useEffect(() => {
-        updateSelectedEmployees();
-        setBackendError(null);
-    }, [updateSelectedEmployees]);
+    }, [selectedIds, allSortedEligibleEmployees, request.male_count, request.female_count]);
 
     useEffect(() => {
         if (errors?.fulfillment_error) {
@@ -232,7 +230,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
         setBackendError(null);
 
         // Validate gender requirements
-        const selectedEmployees = data.employee_ids.map(id =>
+        const selectedEmployees = selectedIds.map(id =>
             allSortedEligibleEmployees.find(e => e.id === id)
         );
 
@@ -257,7 +255,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                 }
             }
         });
-    }, [data.employee_ids, request, allSortedEligibleEmployees, post]);
+    }, [selectedIds, request, allSortedEligibleEmployees, post]);
 
     const openChangeModal = useCallback((index) => {
         setChangingEmployeeIndex(index);
@@ -267,22 +265,25 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
     const selectNewEmployee = useCallback((newEmployeeId) => {
         if (changingEmployeeIndex === null) return;
 
-        const currentIds = [...data.employee_ids];
-        if (currentIds.includes(newEmployeeId)) {
+        const newIds = [...selectedIds];
+        const currentEmpId = newIds[changingEmployeeIndex];
+
+        // Prevent duplicate selection
+        if (newIds.includes(newEmployeeId)) {
             alert('Karyawan ini sudah dipilih');
             return;
         }
 
         const newEmployee = allSortedEligibleEmployees.find(e => e.id === newEmployeeId);
-        const currentEmp = allSortedEligibleEmployees.find(e => e.id === currentIds[changingEmployeeIndex]);
+        const currentEmp = allSortedEligibleEmployees.find(e => e.id === currentEmpId);
 
         // Calculate new gender counts
-        let newMaleCount = data.employee_ids.filter(id => {
+        let newMaleCount = selectedIds.filter(id => {
             const emp = allSortedEligibleEmployees.find(e => e.id === id);
             return emp?.gender === 'male';
         }).length;
 
-        let newFemaleCount = data.employee_ids.filter(id => {
+        let newFemaleCount = selectedIds.filter(id => {
             const emp = allSortedEligibleEmployees.find(e => e.id === id);
             return emp?.gender === 'female';
         }).length;
@@ -307,11 +308,11 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
             return;
         }
 
-        currentIds[changingEmployeeIndex] = newEmployeeId;
-        setData('employee_ids', currentIds);
+        newIds[changingEmployeeIndex] = newEmployeeId;
+        setSelectedIds(newIds);
         setShowModal(false);
         setChangingEmployeeIndex(null);
-    }, [changingEmployeeIndex, data.employee_ids, setData, allSortedEligibleEmployees, request.male_count, request.female_count]);
+    }, [changingEmployeeIndex, selectedIds, allSortedEligibleEmployees, request.male_count, request.female_count]);
 
     const getEmployeeDetails = useCallback((id) => {
         return allSortedEligibleEmployees.find(emp => emp.id === id);
@@ -320,7 +321,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
     if (request.status === 'fulfilled') {
         return (
             <AuthenticatedLayout
-                header={<h2 className="font-semibold text-xl text-gray-800">Penuhi Request Man Power</h2>}
+                header={<h2 className="font-semibold text-gray-800 text-xl">Penuhi Request Man Power</h2>}
             >
                 <div className="bg-white shadow-md mx-auto mt-6 p-4 rounded-lg max-w-4xl text-center">
                     <p className="mb-3 font-bold text-green-600 text-lg">Permintaan ini sudah terpenuhi!</p>
@@ -339,7 +340,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-semibold text-xl text-gray-800">Penuhi Request Man Power</h2>}
+            header={<h2 className="font-semibold text-gray-800 text-xl">Penuhi Request Man Power</h2>}
         >
             <div className="mx-auto mt-6 max-w-4xl">
                 {/* Request Details */}
@@ -350,59 +351,58 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                     <p><strong>Jumlah Diminta:</strong> {request.requested_amount}</p>
                 </div>
 
-
-                {/* Only show Gender Requirements if there are any */}
+                {/* Gender Requirements */}
                 {(request.male_count > 0 || request.female_count > 0) && (
                     <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
                         <h3 className="mb-3 font-bold text-lg">Persyaratan Gender</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="gap-4 grid grid-cols-2">
                             {request.male_count > 0 && (
                                 <div className={`bg-blue-100 p-3 rounded-lg border ${genderStats.male < genderStats.required_male ? 'border-red-500' : 'border-blue-200'
                                     }`}>
-                                    <p className="text-sm text-blue-900">Laki-laki Dibutuhkan</p>
-                                    <p className="text-xl font-bold">{genderStats.male} / {genderStats.required_male}</p>
+                                    <p className="text-blue-900 text-sm">Laki-laki Dibutuhkan</p>
+                                    <p className="font-bold text-xl">{genderStats.male} / {genderStats.required_male}</p>
                                 </div>
                             )}
                             {request.female_count > 0 && (
                                 <div className={`bg-pink-100 p-3 rounded-lg border ${genderStats.female < genderStats.required_female ? 'border-red-500' : 'border-pink-200'
                                     }`}>
-                                    <p className="text-sm text-pink-900">Perempuan Dibutuhkan</p>
-                                    <p className="text-xl font-bold">{genderStats.female} / {genderStats.required_female}</p>
+                                    <p className="text-pink-900 text-sm">Perempuan Dibutuhkan</p>
+                                    <p className="font-bold text-xl">{genderStats.female} / {genderStats.required_female}</p>
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
 
-                {/* Only show Gender Distribution if there are requirements */}
+                {/* Gender Distribution */}
                 {(request.male_count > 0 || request.female_count > 0) && (
                     <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
                         <h3 className="mb-3 font-bold text-lg">Distribusi Gender</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                                <p className="text-sm text-blue-800">Total Terpilih</p>
-                                <p className="text-xl font-bold">{genderStats.total}</p>
+                        <div className="gap-4 grid grid-cols-2 md:grid-cols-4">
+                            <div className="bg-blue-50 p-3 border border-blue-100 rounded-lg">
+                                <p className="text-blue-800 text-sm">Total Terpilih</p>
+                                <p className="font-bold text-xl">{genderStats.total}</p>
                             </div>
                             {request.male_count > 0 && (
-                                <div className="bg-blue-100 p-3 rounded-lg border border-blue-200">
-                                    <p className="text-sm text-blue-900">Laki-laki</p>
-                                    <p className="text-xl font-bold">{genderStats.male}</p>
+                                <div className="bg-blue-100 p-3 border border-blue-200 rounded-lg">
+                                    <p className="text-blue-900 text-sm">Laki-laki</p>
+                                    <p className="font-bold text-xl">{genderStats.male}</p>
                                 </div>
                             )}
                             {request.female_count > 0 && (
-                                <div className="bg-pink-100 p-3 rounded-lg border border-pink-200">
-                                    <p className="text-sm text-pink-900">Perempuan</p>
-                                    <p className="text-xl font-bold">{genderStats.female}</p>
+                                <div className="bg-pink-100 p-3 border border-pink-200 rounded-lg">
+                                    <p className="text-pink-900 text-sm">Perempuan</p>
+                                    <p className="font-bold text-xl">{genderStats.female}</p>
                                 </div>
                             )}
-                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div className="bg-gray-50 p-3 border border-gray-200 rounded-lg">
                                 {genderStats.male_bulanan > 0 && <p className="text-sm">Laki Bulanan: {genderStats.male_bulanan}</p>}
                                 {genderStats.female_bulanan > 0 && <p className="text-sm">Perempuan Bulanan: {genderStats.female_bulanan}</p>}
                                 {genderStats.male_harian > 0 && <p className="text-sm">Laki Harian: {genderStats.male_harian}</p>}
                                 {genderStats.female_harian > 0 && <p className="text-sm">Perempuan Harian: {genderStats.female_harian}</p>}
                                 {(genderStats.male_bulanan === 0 && genderStats.female_bulanan === 0 &&
                                     genderStats.male_harian === 0 && genderStats.female_harian === 0) && (
-                                        <p className="text-sm text-gray-400">Tidak ada data</p>
+                                        <p className="text-gray-400 text-sm">Tidak ada data</p>
                                     )}
                             </div>
                         </div>
@@ -425,9 +425,9 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                 <form onSubmit={handleSubmit}>
                     <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
                         <h3 className="mb-3 font-bold text-lg">Karyawan Terpilih</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
                             {Array.from({ length: request.requested_amount }).map((_, index) => {
-                                const employeeId = data.employee_ids[index];
+                                const employeeId = selectedIds[index];
                                 const employee = getEmployeeDetails(employeeId);
                                 const isEmptySlot = !employeeId;
                                 const employeeSubSection = employee?.subSections?.find(ss => ss.id === request.sub_section_id);
@@ -482,13 +482,28 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
 
                 {/* Employee Selection Modal */}
                 {showModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <div 
+                        className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 p-4"
+                        onClick={() => setShowModal(false)}
+                    >
+                        <div 
+                            className="relative bg-white shadow-xl rounded-lg w-full max-w-4xl max-h-[80vh] overflow-y-auto"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="top-4 right-4 absolute text-gray-500 hover:text-gray-700"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+
                             <div className="p-6">
-                                <h3 className="text-xl font-bold mb-4">Pilih Karyawan Baru</h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                <h3 className="mb-4 font-bold text-xl">Pilih Karyawan Baru</h3>
+                                <div className="gap-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                                     {allSortedEligibleEmployees.map(emp => {
-                                        const isSelected = data.employee_ids.includes(emp.id);
+                                        const isSelected = selectedIds.includes(emp.id);
                                         const empSubSection = emp.subSections?.find(ss => ss.id === request.sub_section_id);
                                         const isSameSubSection = empSubSection?.id === request.sub_section_id;
                                         const isFemale = emp.gender === 'female';
@@ -508,7 +523,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                                                 <div className="flex justify-between items-start">
                                                     <div>
                                                         <strong>{emp.name}</strong>
-                                                        <div className="text-xs text-gray-500 mt-1">
+                                                        <div className="mt-1 text-gray-500 text-xs">
                                                             <p>NIK: {emp.nik}</p>
                                                             <p>Tipe: {emp.type}</p>
                                                             <p>Sub: {empSubSection?.name || 'Lain'}</p>
@@ -525,11 +540,11 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                                         );
                                     })}
                                 </div>
-                                <div className="mt-6 flex justify-end">
+                                <div className="flex justify-end mt-6">
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}
-                                        className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
+                                        className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg"
                                     >
                                         Batal
                                     </button>
