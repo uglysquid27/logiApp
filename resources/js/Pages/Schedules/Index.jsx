@@ -227,7 +227,7 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800 dark:divide-gray-700">
+                        <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800">
                             {schedules.map((scheduleItem) => (
                                 <tr key={scheduleItem.id}>
                                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
