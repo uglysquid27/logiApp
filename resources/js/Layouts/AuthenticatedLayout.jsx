@@ -63,8 +63,8 @@ export default function AuthenticatedLayout({ header, children }) {
 
     return (
         <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased">
-            {/* Mobile Header - Simplified without logo */}
-            <header className="md:hidden bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center">
+            {/* Mobile Header */}
+            <header className="md:hidden bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center sticky top-0 z-50">
                 <button 
                     onClick={toggleMobileMenu}
                     className="text-gray-600 dark:text-gray-300 focus:outline-none transition-transform hover:scale-110"
@@ -92,8 +92,8 @@ export default function AuthenticatedLayout({ header, children }) {
                 </label>
             </header>
 
-            {/* Sidebar - Animated sliding menu */}
-            <aside className={`fixed md:static inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 w-64 bg-gray-100 dark:bg-gray-800 flex flex-col shadow-lg pt-4 md:pt-8 z-40 transition-transform duration-300 ease-in-out`}>
+            {/* Sidebar */}
+            <aside className={`fixed md:sticky top-0 inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 w-64 bg-gray-100 dark:bg-gray-800 flex flex-col shadow-lg pt-4 md:pt-8 z-40 transition-transform duration-300 ease-in-out h-screen`}>
                 {/* Close button for mobile */}
                 <div className="md:hidden flex justify-end p-4">
                     <button 
@@ -198,7 +198,7 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
             </aside>
 
-            {/* Overlay for mobile menu - Animated fade */}
+            {/* Overlay for mobile menu */}
             {isMobileMenuOpen && (
                 <div 
                     className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden transition-opacity duration-300 ease-in-out opacity-100"
@@ -208,7 +208,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
             <div className="flex-1 flex flex-col">
                 {header && (
-                    <header className="hidden md:block bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:px-16 pt-4">
+                    <header className="hidden md:block bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-4 sticky top-0 z-40">
                         <div className="p-4 shadow-md rounded-md bg-white dark:bg-gray-800 flex justify-between items-center transition-colors duration-200">
                             <div className="flex-grow">
                                 {header}
@@ -232,7 +232,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
                     </header>
                 )}
-                <main className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto p-4 md:p-6 transition-all duration-200">
+                <main className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto p-4 md:px-6 md:py-4 transition-all duration-200">
                     {children}
                 </main>
             </div>
