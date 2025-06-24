@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { usePage, router } from '@inertiajs/react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
@@ -14,7 +14,6 @@ dayjs.extend(isTomorrow);
 dayjs.extend(isBetween);
 dayjs.locale('id');
 
-// Modal Component for Shift Details (unchanged)
 const ShiftDetailModal = ({ shift, onClose }) => {
     if (!shift) return null;
 
@@ -48,14 +47,13 @@ const ShiftDetailModal = ({ shift, onClose }) => {
     );
 };
 
-// New Modal Component for Manpower Request Details (unchanged)
 const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => {
     if (!request) return null;
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         try {
-            return dayjs(dateString).format('dddd, DD MMMMYYYY');
+            return dayjs(dateString).format('dddd, DD MMMM YYYY');
         } catch (error) {
             return dateString;
         }
@@ -185,14 +183,13 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
     </div>
 );
 
-// New component for displaying a list of schedules in detail (unchanged)
 const ScheduleDetailList = ({ title, schedules, onClose }) => {
     if (!schedules || schedules.length === 0) return null;
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         try {
-            return dayjs(dateString).format('dddd, DD MMMMYYYY');
+            return dayjs(dateString).format('dddd, DD MMMM YYYY');
         } catch (error) {
             return dateString;
         }
@@ -266,7 +263,6 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
     );
 };
 
-
 const Index = () => {
     const { schedules, filters } = usePage().props;
     const [showShiftModal, setShowShiftModal] = useState(false);
@@ -274,43 +270,110 @@ const Index = () => {
     const [showManPowerRequestModal, setShowManPowerRequestModal] = useState(false);
     const [currentManPowerRequestDetails, setCurrentManPowerRequestDetails] = useState(null);
     const [assignedEmployeesForModal, setAssignedEmployeesForModal] = useState([]);
-
-    // State for date filters, initialized from props (to reflect current URL params)
     const [startDate, setStartDate] = useState(filters.start_date || '');
     const [endDate, setEndDate] = useState(filters.end_date || '');
-
-    // States for showing detail lists
     const [showDisplayedDetails, setShowDisplayedDetails] = useState(false);
     const [showWeeklyDetails, setShowWeeklyDetails] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
+    
+    const itemsPerPage = 5;
 
-    // This useEffect ensures that if the URL changes (e.g., via browser back/forward or direct link),
-    // the filter input fields are updated to reflect the current URL parameters.
     useEffect(() => {
         setStartDate(filters.start_date || '');
         setEndDate(filters.end_date || '');
+        setCurrentPage(1);
     }, [filters]);
 
+    const groupedSchedulesByDateShiftSubSection = useMemo(() => {
+        return schedules.reduce((acc, schedule) => {
+            if (!schedule.employee || !schedule.sub_section || !schedule.man_power_request?.shift || !schedule.man_power_request?.sub_section?.section) {
+                console.warn('Schedule missing essential data (employee, sub_section, shift, or section):', schedule);
+                return acc;
+            }
 
-    const applyFilters = () => {
-        router.get(route('schedules.index'), {
-            start_date: startDate,
-            end_date: endDate,
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+            const dateKey = dayjs(schedule.date).format('YYYY-MM-DD');
+            const displayDate = dayjs(schedule.date).format('dddd, DD MMMM YYYY');
+            const shiftObj = schedule.man_power_request.shift;
+            const shiftName = shiftObj.name;
+            const subSectionName = schedule.sub_section.name || 'Lain-lain';
+
+            if (!acc[dateKey]) {
+                acc[dateKey] = {
+                    displayDate: displayDate,
+                    shifts: {}
+                };
+            }
+
+            if (!acc[dateKey].shifts[shiftName]) {
+                acc[dateKey].shifts[shiftName] = {
+                    details: shiftObj,
+                    subSections: {}
+                };
+            }
+
+            if (!acc[dateKey].shifts[shiftName].subSections[subSectionName]) {
+                acc[dateKey].shifts[shiftName].subSections[subSectionName] = [];
+            }
+
+            acc[dateKey].shifts[shiftName].subSections[subSectionName].push({
+                employee: schedule.employee,
+                sub_section: schedule.sub_section,
+                man_power_request: schedule.man_power_request
+            });
+
+            return acc;
+        }, {});
+    }, [schedules]);
+
+    const sortedDates = useMemo(() => 
+        Object.keys(groupedSchedulesByDateShiftSubSection).sort((a, b) => 
+            dayjs(a).valueOf() - dayjs(b).valueOf()
+        ), 
+        [groupedSchedulesByDateShiftSubSection]
+    );
+
+    const totalPages = Math.ceil(sortedDates.length / itemsPerPage);
+    const paginatedDates = sortedDates.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const applyFilters = async () => {
+        if (startDate && endDate) {
+            const daysDiff = dayjs(endDate).diff(dayjs(startDate), 'day');
+            if (daysDiff > 30) {
+                alert('Mohon pilih rentang tanggal maksimal 30 hari');
+                return;
+            }
+        }
+        
+        setIsLoading(true);
+        try {
+            await router.get(route('schedules.index'), {
+                start_date: startDate,
+                end_date: endDate,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+            setCurrentPage(1);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const clearFilters = () => {
         setStartDate('');
         setEndDate('');
         router.get(route('schedules.index'), {
-            start_date: '', // Explicitly send empty strings
+            start_date: '',
             end_date: '',
         }, {
             preserveState: true,
             preserveScroll: true,
         });
+        setCurrentPage(1);
     };
 
     const openShiftModal = (shiftDetails) => {
@@ -335,67 +398,16 @@ const Index = () => {
         setAssignedEmployeesForModal([]);
     };
 
-    // Group schedules based on date, then shift, then sub-section
-    const groupedSchedulesByDateShiftSubSection = schedules.reduce((acc, schedule) => {
-        // Check if all necessary relationships are loaded. If not, log a warning and skip this schedule.
-        if (!schedule.employee || !schedule.sub_section || !schedule.man_power_request?.shift || !schedule.man_power_request?.sub_section?.section) {
-            console.warn('Schedule missing essential data (employee, sub_section, shift, or section):', schedule);
-            return acc;
-        }
-
-        const dateKey = dayjs(schedule.date).format('YYYY-MM-DD');
-        const displayDate = dayjs(schedule.date).format('dddd, DD MMMMYYYY');
-        const shiftObj = schedule.man_power_request.shift;
-        const shiftName = shiftObj.name;
-
-        const subSectionName = schedule.sub_section.name || 'Lain-lain';
-
-        if (!acc[dateKey]) {
-            acc[dateKey] = {
-                displayDate: displayDate,
-                shifts: {}
-            };
-        }
-
-        if (!acc[dateKey].shifts[shiftName]) {
-            acc[dateKey].shifts[shiftName] = {
-                details: shiftObj,
-                subSections: {}
-            };
-        }
-
-        if (!acc[dateKey].shifts[shiftName].subSections[subSectionName]) {
-            acc[dateKey].shifts[shiftName].subSections[subSectionName] = [];
-        }
-
-        acc[dateKey].shifts[shiftName].subSections[subSectionName].push({
-            employee: schedule.employee,
-            sub_section: schedule.sub_section,
-            man_power_request: schedule.man_power_request
-        });
-
-        return acc;
-    }, {});
-
-    // Sort dates (e.g., today, tomorrow, then future dates)
-    const sortedDates = Object.keys(groupedSchedulesByDateShiftSubSection).sort((a, b) => {
-        return dayjs(a).valueOf() - dayjs(b).valueOf();
-    });
-
-    // Define a custom order for shifts
-    const shiftOrder = { 'Pagi': 1, 'Siang': 2, 'Malam': 3 };
-
-    // Calculate total schedules displayed
     const totalSchedulesDisplayed = schedules.length;
-
-    // Calculate total schedules for this week (last 7 days including today)
+    
     const today = dayjs().startOf('day');
     const sevenDaysAgo = dayjs().subtract(6, 'day').startOf('day');
-
     const schedulesThisWeek = schedules.filter(schedule =>
-        dayjs(schedule.date).isBetween(sevenDaysAgo, today, 'day', '[]') // '[]' means inclusive of start and end dates
+        dayjs(schedule.date).isBetween(sevenDaysAgo, today, 'day', '[]')
     );
     const totalSchedulesThisWeek = schedulesThisWeek.length;
+
+    const shiftOrder = { 'Pagi': 1, 'Siang': 2, 'Malam': 3 };
 
     return (
         <AuthenticatedLayout
@@ -408,7 +420,6 @@ const Index = () => {
             <div className="mx-auto mt-10 max-w-5xl p-4">
                 <h1 className="mb-8 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">Agenda Penjadwalan</h1>
 
-                {/* Date Filter Section */}
                 <div className="mb-8 flex flex-col items-center space-y-4 rounded-lg bg-white p-4 shadow-md dark:bg-gray-800 sm:flex-row sm:space-x-4 sm:space-y-0">
                     <div className="flex w-full flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
                         <div className="flex-1">
@@ -453,58 +464,87 @@ const Index = () => {
                     </div>
                 </div>
 
+                {isLoading && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+                        <div className="rounded-lg bg-white p-4 shadow-xl dark:bg-gray-800">
+                            Memuat jadwal...
+                        </div>
+                    </div>
+                )}
+
                 {Object.keys(groupedSchedulesByDateShiftSubSection).length === 0 ? (
                     <div className="rounded-md border-l-4 border-blue-500 bg-blue-100 p-4 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-200" role="alert">
                         <p className="font-bold">Informasi:</p>
                         <p>Tidak ada penjadwalan dalam rentang tanggal yang dipilih.</p>
                     </div>
                 ) : (
-                    // Iterate through sorted dates
-                    sortedDates.map(dateKey => {
-                        const dateData = groupedSchedulesByDateShiftSubSection[dateKey];
-                        const shiftsForDate = dateData.shifts;
+                    <>
+                        {paginatedDates.map(dateKey => {
+                            const dateData = groupedSchedulesByDateShiftSubSection[dateKey];
+                            const shiftsForDate = dateData.shifts;
 
-                        // Sort shifts for the current date
-                        const sortedShiftsForDate = Object.keys(shiftsForDate).sort((a, b) => {
-                            return (shiftOrder[a] || 99) - (shiftOrder[b] || 99);
-                        });
+                            const sortedShiftsForDate = Object.keys(shiftsForDate).sort((a, b) => {
+                                return (shiftOrder[a] || 99) - (shiftOrder[b] || 99);
+                            });
 
-                        return (
-                            <React.Fragment key={dateKey}>
-                                <div className="mb-10">
-                                    <h2 className="mb-6 rounded-lg bg-gray-100 p-4 text-2xl font-bold text-gray-800 shadow-sm dark:bg-gray-700 dark:text-gray-100">
-                                        {dateData.displayDate}
-                                    </h2>
-                                    {/* Wrap shifts in a flex container for horizontal display */}
-                                    <div className="flex flex-col space-y-8 pb-4 md:flex-row md:space-x-4 md:space-y-0 lg:overflow-x-visible overflow-x-auto">
-                                        {sortedShiftsForDate.map(shiftName => (
-                                            <div key={`${dateKey}-${shiftName}`} className="flex w-full flex-col">
-                                                <div className="mb-4 flex items-center justify-between">
-                                                    {/* ScheduleSection now only renders the sub-sections and employees */}
-                                                    <ScheduleSection
-                                                        title={`Shift ${shiftName}`}
-                                                        schedulesBySubSection={shiftsForDate[shiftName].subSections}
-                                                        openManPowerRequestModal={openManPowerRequestModal}
-                                                    />
-                                                    <button
-                                                        onClick={() => openShiftModal(shiftsForDate[shiftName].details)}
-                                                        className="ml-2 flex-shrink-0 rounded-full bg-indigo-500 p-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-600 dark:focus:ring-offset-gray-800"
-                                                        title={`Lihat detail Shift ${shiftName}`}
-                                                    >
-                                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                    </button>
+                            return (
+                                <React.Fragment key={dateKey}>
+                                    <div className="mb-10">
+                                        <h2 className="mb-6 rounded-lg bg-gray-100 p-4 text-2xl font-bold text-gray-800 shadow-sm dark:bg-gray-700 dark:text-gray-100">
+                                            {dateData.displayDate}
+                                        </h2>
+                                        <div className="flex flex-col space-y-8 pb-4 md:flex-row md:space-x-4 md:space-y-0 lg:overflow-x-visible overflow-x-auto">
+                                            {sortedShiftsForDate.map(shiftName => (
+                                                <div key={`${dateKey}-${shiftName}`} className="flex w-full flex-col">
+                                                    <div className="mb-4 flex items-center justify-between">
+                                                        <ScheduleSection
+                                                            title={`Shift ${shiftName}`}
+                                                            schedulesBySubSection={shiftsForDate[shiftName].subSections}
+                                                            openManPowerRequestModal={openManPowerRequestModal}
+                                                        />
+                                                        <button
+                                                            onClick={() => openShiftModal(shiftsForDate[shiftName].details)}
+                                                            className="ml-2 flex-shrink-0 rounded-full bg-indigo-500 p-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-600 dark:focus:ring-offset-gray-800"
+                                                            title={`Lihat detail Shift ${shiftName}`}
+                                                        >
+                                                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                                <hr className="my-10 border-t-2 border-gray-200 dark:border-gray-700" />
-                            </React.Fragment>
-                        );
-                    })
+                                    <hr className="my-10 border-t-2 border-gray-200 dark:border-gray-700" />
+                                </React.Fragment>
+                            );
+                        })}
+                        
+                        {totalPages > 1 && (
+                            <div className="mt-6 flex items-center justify-between">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="rounded-md bg-indigo-600 px-4 py-2 text-white disabled:bg-indigo-300 dark:disabled:bg-indigo-800"
+                                >
+                                    Previous
+                                </button>
+                                
+                                <span className="text-gray-700 dark:text-gray-300">
+                                    Halaman {currentPage} dari {totalPages}
+                                </span>
+                                
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="rounded-md bg-indigo-600 px-4 py-2 text-white disabled:bg-indigo-300 dark:disabled:bg-indigo-800"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
+                    </>
                 )}
 
-                {/* Summary Section */}
                 <div className="mt-8 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
                     <h3 className="mb-4 text-xl font-bold text-gray-800 dark:text-gray-100">Ringkasan Penjadwalan</h3>
                     <div className="grid grid-cols-1 gap-4 text-gray-700 dark:text-gray-300 md:grid-cols-2">
@@ -529,7 +569,6 @@ const Index = () => {
                     </div>
                 </div>
 
-                {/* Detail Modals for Summary */}
                 {showDisplayedDetails && (
                     <ScheduleDetailList
                         title="Detail Semua Penjadwalan Ditampilkan"
@@ -545,13 +584,11 @@ const Index = () => {
                     />
                 )}
 
-                {/* Shift Detail Modal */}
                 <ShiftDetailModal
                     shift={currentShiftDetails}
                     onClose={closeShiftModal}
                 />
 
-                {/* New Manpower Request Detail Modal */}
                 <ManPowerRequestDetailModal
                     request={currentManPowerRequestDetails}
                     assignedEmployees={assignedEmployeesForModal}
