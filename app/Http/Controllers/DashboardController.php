@@ -269,4 +269,66 @@ class DashboardController extends Controller
 
         return response()->json($schedules);
     }
+
+    // Add these methods to your DashboardController
+
+/**
+ * Get manpower requests by month and status
+ */
+public function getManpowerRequestsByMonth(Request $request, $month, $status)
+{
+    $startDate = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+    $endDate = Carbon::createFromFormat('Y-m', $month)->endOfMonth();
+
+    $requests = ManPowerRequest::query()
+        ->where('status', $status)
+        ->whereBetween('date', [$startDate, $endDate])
+        ->with(['subSection', 'shift'])
+        ->when($request->input('filter_date_from'), function ($query, $date) {
+            $query->whereDate('date', '>=', $date);
+        })
+        ->when($request->input('filter_date_to'), function ($query, $date) {
+            $query->whereDate('date', '<=', $date);
+        })
+        ->when($request->input('filter_sub_section_id'), function ($query, $subSectionId) {
+            $query->where('sub_section_id', $subSectionId);
+        })
+        ->when($request->input('filter_shift_id'), function ($query, $shiftId) {
+            $query->where('shift_id', $shiftId);
+        })
+        ->when($request->input('filter_requested_amount'), function ($query, $amount) {
+            $query->where('requested_amount', $amount);
+        })
+        ->orderBy('date', 'desc')
+        ->paginate(10)
+        ->withQueryString();
+
+    return response()->json($requests);
+}
+
+/**
+ * Get schedules by subsection
+ */
+public function getSchedulesBySubSection(Request $request, $subSectionId)
+{
+    $schedules = Schedule::query()
+        ->where('sub_section_id', $subSectionId)
+        ->with(['employee', 'subSection', 'manPowerRequest.shift'])
+        ->when($request->input('filter_date_from'), function ($query, $date) {
+            $query->whereDate('date', '>=', $date);
+        })
+        ->when($request->input('filter_date_to'), function ($query, $date) {
+            $query->whereDate('date', '<=', $date);
+        })
+        ->when($request->input('filter_employee_name'), function ($query, $employeeName) {
+            $query->whereHas('employee', function ($q) use ($employeeName) {
+                $q->where('name', 'like', '%' . $employeeName . '%');
+            });
+        })
+        ->orderBy('date', 'asc')
+        ->paginate(10)
+        ->withQueryString();
+
+    return response()->json($schedules);
+}
 }

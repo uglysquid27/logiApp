@@ -58,8 +58,8 @@ Route::post('/permits', [PermitController::class, 'store'])->name('permits.store
 
 Route::middleware(['auth:employee'])
     ->prefix('employee')
-    ->as('employee.')    
-    ->group(function() {
+    ->as('employee.')
+    ->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard'); // Nama 'employee.dashboard'
         Route::post('/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('schedule.respond'); // Nama 'employee.schedule.respond'
 
@@ -71,23 +71,23 @@ Route::middleware('auth:web')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::resource('manpower-requests', ManpowerRequestController::class); 
+    Route::resource('manpower-requests', ManpowerRequestController::class);
 
     Route::get('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'create'])->name('manpower-requests.fulfill');
     Route::post('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'store'])->name('manpower-requests.fulfill.store');
 
-      // Route to initiate the revision process (changes status to 'revision_requested')
-    // This is the action taken from the Index.jsx list view.
     Route::post('/manpower-requests/{manpower_request}/request-revision', [ManpowerRequestController::class, 'requestRevision'])
         ->name('manpower-requests.request-revision');
 
-    // Route to display the revision form UI.
-    // This will load your Revision.jsx component.
-    // It leverages the existing 'edit' method in ManpowerRequestController
-    // to fetch the data needed to pre-populate the form.
     Route::get('/manpower-requests/{manpower_request}/revision', [ManpowerRequestController::class, 'edit'])
         ->name('manpower-requests.revision.edit');
-        
+
+    Route::get('/dashboard/requests/{month}/{status}', [DashboardController::class, 'getManpowerRequestsByMonth'])
+        ->name('dashboard.requests.byMonth');
+
+    Route::get('/dashboard/schedules/by-subsection/{subSectionId}', [DashboardController::class, 'getSchedulesBySubSection'])
+        ->name('dashboard.schedules.bySubSection');
+
     // Schedule Management
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
@@ -102,8 +102,7 @@ Route::middleware('auth:web')->group(function () {
 
     Route::get('/admin/permits', [AdminPermitController::class, 'index'])->name('admin.permits.index');
     Route::post('/admin/permits/{permit}/respond', [AdminPermitController::class, 'respond'])->name('admin.permits.respond');
-
 });
 
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
