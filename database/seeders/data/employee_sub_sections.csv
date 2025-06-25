@@ -1,0 +1,354 @@
+NIK,SECTION,BAGIAN
+10807,Finished goods,Leader
+10464,Finished goods,Leader
+10802,Finished goods,Leader
+10636,Finished goods,Leader
+10466,Finished goods,Admin
+10937,Finished goods,Admin
+10935,Finished goods,Admin
+11527,Finished goods,Penandaan/Putway
+11635,Finished goods,Penandaan/Putway
+11443,Finished goods,Penandaan/Putway
+11663,Finished goods,Penandaan/Putway
+11533,Finished goods,Penandaan/Putway
+11603,Finished goods,Penandaan/Putway
+11609,Finished goods,Penandaan/Putway
+10459,Finished goods,Penandaan/Putway
+11381,Finished goods,Penandaan/Putway
+11617,Finished goods,Penandaan/Putway
+11431,Finished goods,Penandaan/Putway
+11430,Finished goods,Penandaan/Putway
+11377,Finished goods,Penandaan/Putway
+11426,Finished goods,Penandaan/Putway
+10791,Finished goods,SAP
+11178,Finished goods,SAP
+10468,Delivery,Leader
+10789,Delivery,Leader
+10921,Delivery,Dispatcer
+11561,Delivery,Dispatcer
+10800,Delivery,Picker
+10498,Delivery,Picker
+10747,Delivery,Picker
+11363,Delivery,Picker
+10782,Delivery,Admin
+10465,Delivery,Admin
+10689,Delivery,Admin
+11159,Delivery,Dispatcer
+11461,Delivery,Dispatcer
+10619,Delivery,Dispatcer
+10734,Delivery,Dispatcer
+11345,Delivery,Dispatcer
+11161,Delivery,Dispatcer
+10910,Delivery,Dispatcer
+10952,Delivery,Dispatcer
+10784,Delivery,Dispatcer
+11008,Delivery,Dispatcer
+11745,Loader,Loader
+11746,Loader,Loader
+11347,Loader,Loader
+11729,Loader,Loader
+11747,Loader,Loader
+11702,Loader,Loader
+10991,Loader,Loader
+11748,Loader,Loader
+11749,Loader,Loader
+11750,Loader,Loader
+11751,Loader,Loader
+11731,Loader,Loader
+11399,Loader,Loader
+11752,Loader,Loader
+11732,Loader,Loader
+11733,Loader,Loader
+11753,Loader,Loader
+11504,Loader,Loader
+11350,Loader,Loader
+11484,Loader,Loader
+11754,Loader,Loader
+11576,Loader,Loader
+11755,Loader,Loader
+11756,Loader,Loader
+11757,Loader,Loader
+11708,Loader,Loader
+11546,Loader,Loader
+11758,Loader,Loader
+11736,Loader,Loader
+11759,Loader,Loader
+11709,Loader,Loader
+10884,Loader,Loader
+11760,Loader,Loader
+11348,Loader,Loader
+11740,Loader,Loader
+11742,Loader,Loader
+11726,Loader,Loader
+10783,Loader,Loader
+10728,Loader,Loader
+11761,Loader,Loader
+11762,Loader,Loader
+10524,Loader,Loader
+11728,Loader,Loader
+11713,Loader,Loader
+11763,Loader,Loader
+11716,Loader,Loader
+11473,Loader,Loader
+11764,Loader,Loader
+10898,RM/PM,Admin
+10565,RM/PM,Checker
+10785,RM/PM,Checker
+10499,RM/PM,Checker
+10834,RM/PM,Checker
+10683,RM/PM,Checker
+10861,RM/PM,Checker
+10844,RM/PM,Checker
+11342,RM/PM,Buffer Room/Penimbangan
+10928,RM/PM,Buffer Room/Penimbangan
+10879,RM/PM,Buffer Room/Penimbangan
+11073,RM/PM,Buffer Room/Penimbangan
+11074,RM/PM,Buffer Room/Penimbangan
+10672,RM/PM,Buffer Room/Penimbangan
+10671,RM/PM,Buffer Room/Penimbangan
+10612,Operator Forklift,Operator Forklift
+10803,Operator Forklift,Operator Forklift
+10804,Operator Forklift,Operator Forklift
+10798,Operator Forklift,Operator Forklift
+11299,Operator Forklift,Operator Forklift
+10485,Operator Forklift,Operator Forklift
+10640,Operator Forklift,Operator Forklift
+10630,Operator Forklift,Operator Forklift
+11301,Operator Forklift,Operator Forklift
+11302,Operator Forklift,Operator Forklift
+10726,Operator Forklift,Operator Forklift
+10859,Operator Forklift,Operator Forklift
+10616,Operator Forklift,Operator Forklift
+10858,Operator Forklift,Operator Forklift
+10625,Operator Forklift,Operator Forklift
+10494,Operator Forklift,Operator Forklift
+10484,Operator Forklift,Operator Forklift
+10866,Operator Forklift,Operator Forklift
+10797,Operator Forklift,Operator Forklift
+10818,Operator Forklift,Operator Forklift
+11108,Operator Forklift,Operator Forklift
+10576,Operator Forklift,Operator Forklift
+10824,Operator Forklift,Operator Forklift
+11324,Operator Forklift,Operator Forklift
+10781,Operator Forklift,Operator Forklift
+10786,Operator Forklift,Operator Forklift
+10933,Operator Forklift,Operator Forklift
+10838,Operator Forklift,Operator Forklift
+10821,Operator Forklift,Operator Forklift
+10954,Operator Forklift,Operator Forklift
+11319,Operator Forklift,Operator Forklift
+10843,Operator Forklift,Operator Forklift
+11321,Operator Forklift,Operator Forklift
+10845,Operator Forklift,Operator Forklift
+10828,Operator Forklift,Operator Forklift
+10833,Operator Forklift,Operator Forklift
+10871,Operator Forklift,Operator Forklift
+10850,Operator Forklift,Operator Forklift
+10855,Operator Forklift,Operator Forklift
+10873,Operator Forklift,Operator Forklift
+10864,Operator Forklift,Operator Forklift
+10471,Inspeksi,Leader
+10453,Inspeksi,Leader
+10463,Inspeksi,Leader
+10649,Inspeksi,Checker
+10454,Inspeksi,Admin
+10457,Inspeksi,Admin
+10473,Inspeksi,Inspektor
+10470,Inspeksi,Inspektor
+10456,Inspeksi,Inspektor
+10452,Inspeksi,Inspektor
+11098,Inspeksi,Inspektor
+11064,Inspeksi,Inspektor
+10483,Inspeksi,Inspektor
+11202,Inspeksi,Inspektor
+10477,Inspeksi,Inspektor
+11395,Inspeksi,Inspektor
+10977,Inspeksi,Inspektor
+10599,Inspeksi,Inspektor
+10768,Inspeksi,Inspektor
+11601,Inspeksi,Inspektor
+10902,Inspeksi,Inspektor
+11193,Inspeksi,Inspektor
+11405,Inspeksi,Inspektor
+11396,Inspeksi,Inspektor
+11602,Inspeksi,Inspektor
+11376,Inspeksi,Inspektor
+11045,Inspeksi,Inspektor
+10993,Inspeksi,Inspektor
+11665,Inspeksi,Inspektor
+10967,Inspeksi,Inspektor
+10750,Inspeksi,Inspektor
+10997,Inspeksi,Inspektor
+10553,Inspeksi,Inspektor
+11668,Inspeksi,Inspektor
+11027,Inspeksi,Inspektor
+10505,Inspeksi,Inspektor
+11669,Inspeksi,Inspektor
+11047,Inspeksi,Inspektor
+11671,Inspeksi,Inspektor
+11673,Inspeksi,Inspektor
+10574,Inspeksi,Inspektor
+11608,Inspeksi,Inspektor
+10678,Inspeksi,Inspektor
+11329,Inspeksi,Inspektor
+11048,Inspeksi,Inspektor
+11674,Inspeksi,Inspektor
+11676,Inspeksi,Inspektor
+11677,Inspeksi,Inspektor
+11611,Inspeksi,Inspektor
+10979,Inspeksi,Inspektor
+10763,Inspeksi,Inspektor
+11612,Inspeksi,Inspektor
+10999,Inspeksi,Inspektor
+10506,Inspeksi,Inspektor
+10719,Inspeksi,Inspektor
+10488,Inspeksi,Inspektor
+11001,Inspeksi,Inspektor
+10607,Inspeksi,Inspektor
+10704,Inspeksi,Inspektor
+10518,Inspeksi,Inspektor
+11682,Inspeksi,Inspektor
+11683,Inspeksi,Inspektor
+10516,Inspeksi,Inspektor
+11684,Inspeksi,Inspektor
+11192,Inspeksi,Inspektor
+11388,Inspeksi,Inspektor
+11198,Inspeksi,Inspektor
+11386,Inspeksi,Inspektor
+10718,Inspeksi,Inspektor
+10451,Inspeksi,Inspektor
+11224,Inspeksi,Inspektor
+11053,Inspeksi,Inspektor
+11687,Inspeksi,Inspektor
+10924,Inspeksi,Inspektor
+10896,Inspeksi,Inspektor
+10752,Inspeksi,Inspektor
+11403,Inspeksi,Inspektor
+11689,Inspeksi,Inspektor
+10660,Inspeksi,Inspektor
+11036,Inspeksi,Inspektor
+11191,Inspeksi,Inspektor
+11186,Inspeksi,Inspektor
+11384,Inspeksi,Inspektor
+11621,Inspeksi,Inspektor
+11622,Inspeksi,Inspektor
+11434,Inspeksi,Inspektor
+11024,Inspeksi,Inspektor
+11389,Inspeksi,Inspektor
+10765,Inspeksi,Inspektor
+11435,Inspeksi,Inspektor
+11625,Inspeksi,Inspektor
+11693,Inspeksi,Inspektor
+11136,Inspeksi,Inspektor
+10603,Inspeksi,Inspektor
+11694,Inspeksi,Inspektor
+11695,Inspeksi,Inspektor
+10741,Inspeksi,Inspektor
+11628,Inspeksi,Inspektor
+11245,Inspeksi,Inspektor
+11629,Inspeksi,Inspektor
+10746,Inspeksi,Inspektor
+11378,Inspeksi,Inspektor
+11382,Inspeksi,Inspektor
+11042,Inspeksi,Inspektor
+11364,Inspeksi,Inspektor
+10901,Inspeksi,Inspektor
+10504,Inspeksi,Inspektor
+11041,Inspeksi,Inspektor
+10744,Inspeksi,Inspektor
+11432,Inspeksi,Inspektor
+10769,Inspeksi,Inspektor
+11341,Inspeksi,Inspektor
+10903,Inspeksi,Inspektor
+10522,Inspeksi,Inspektor
+10976,Inspeksi,Inspektor
+11526,Inspeksi,Resealer
+10627,Inspeksi,Resealer
+10739,Inspeksi,Resealer
+10757,Inspeksi,Resealer
+11078,Inspeksi,Resealer
+11567,Inspeksi,Resealer
+10949,Inspeksi,Resealer
+11418,Inspeksi,Resealer
+10880,Inspeksi,Resealer
+11518,Inspeksi,Resealer
+11006,Inspeksi,Resealer
+10938,Inspeksi,Resealer
+11334,Inspeksi,Resealer
+11355,Inspeksi,Resealer
+11642,Inspeksi,Resealer
+11089,Inspeksi,Resealer
+11572,Inspeksi,Resealer
+11090,Inspeksi,Resealer
+11413,Inspeksi,Resealer
+11487,Inspeksi,Resealer
+11552,Inspeksi,Resealer
+11514,Inspeksi,Resealer
+11477,Inspeksi,Resealer
+11501,Inspeksi,Resealer
+11067,Inspeksi,Resealer
+10669,Inspeksi,Resealer
+11474,Inspeksi,Resealer
+11343,Inspeksi,Resealer
+11249,Inspeksi,Resealer
+11372,Inspeksi,Resealer
+11647,Inspeksi,Resealer
+10755,Inspeksi,Resealer
+10986,Inspeksi,Resealer
+10753,Inspeksi,Resealer
+11354,Inspeksi,Resealer
+11656,Inspeksi,Resealer
+11479,Inspeksi,Resealer
+11132,Inspeksi,Resealer
+11659,Inspeksi,Resealer
+11516,Inspeksi,Resealer
+11375,Inspeksi,Resealer
+11536,Inspeksi,Resealer
+10629,Inspeksi,Resealer
+11469,Inspeksi,Resealer
+11146,Inspeksi,Resealer
+10633,Inspeksi,Resealer
+10581,Inspeksi,Resealer
+11468,Inspeksi,Resealer
+11637,Inspeksi,Resealer
+10777,Inspeksi,Inspektor
+11179,Inspeksi,Inspektor
+11404,Inspeksi,Inspektor
+11643,Inspeksi,Resealer
+11393,Inspeksi,Inspektor
+10756,Inspeksi,Resealer
+11385,Inspeksi,Inspektor
+11414,Inspeksi,Resealer
+11118,Inspeksi,Resealer
+11470,Inspeksi,Resealer
+11556,Inspeksi,Resealer
+11649,Inspeksi,Resealer
+10666,Inspeksi,Resealer
+11091,Inspeksi,Resealer
+10992,Inspeksi,Resealer
+11553,Inspeksi,Resealer
+11373,Inspeksi,Resealer
+11094,Inspeksi,Resealer
+11110,Inspeksi,Resealer
+10729,Inspeksi,Resealer
+10517,Inspeksi,Inspektor
+11614,Inspeksi,Inspektor
+11158,Inspeksi,Resealer
+11560,Inspeksi,Resealer
+11424,Inspeksi,Resealer
+11688,Inspeksi,Inspektor
+10909,Inspeksi,Inspektor
+11449,Inspeksi,Resealer
+11412,Inspeksi,Resealer
+11691,Inspeksi,Inspektor
+10609,Inspeksi,Inspektor
+11630,Inspeksi,Inspektor
+10589,Inspeksi,Inspektor
+11769,Inspeksi,Reject
+11766,Inspeksi,Reject
+11768,Inspeksi,Reject
+11771,Inspeksi,Reject
+11765,Inspeksi,Reject
+11772,Inspeksi,Reject
+11767,Inspeksi,Reject
+11770,Inspeksi,Reject

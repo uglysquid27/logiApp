@@ -10,16 +10,42 @@ class SubSectionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Ambil semua section dulu
+        // Get all sections first
         $sections = Section::all();
 
-        // Contoh sub-sections per section
+        // Sub-sections data based on Excel file
         $subSectionsData = [
-            'Produksi' => ['Line 1', 'Line 2', 'Line 3'],
-            'Quality Control' => ['QC A', 'QC B'],
-            'Logistik' => ['Gudang 1', 'Gudang 2'],
-            'HRD' => ['Recruitment', 'Payroll'],
-            'Maintenance' => ['Elektrikal', 'Mekanik']
+            'Finished goods' => [
+                'Leader',
+                'Admin',
+                'Penandaan/Putway',
+                'SAP'
+            ],
+            'Delivery' => [
+                'Leader',
+                'Dispatcer',
+                'Picker',
+                'Admin'
+            ],
+            'Loader' => [
+                'Loader' // All loader employees have "Loader" as both section and sub-section
+            ],
+            'RM/PM' => [
+                'Admin',
+                'Checker',
+                'Buffer Room/Penimbangan'
+            ],
+            'Operator Forklift' => [
+                'Operator Forklift' // All have same sub-section as section
+            ],
+            'Inspeksi' => [
+                'Leader',
+                'Checker',
+                'Admin',
+                'Inspektor',
+                'Resealer',
+                'Reject'
+            ]
         ];
 
         foreach ($sections as $section) {
