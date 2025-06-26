@@ -11,35 +11,31 @@ class ManPowerRequest extends Model
 
     protected $fillable = [
         'sub_section_id',
+        'shift_id',
         'date',
-        'shift_id', // Ensure this is in fillable
-        'start_time', // New field
-        'end_time',   // New field
+        'start_time',
+        'end_time',
         'requested_amount',
         'male_count',
         'female_count',
         'status',
+        'fulfilled_by'
     ];
 
-    protected $casts = [
-        'date' => 'date',
-    ];
+    // Add this relationship
+    public function fulfilledBy()
+    {
+        return $this->belongsTo(User::class, 'fulfilled_by');
+    }
 
+    // Existing relationships...
     public function subSection()
     {
         return $this->belongsTo(SubSection::class);
     }
 
-    public function shift() // Relationship to Shift is maintained
+    public function shift()
     {
         return $this->belongsTo(Shift::class);
-    }
-
-    /**
-     * Get the schedules associated with the man power request.
-     */
-    public function schedules()
-    {
-        return $this->hasMany(Schedule::class);
     }
 }

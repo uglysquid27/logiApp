@@ -6,20 +6,34 @@ NIK,SECTION,BAGIAN
 10466,Finished goods,Admin
 10937,Finished goods,Admin
 10935,Finished goods,Admin
-11527,Finished goods,Penandaan/Putway
-11635,Finished goods,Penandaan/Putway
-11443,Finished goods,Penandaan/Putway
-11663,Finished goods,Penandaan/Putway
-11533,Finished goods,Penandaan/Putway
-11603,Finished goods,Penandaan/Putway
-11609,Finished goods,Penandaan/Putway
-10459,Finished goods,Penandaan/Putway
-11381,Finished goods,Penandaan/Putway
-11617,Finished goods,Penandaan/Putway
-11431,Finished goods,Penandaan/Putway
-11430,Finished goods,Penandaan/Putway
-11377,Finished goods,Penandaan/Putway
-11426,Finished goods,Penandaan/Putway
+11527,Finished goods,Penandaan
+11527,Finished goods,Putway
+11635,Finished goods,Penandaan
+11635,Finished goods,Putway
+11443,Finished goods,Penandaan
+11443,Finished goods,Putway
+11663,Finished goods,Penandaan
+11663,Finished goods,Putway
+11533,Finished goods,Penandaan
+11533,Finished goods,Putway
+11603,Finished goods,Penandaan
+11603,Finished goods,Putway
+11609,Finished goods,Penandaan
+11609,Finished goods,Putway
+10459,Finished goods,Penandaan
+10459,Finished goods,Putway
+11381,Finished goods,Penandaan
+11381,Finished goods,Putway
+11617,Finished goods,Penandaan
+11617,Finished goods,Putway
+11431,Finished goods,Penandaan
+11431,Finished goods,Putway
+11430,Finished goods,Penandaan
+11430,Finished goods,Putway
+11377,Finished goods,Penandaan
+11377,Finished goods,Putway
+11426,Finished goods,Penandaan
+11426,Finished goods,Putway
 10791,Finished goods,SAP
 11178,Finished goods,SAP
 10468,Delivery,Leader
@@ -99,13 +113,20 @@ NIK,SECTION,BAGIAN
 10683,RM/PM,Checker
 10861,RM/PM,Checker
 10844,RM/PM,Checker
-11342,RM/PM,Buffer Room/Penimbangan
-10928,RM/PM,Buffer Room/Penimbangan
-10879,RM/PM,Buffer Room/Penimbangan
-11073,RM/PM,Buffer Room/Penimbangan
-11074,RM/PM,Buffer Room/Penimbangan
-10672,RM/PM,Buffer Room/Penimbangan
-10671,RM/PM,Buffer Room/Penimbangan
+11342,RM/PM,Buffer Room
+11342,RM/PM,Penimbangan
+10928,RM/PM,Buffer Room
+10928,RM/PM,Penimbangan
+10879,RM/PM,Buffer Room
+10879,RM/PM,Penimbangan
+11073,RM/PM,Buffer Room
+11073,RM/PM,Penimbangan
+11074,RM/PM,Buffer Room
+11074,RM/PM,Penimbangan
+10672,RM/PM,Buffer Room
+10672,RM/PM,Penimbangan
+10671,RM/PM,Buffer Room
+10671,RM/PM,Penimbangan
 10612,Operator Forklift,Operator Forklift
 10803,Operator Forklift,Operator Forklift
 10804,Operator Forklift,Operator Forklift

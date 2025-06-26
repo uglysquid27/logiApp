@@ -19,6 +19,7 @@ return new class extends Migration
             $table->unsignedInteger('male_count')->default(0);
             $table->unsignedInteger('female_count')->default(0);
             $table->enum('status', ['pending', 'fulfilled', 'rejected'])->default('pending');
+            $table->foreignId('fulfilled_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }

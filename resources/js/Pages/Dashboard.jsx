@@ -37,135 +37,135 @@ class ErrorBoundary extends React.Component {
     }
 }
 
-const DetailModal = ({ 
-    isOpen, 
-    onClose, 
-    title, 
-    data = null, 
-    columns = [], 
-    formatDate, 
-    onFilterOrPaginate 
-  }) => {
+const DetailModal = ({
+    isOpen,
+    onClose,
+    title,
+    data = null,
+    columns = [],
+    formatDate,
+    onFilterOrPaginate
+}) => {
     // Safely handle null/undefined data
     const items = data?.data || [];
     const paginationLinks = data?.links || [];
     const isPaginated = paginationLinks.length > 0;
-  
+
     const [filterValues, setFilterValues] = useState({});
-  
+
     useEffect(() => {
-      if (isOpen && data?.path) {
-        try {
-          const url = new URL(data.path);
-          const params = new URLSearchParams(url.search);
-          const newFilterValues = {};
-          
-          columns.forEach(col => {
-            if (!col.filterable) return;
-            
-            const filterKey = col.filterField || col.field;
-            if (col.filterType === 'date_range') {
-              if (params.has(`filter_${filterKey}_from`)) {
-                newFilterValues[`${filterKey}_from`] = params.get(`filter_${filterKey}_from`);
-              }
-              if (params.has(`filter_${filterKey}_to`)) {
-                newFilterValues[`${filterKey}_to`] = params.get(`filter_${filterKey}_to`);
-              }
-            } else if (params.has(`filter_${filterKey}`)) {
-              newFilterValues[filterKey] = params.get(`filter_${filterKey}`);
+        if (isOpen && data?.path) {
+            try {
+                const url = new URL(data.path);
+                const params = new URLSearchParams(url.search);
+                const newFilterValues = {};
+
+                columns.forEach(col => {
+                    if (!col.filterable) return;
+
+                    const filterKey = col.filterField || col.field;
+                    if (col.filterType === 'date_range') {
+                        if (params.has(`filter_${filterKey}_from`)) {
+                            newFilterValues[`${filterKey}_from`] = params.get(`filter_${filterKey}_from`);
+                        }
+                        if (params.has(`filter_${filterKey}_to`)) {
+                            newFilterValues[`${filterKey}_to`] = params.get(`filter_${filterKey}_to`);
+                        }
+                    } else if (params.has(`filter_${filterKey}`)) {
+                        newFilterValues[filterKey] = params.get(`filter_${filterKey}`);
+                    }
+                });
+                setFilterValues(newFilterValues);
+            } catch (e) {
+                console.error('Error parsing URL:', e);
             }
-          });
-          setFilterValues(newFilterValues);
-        } catch (e) {
-          console.error('Error parsing URL:', e);
         }
-      }
     }, [isOpen, data, columns]);
-  
+
     if (!isOpen) return null;
-  
+
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-          {/* Modal header */}
-          <div className="flex justify-between items-center p-4 border-b">
-            <h3 className="text-xl font-semibold">{title}</h3>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-              &times;
-            </button>
-          </div>
-  
-          {/* Modal content */}
-          <div className="p-4">
-            {/* Filter section */}
-            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {columns.map((col, index) => (
-                col.filterable && (
-                  <div key={index} className="space-y-1">
-                    <label className="block text-sm font-medium text-gray-700">
-                      {col.header}
-                    </label>
-                    {/* Render appropriate filter input based on type */}
-                  </div>
-                )
-              ))}
-            </div>
-  
-            {/* Data table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {columns.map((col, idx) => (
-                      <th key={idx} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                        {col.header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {items.length > 0 ? (
-                    items.map((item, itemIdx) => (
-                      <tr key={itemIdx || item.id}>
-                        {columns.map((col, colIdx) => (
-                          <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                            {col.render ? col.render(item, formatDate) : (item[col.field] || 'N/A')}
-                          </td>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+                {/* Modal header */}
+                <div className="flex justify-between items-center p-4 border-b">
+                    <h3 className="text-xl font-semibold">{title}</h3>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                        &times;
+                    </button>
+                </div>
+
+                {/* Modal content */}
+                <div className="p-4">
+                    {/* Filter section */}
+                    <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {columns.map((col, index) => (
+                            col.filterable && (
+                                <div key={index} className="space-y-1">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        {col.header}
+                                    </label>
+                                    {/* Render appropriate filter input based on type */}
+                                </div>
+                            )
                         ))}
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={columns.length} className="px-4 py-4 text-center text-sm text-gray-500">
-                        No data available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    </div>
+
+                    {/* Data table */}
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    {columns.map((col, idx) => (
+                                        <th key={idx} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                            {col.header}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {items.length > 0 ? (
+                                    items.map((item) => (
+                                        <tr key={item.id || `${item.date}_${item.sub_section?.id || '0'}_${item.shift?.id || '0'}`}>
+                                            {columns.map((col, colIdx) => (
+                                                <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                                    {col.render ? col.render(item, formatDate) : (item[col.field] || 'N/A')}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={columns.length} className="px-4 py-4 text-center text-sm text-gray-500">
+                                            No data available
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {isPaginated && paginationLinks.length > 0 && (
+                        <div className="mt-4 flex justify-center">
+                            <nav className="flex space-x-1">
+                                {paginationLinks.map((link, idx) => (
+                                    <button
+                                        key={`${link.label}_${idx}`}  // Combine label and index for uniqueness
+                                        onClick={() => link.url && onFilterOrPaginate(link.url)}
+                                        className={`px-3 py-1 rounded-md ${link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        disabled={!link.url}
+                                    />
+                                ))}
+                            </nav>
+                        </div>
+                    )}
+                </div>
             </div>
-  
-            {/* Pagination */}
-            {isPaginated && paginationLinks.length > 0 && (
-              <div className="mt-4 flex justify-center">
-                <nav className="flex space-x-1">
-                  {paginationLinks.map((link, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => link.url && onFilterOrPaginate(link.url)}
-                      className={`px-3 py-1 rounded-md ${link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                      dangerouslySetInnerHTML={{ __html: link.label }}
-                      disabled={!link.url}
-                    />
-                  ))}
-                </nav>
-              </div>
-            )}
-          </div>
         </div>
-      </div>
     );
-  };
+};
 
 export default function Dashboard() {
     const { props } = usePage();
@@ -197,13 +197,13 @@ export default function Dashboard() {
         if (!dateString) return 'N/A';
         const date = dayjs(dateString);
         return date.isValid() ? date.format('DD MMMM YYYY') : 'N/A';
-      };
-      
-      const formatDateTime = (dateString) => {
+    };
+
+    const formatDateTime = (dateString) => {
         if (!dateString) return 'N/A';
         const date = dayjs(dateString);
         return date.isValid() ? date.format('DD MMMM HH:mm') : 'N/A';
-      };
+    };
 
     const fetchModalData = async (url, query = '') => {
         try {

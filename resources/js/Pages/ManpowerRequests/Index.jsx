@@ -156,22 +156,22 @@ export default function Index({ requests }) {
                               </svg>
                               Dipenuhi
                             </span>
-                            <button
+                            {/* <button
                               onClick={() => handleRequestRevision(req.id)}
                               className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 text-sm font-medium px-2 py-1"
                             >
                               Revisi
-                            </button>
+                            </button> */}
                           </>
                         )}
                         {req.status === 'revision_requested' && (
                           <>
-                            <span className="text-purple-600 dark:text-purple-400 text-sm italic flex items-center">
+                            {/* <span className="text-purple-600 dark:text-purple-400 text-sm italic flex items-center">
                               <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M13.586 3.586a2 2 0 112.828 2.828l-7.586 7.586A.5.5 0 018 14.586v-1.586h-1.586a.5.5 0 01-.354-.854l7.586-7.586zM9.5 16h-5a2 2 0 01-2-2v-5c0-.552.448-1 1-1h1c.552 0 1 .448 1 1v1h1c.552 0 1 .448 1 1v1h1c.552 0 1 .448 1 1v1c0 1.104-.896 2-2 2z" clipRule="evenodd" fillRule="evenodd"></path>
                               </svg>
                               Revisi
-                            </span>
+                            </span> */}
                             <Link
                               href={route('manpower-requests.revision.edit', req.id)}
                               className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium px-2 py-1"
@@ -214,6 +214,9 @@ export default function Index({ requests }) {
                       </th>
                       <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         Aksi
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Oleh
                       </th>
                     </tr>
                   </thead>
@@ -287,19 +290,19 @@ export default function Index({ requests }) {
                                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"></path></svg>
                                   Dipenuhi
                                 </span>
-                                <button
+                                {/* <button
                                   onClick={() => handleRequestRevision(req.id)}
                                   className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 font-semibold"
                                 >
                                   Revisi
-                                </button>
+                                </button> */}
                               </div>
                             ) : req.status === 'revision_requested' ? (
                               <div className="flex justify-end items-center space-x-3">
-                                <span className="text-purple-600 dark:text-purple-400 italic inline-flex items-center">
+                                {/* <span className="text-purple-600 dark:text-purple-400 italic inline-flex items-center">
                                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M13.586 3.586a2 2 0 112.828 2.828l-7.586 7.586A.5.5 0 018 14.586v-1.586h-1.586a.5.5 0 01-.354-.854l7.586-7.586zM9.5 16h-5a2 2 0 01-2-2v-5c0-.552.448-1 1-1h1c.552 0 1 .448 1 1v1h1c.552 0 1 .448 1 1v1h1c.552 0 1 .448 1 1v1c0 1.104-.896 2-2 2z" clipRule="evenodd" fillRule="evenodd"></path></svg>
                                   Revisi
-                                </span>
+                                </span> */}
                                 <Link
                                   href={route('manpower-requests.revision.edit', req.id)}
                                   className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 font-semibold"
@@ -308,6 +311,9 @@ export default function Index({ requests }) {
                                 </Link>
                               </div>
                             ) : null}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 text-center">
+                            {req.fulfilled_by?.name || '-'}
                           </td>
                         </tr>
                       ))

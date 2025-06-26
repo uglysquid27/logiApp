@@ -4,7 +4,13 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import dayjs from 'dayjs';
 import { router } from '@inertiajs/react';
 
-export default function Fulfill({ request, sameSubSectionEmployees, otherSubSectionEmployees, message }) {
+export default function Fulfill({ 
+    request, 
+    sameSubSectionEmployees, 
+    otherSubSectionEmployees, 
+    message,
+    auth 
+}) {
     // Debug incoming data
     useEffect(() => {
         console.log('Request:', {
@@ -13,6 +19,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
         });
         console.log('Same Sub-Section Employees:', sameSubSectionEmployees);
         console.log('Other Sub-Section Employees:', otherSubSectionEmployees);
+        console.log('Auth User:', auth.user);
     }, []);
 
     // Normalize gender with strict validation
@@ -170,6 +177,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
 
     const { data, setData, post, processing, errors } = useForm({
         employee_ids: initialSelectedIds,
+        fulfilled_by: auth.user.id // Added fulfilled_by field
     });
 
     const [selectedIds, setSelectedIds] = useState(initialSelectedIds);
@@ -182,7 +190,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
         setData('employee_ids', selectedIds);
     }, [selectedIds]);
 
-    // Reset selection when initialSelectedIds changes (e.g., when request changes)
+    // Reset selection when initialSelectedIds changes
     useEffect(() => {
         setSelectedIds(initialSelectedIds);
     }, [initialSelectedIds]);
@@ -322,9 +330,15 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
         return (
             <AuthenticatedLayout
                 header={<h2 className="font-semibold text-gray-800 text-xl">Penuhi Request Man Power</h2>}
+                user={auth.user}
             >
                 <div className="bg-white shadow-md mx-auto mt-6 p-4 rounded-lg max-w-4xl text-center">
                     <p className="mb-3 font-bold text-green-600 text-lg">Permintaan ini sudah terpenuhi!</p>
+                    {request.fulfilled_by && (
+                        <p className="text-gray-600 mb-4">
+                            Dipenuhi oleh: {request.fulfilled_by.name} ({request.fulfilled_by.email})
+                        </p>
+                    )}
                     <button
                         onClick={() => router.visit(route('manpower-requests.index'))}
                         className="bg-blue-600 hover:bg-blue-700 mt-4 px-4 py-2 rounded-lg text-white"
@@ -341,6 +355,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
     return (
         <AuthenticatedLayout
             header={<h2 className="font-semibold text-gray-800 text-xl">Penuhi Request Man Power</h2>}
+            user={auth.user}
         >
             <div className="mx-auto mt-6 max-w-4xl">
                 {/* Request Details */}
@@ -349,6 +364,7 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                     <p><strong>Tanggal:</strong> {dayjs(request.date).format('DD MMMM YYYY')}</p>
                     <p><strong>Sub Section:</strong> {request.sub_section?.name}</p>
                     <p><strong>Jumlah Diminta:</strong> {request.requested_amount}</p>
+                    <p><strong>Diproses oleh:</strong> {auth.user.name} ({auth.user.email})</p>
                 </div>
 
                 {/* Gender Requirements */}
@@ -357,15 +373,13 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                         <h3 className="mb-3 font-bold text-lg">Persyaratan Gender</h3>
                         <div className="gap-4 grid grid-cols-2">
                             {request.male_count > 0 && (
-                                <div className={`bg-blue-100 p-3 rounded-lg border ${genderStats.male < genderStats.required_male ? 'border-red-500' : 'border-blue-200'
-                                    }`}>
+                                <div className={`bg-blue-100 p-3 rounded-lg border ${genderStats.male < genderStats.required_male ? 'border-red-500' : 'border-blue-200'}`}>
                                     <p className="text-blue-900 text-sm">Laki-laki Dibutuhkan</p>
                                     <p className="font-bold text-xl">{genderStats.male} / {genderStats.required_male}</p>
                                 </div>
                             )}
                             {request.female_count > 0 && (
-                                <div className={`bg-pink-100 p-3 rounded-lg border ${genderStats.female < genderStats.required_female ? 'border-red-500' : 'border-pink-200'
-                                    }`}>
+                                <div className={`bg-pink-100 p-3 rounded-lg border ${genderStats.female < genderStats.required_female ? 'border-red-500' : 'border-pink-200'}`}>
                                     <p className="text-pink-900 text-sm">Perempuan Dibutuhkan</p>
                                     <p className="font-bold text-xl">{genderStats.female} / {genderStats.required_female}</p>
                                 </div>
@@ -471,13 +485,17 @@ export default function Fulfill({ request, sameSubSectionEmployees, otherSubSect
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-6 py-3 rounded-lg text-white transition duration-200"
-                    >
-                        {processing ? 'Menyimpan...' : 'Submit Permintaan'}
-                    </button>
+                    <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
+                        <h3 className="mb-3 font-bold text-lg">Konfirmasi</h3>
+                        <p className="text-gray-600 mb-4">Anda akan mengirim permintaan ini sebagai: {auth.user.name}</p>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-6 py-3 rounded-lg text-white transition duration-200"
+                        >
+                            {processing ? 'Menyimpan...' : 'Submit Permintaan'}
+                        </button>
+                    </div>
                 </form>
 
                 {/* Employee Selection Modal */}
