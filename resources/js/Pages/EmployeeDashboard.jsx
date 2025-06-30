@@ -384,36 +384,6 @@ export default function EmployeeDashboard() {
                     </div>
                 </div>
             )}
-
-            {/* Custom Scrollbar Styles */}
-            <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                    height: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: #e5e7eb;
-                    border-radius: 10px;
-                }
-                .dark .custom-scrollbar::-webkit-scrollbar-track {
-                    background: #374151;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background-color: #93c5fd;
-                    border-radius: 10px;
-                    border: 2px solid #e5e7eb;
-                }
-                .dark .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background-color: #6366f1;
-                    border-color: #374151;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background-color: #60a5fa;
-                }
-                .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background-color: #4f46e5;
-                }
-            `}</style>
         </AuthenticatedLayout>
     );
 }
