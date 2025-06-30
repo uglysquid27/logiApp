@@ -305,7 +305,12 @@ export default function EmployeeDashboard() {
                                                                                         </span>
                                                                                     </div>
                                                                                     <div>
-                                                                                        <p className="font-medium text-gray-800 dark:text-gray-100">{coworker.employee.name}</p>
+                                                                                        <p className="font-medium text-gray-800 dark:text-gray-100">
+                                                                                            {coworker.employee.name}
+                                                                                            <span className="ml-2 text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded-full">
+                                                                                                {coworker.sub_section}
+                                                                                            </span>
+                                                                                        </p>
                                                                                         <p className="text-xs text-gray-500 dark:text-gray-400">NIK: {coworker.employee.nik}</p>
                                                                                         <p className={`text-xs ${coworker.status === 'accepted' ? 'text-green-600 dark:text-green-400' :
                                                                                                 coworker.status === 'rejected' ? 'text-red-600 dark:text-red-400' :
