@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 import { router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import React from 'react';
 
 dayjs.locale('id');
 
@@ -20,6 +21,10 @@ export default function EmployeeDashboard() {
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState('error');
 
+    // State for coworkers data
+    const [coworkersData, setCoworkersData] = useState(null);
+    const [loadingCoworkers, setLoadingCoworkers] = useState(false);
+
     // Auto-hide alert after 5 seconds
     useEffect(() => {
         if (showAlert) {
@@ -33,6 +38,26 @@ export default function EmployeeDashboard() {
         setAlertMessage(message);
         setAlertType(type);
         setShowAlert(true);
+    };
+
+    // Function to fetch coworkers data
+    const fetchSameShiftEmployees = async (scheduleId) => {
+        if (coworkersData?.current_schedule?.id === scheduleId) {
+            setCoworkersData(null);
+            return;
+        }
+
+        setLoadingCoworkers(true);
+        try {
+            const response = await fetch(route('employee.schedule.same-shift', scheduleId));
+            const data = await response.json();
+            setCoworkersData(data);
+        } catch (error) {
+            console.error('Failed to fetch coworkers:', error);
+            showCustomAlert('Gagal memuat rekan kerja. Silakan coba lagi.', 'error');
+        } finally {
+            setLoadingCoworkers(false);
+        }
     };
 
     // Function to open the rejection modal
@@ -105,8 +130,8 @@ export default function EmployeeDashboard() {
                     {/* Custom Alert Display */}
                     {showAlert && (
                         <div className={`mb-4 px-4 py-3 rounded-lg shadow-md text-sm
-                            ${alertType === 'success' 
-                                ? 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-200' 
+                            ${alertType === 'success'
+                                ? 'bg-green-100 border border-green-400 text-green-700 dark:bg-green-800 dark:border-green-600 dark:text-green-200'
                                 : 'bg-red-100 border border-red-400 text-red-700 dark:bg-red-800 dark:border-red-600 dark:text-red-200'}`}>
                             {alertMessage}
                             <button
@@ -164,63 +189,148 @@ export default function EmployeeDashboard() {
                                     </thead>
                                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                         {mySchedules.map((schedule) => (
-                                            <tr key={schedule.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
-                                                <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-100">
-                                                    {formatDate(schedule.date)}
-                                                </td>
-                                                <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
-                                                    {schedule.man_power_request?.shift?.name || 'N/A'}
-                                                </td>
-                                                <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
-                                                    {schedule.man_power_request?.start_time?.substring(0, 5) || 'N/A'} - {schedule.man_power_request?.end_time?.substring(0, 5) || 'N/A'}
-                                                </td>
-                                                <td className="hidden sm:table-cell px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
-                                                    {schedule.sub_section?.name || 'N/A'}
-                                                </td>
-                                                <td className="hidden md:table-cell px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
-                                                    {schedule.sub_section?.section?.name || 'N/A'}
-                                                </td>
-                                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm">
-                                                    {schedule.status === 'accepted' ? (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500 text-white">
-                                                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                                            Diterima
-                                                        </span>
-                                                    ) : schedule.status === 'rejected' ? (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-500 text-white">
-                                                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
-                                                            Ditolak
-                                                        </span>
-                                                    ) : (
-                                                        <div className="flex flex-col gap-1 sm:gap-2">
-                                                            <button
-                                                                onClick={() => respond(schedule.id, 'accepted')}
-                                                                className="flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
-                                                            >
-                                                                <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
-                                                                Terima
-                                                            </button>
+                                            <React.Fragment key={schedule.id}>
+                                                <tr className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-100">
+                                                        {formatDate(schedule.date)}
+                                                    </td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+                                                        {schedule.man_power_request?.shift?.name || 'N/A'}
+                                                    </td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+                                                        {schedule.man_power_request?.start_time?.substring(0, 5) || 'N/A'} - {schedule.man_power_request?.end_time?.substring(0, 5) || 'N/A'}
+                                                    </td>
+                                                    <td className="hidden sm:table-cell px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+                                                        {schedule.sub_section?.name || 'N/A'}
+                                                    </td>
+                                                    <td className="hidden md:table-cell px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+                                                        {schedule.sub_section?.section?.name || 'N/A'}
+                                                    </td>
+                                                    <td className="px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm">
+                                                        {schedule.status === 'accepted' ? (
+                                                            <div className="flex flex-col gap-1 sm:gap-2">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-green-500 text-white">
+                                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                                    Diterima
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => fetchSameShiftEmployees(schedule.id)}
+                                                                    className="flex items-center justify-center bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
+                                                                >
+                                                                    {loadingCoworkers && coworkersData?.current_schedule?.id === schedule.id ? (
+                                                                        'Memuat...'
+                                                                    ) : (
+                                                                        'Lihat Rekan Kerja'
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        ) : schedule.status === 'rejected' ? (
+                                                            <div className="flex flex-col gap-1 sm:gap-2">
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-500 text-white">
+                                                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
+                                                                    Ditolak
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => fetchSameShiftEmployees(schedule.id)}
+                                                                    className="flex items-center justify-center bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
+                                                                >
+                                                                    {loadingCoworkers && coworkersData?.current_schedule?.id === schedule.id ? (
+                                                                        'Memuat...'
+                                                                    ) : (
+                                                                        'Lihat Rekan Kerja'
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col gap-1 sm:gap-2">
+                                                                <button
+                                                                    onClick={() => respond(schedule.id, 'accepted')}
+                                                                    className="flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
+                                                                >
+                                                                    <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path></svg>
+                                                                    Terima
+                                                                </button>
 
-                                                            <button
-                                                                onClick={() => openRejectModal(schedule.id)}
-                                                                className="flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
-                                                            >
-                                                                <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
-                                                                Tolak
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td className="hidden lg:table-cell px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm">
-                                                    {schedule.status === 'rejected' ? (
-                                                        <p className="text-xs text-red-300 italic">"{schedule.rejection_reason || 'Tidak ada alasan'}"</p>
-                                                    ) : schedule.status === 'accepted' ? (
-                                                        <span className="inline-block text-xs sm:text-sm text-gray-500 italic">Tidak ada alasan</span>
-                                                    ) : (
-                                                        <span className="inline-block text-xs sm:text-sm text-gray-500 italic">Menunggu Respon</span>
-                                                    )}
-                                                </td>
-                                            </tr>
+                                                                <button
+                                                                    onClick={() => openRejectModal(schedule.id)}
+                                                                    className="flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
+                                                                >
+                                                                    <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
+                                                                    Tolak
+                                                                </button>
+
+                                                                <button
+                                                                    onClick={() => fetchSameShiftEmployees(schedule.id)}
+                                                                    className="flex items-center justify-center bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
+                                                                >
+                                                                    {loadingCoworkers && coworkersData?.current_schedule?.id === schedule.id ? (
+                                                                        'Memuat...'
+                                                                    ) : (
+                                                                        'Lihat Rekan Kerja'
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="hidden lg:table-cell px-3 py-2 sm:px-4 sm:py-3 text-xs sm:text-sm">
+                                                        {schedule.status === 'rejected' ? (
+                                                            <p className="text-xs text-red-300 italic">"{schedule.rejection_reason || 'Tidak ada alasan'}"</p>
+                                                        ) : schedule.status === 'accepted' ? (
+                                                            <span className="inline-block text-xs sm:text-sm text-gray-500 italic">Tidak ada alasan</span>
+                                                        ) : (
+                                                            <span className="inline-block text-xs sm:text-sm text-gray-500 italic">Menunggu Respon</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+
+                                                {/* Coworkers Row */}
+                                                {coworkersData?.current_schedule?.id === schedule.id && (
+                                                    <tr className="bg-gray-50 dark:bg-gray-700">
+                                                        <td colSpan="7" className="px-3 py-4 sm:px-6 sm:py-4">
+                                                            <div className="space-y-3">
+                                                                <h3 className="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
+                                                                    Rekan Kerja di Shift yang Sama:
+                                                                </h3>
+                                                                {coworkersData.coworkers.length > 0 ? (
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                                        {coworkersData.coworkers.map((coworker) => (
+                                                                            <div key={coworker.id} className={`p-3 rounded-lg border-l-4 ${coworker.status === 'accepted' ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-700' :
+                                                                                    coworker.status === 'rejected' ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-700' :
+                                                                                        'border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-700'
+                                                                                }`}>
+                                                                                <div className="flex items-center space-x-3">
+                                                                                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                                                                        <span className="text-indigo-600 dark:text-indigo-300 font-medium">
+                                                                                            {coworker.employee.name.charAt(0)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <p className="font-medium text-gray-800 dark:text-gray-100">{coworker.employee.name}</p>
+                                                                                        <p className="text-xs text-gray-500 dark:text-gray-400">NIK: {coworker.employee.nik}</p>
+                                                                                        <p className={`text-xs ${coworker.status === 'accepted' ? 'text-green-600 dark:text-green-400' :
+                                                                                                coworker.status === 'rejected' ? 'text-red-600 dark:text-red-400' :
+                                                                                                    'text-yellow-600 dark:text-yellow-400'
+                                                                                            }`}>
+                                                                                            Status: {coworker.status === 'accepted' ? 'Diterima' : coworker.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                                                                                        </p>
+                                                                                        {coworker.status === 'rejected' && coworker.rejection_reason && (
+                                                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                                                Alasan: "{coworker.rejection_reason}"
+                                                                                            </p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-gray-500 dark:text-gray-400 text-sm">Tidak ada rekan kerja yang ditemukan untuk shift ini</p>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
                                         ))}
                                     </tbody>
                                 </table>

@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Models\Schedule;
-use App\Models\Employee; // Import model Employee
-use App\Models\ManPowerRequest; // Import model ManPowerRequest
+use App\Models\Employee;
+use App\Models\ManPowerRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // Import DB facade for transactions
+use Illuminate\Support\Facades\DB;
 
 class EmployeeDashboardController extends Controller
 {
@@ -21,11 +21,11 @@ class EmployeeDashboardController extends Controller
         $mySchedules = Schedule::with([
                 'manPowerRequest.shift',
                 'subSection.section',
-                'employee' // Load employee data if needed, though often available from auth
+                'employee'
             ])
             ->where('employee_id', $employee->id)
-            ->whereDate('date', '>=', Carbon::today()) // Only schedules from today onwards
-            ->orderBy('date', 'asc') // Order by date ascending
+            ->whereDate('date', '>=', Carbon::today())
+            ->orderBy('date', 'asc')
             ->get();
 
         return Inertia::render('EmployeeDashboard', [
@@ -35,6 +35,35 @@ class EmployeeDashboardController extends Controller
             'mySchedules' => $mySchedules,
         ]);
     }
+
+    public function sameShiftEmployees(Schedule $schedule)
+{
+    $employee = Auth::guard('employee')->user();
+    
+    // Verify schedule ownership
+    abort_unless($schedule->employee_id === $employee->id, 403);
+
+    return response()->json([
+        'current_schedule' => [
+            'id' => $schedule->id,
+            'status' => $schedule->status
+        ],
+        'coworkers' => Schedule::with(['employee'])
+            ->whereHas('manPowerRequest', function($q) use ($schedule) {
+                $q->where('shift_id', $schedule->manPowerRequest->shift_id);
+            })
+            ->whereDate('date', $schedule->date)
+            ->where('sub_section_id', $schedule->sub_section_id)
+            ->where('employee_id', '!=', $employee->id)
+            ->get()
+            ->map(fn($s) => [
+                'id' => $s->id,
+                'employee' => $s->employee,
+                'status' => $s->status,
+                'rejection_reason' => $s->rejection_reason
+            ])
+    ]);
+}
 
     public function respond(Request $req, Schedule $schedule)
     {
@@ -56,34 +85,22 @@ class EmployeeDashboardController extends Controller
             if ($req->status === 'rejected') {
                 $data['rejection_reason'] = $req->rejection_reason;
                 
-                // === Perubahan Baru: Update status karyawan dan cuti ===
-                // Temukan karyawan yang terkait dengan jadwal ini
+                // Update employee status and cuti
                 $employeeToUpdate = Employee::find($schedule->employee_id);
                 if ($employeeToUpdate) {
-                    $employeeToUpdate->status = 'available'; // Ubah status karyawan menjadi 'available'
-                    $employeeToUpdate->cuti = 'yes';      // Ubah status cuti menjadi 'yes'
+                    $employeeToUpdate->status = 'available';
+                    $employeeToUpdate->cuti = 'yes';
                     $employeeToUpdate->save();
                 }
 
-                // === Perubahan Baru: Update status manpower request ===
-                // Temukan manpower request yang terkait dengan jadwal ini
+                // Update manpower request status
                 $manPowerRequest = ManPowerRequest::find($schedule->man_power_request_id);
                 if ($manPowerRequest) {
-                    $manPowerRequest->status = 'pending'; // Ubah status manpower request menjadi 'pending'
+                    $manPowerRequest->status = 'pending';
                     $manPowerRequest->save();
                 }
-
             } else {
-                $data['rejection_reason'] = null; // Reset rejection reason if accepted
-                // Jika status diubah menjadi 'accepted', pastikan status karyawan dan cuti juga diatur ulang
-                // sesuai dengan logika bisnis Anda saat ini.
-                // Contoh:
-                // $employeeToUpdate = Employee::find($schedule->employee_id);
-                // if ($employeeToUpdate) {
-                //     $employeeToUpdate->status = 'busy'; // Atau status lain yang sesuai
-                //     $employeeToUpdate->cuti = 'no';
-                //     $employeeToUpdate->save();
-                // }
+                $data['rejection_reason'] = null;
             }
         
             // Update the schedule status and rejection reason

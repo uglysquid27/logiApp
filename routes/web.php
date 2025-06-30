@@ -55,15 +55,70 @@ Route::get('/dashboard/schedules/upcoming', [DashboardController::class, 'getUpc
 Route::get('/permits', [PermitController::class, 'index'])->name('permits.index');
 Route::post('/permits', [PermitController::class, 'store'])->name('permits.store');
 
+Route::get('/test-same-shift', function() {
+    $schedule = App\Models\Schedule::first();
+    return app()->make(App\Http\Controllers\EmployeeDashboardController::class)
+        ->sameShiftEmployees($schedule);
+});
+
+
+Route::get('/debug-schedules', function() {
+    $employee = auth()->guard('employee')->user();
+    
+    // Get first schedule of the employee
+    $schedule = \App\Models\Schedule::with(['manPowerRequest.shift', 'subSection'])
+        ->where('employee_id', $employee->id)
+        ->whereDate('date', '>=', now())
+        ->first();
+
+    if (!$schedule) {
+        return response()->json([
+            'error' => 'No schedules found for this employee',
+            'employee_id' => $employee->id
+        ]);
+    }
+
+    // Check for same-shift employees
+    $sameShiftCount = \App\Models\Schedule::whereHas('manPowerRequest', function($q) use ($schedule) {
+            $q->where('shift_id', $schedule->manPowerRequest->shift_id);
+        })
+        ->whereDate('date', $schedule->date)
+        ->where('sub_section_id', $schedule->sub_section_id)
+        ->where('status', 'accepted')
+        ->where('employee_id', '!=', $employee->id)
+        ->count();
+
+    return [
+        'current_employee' => $employee->only('id', 'name', 'nik'),
+        'current_schedule' => [
+            'id' => $schedule->id,
+            'date' => $schedule->date,
+            'shift' => $schedule->manPowerRequest->shift->name,
+            'sub_section' => $schedule->subSection->name,
+            'status' => $schedule->status
+        ],
+        'same_shift_coworkers_count' => $sameShiftCount,
+        'same_shift_condition' => [
+            'shift_id' => $schedule->manPowerRequest->shift_id,
+            'date' => $schedule->date->format('Y-m-d'),
+            'sub_section_id' => $schedule->sub_section_id
+        ]
+    ];
+})->middleware('auth:employee');
+
 
 Route::middleware(['auth:employee'])
     ->prefix('employee')
     ->as('employee.')
     ->group(function () {
-        Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard'); // Nama 'employee.dashboard'
-        Route::post('/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('schedule.respond'); // Nama 'employee.schedule.respond'
-
-        Route::resource('permits', PermitController::class); // Ini akan menghasilkan 'employee.permits.index', 'employee.permits.create', dll.
+        Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('schedule.respond');
+        
+        // Add this new route for same-shift employees
+        Route::get('/schedule/{schedule}/same-shift', [EmployeeDashboardController::class, 'sameShiftEmployees'])
+            ->name('schedule.same-shift');
+            
+        Route::resource('permits', PermitController::class);
     });
 
 Route::middleware('auth:web')->group(function () {

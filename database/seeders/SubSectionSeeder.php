@@ -18,7 +18,8 @@ class SubSectionSeeder extends Seeder
             'Finished goods' => [
                 'Leader',
                 'Admin',
-                'Penandaan/Putway',
+                'Penandaan',
+                'Putway',
                 'SAP'
             ],
             'Delivery' => [
@@ -33,7 +34,8 @@ class SubSectionSeeder extends Seeder
             'RM/PM' => [
                 'Admin',
                 'Checker',
-                'Buffer Room/Penimbangan'
+                'Buffer Room',
+                'Penimbangan'
             ],
             'Operator Forklift' => [
                 'Operator Forklift' // All have same sub-section as section
