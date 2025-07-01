@@ -15,9 +15,9 @@ export default defineConfig({
         host: '0.0.0.0', // Biar bisa diakses dari device lain
         port: 5173,
         cors: true,
-        hmr: {
-            host: '192.168.1.26', // <--- Ganti ini dengan IP kamu (en0)
-            protocol: 'ws',
-        },
+        // hmr: {
+        //     host: '192.168.1.26', // <--- Ganti ini dengan IP kamu (en0)
+        //     protocol: 'ws',
+        // },
     },
 });

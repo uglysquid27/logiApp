@@ -8,6 +8,7 @@ export default function Fulfill({
     request, 
     sameSubSectionEmployees, 
     otherSubSectionEmployees, 
+    currentScheduledIds = [],
     message,
     auth 
 }) {
@@ -19,6 +20,7 @@ export default function Fulfill({
         });
         console.log('Same Sub-Section Employees:', sameSubSectionEmployees);
         console.log('Other Sub-Section Employees:', otherSubSectionEmployees);
+        console.log('Current Scheduled IDs:', currentScheduledIds);
         console.log('Auth User:', auth.user);
     }, []);
 
@@ -43,13 +45,15 @@ export default function Fulfill({
                 ...emp,
                 subSections: emp.sub_sections_data || [],
                 gender: normalizeGender(emp.gender),
-                originalGender: emp.gender
+                originalGender: emp.gender,
+                isCurrentlyScheduled: currentScheduledIds.includes(emp.id)
             })),
             ...otherSubSectionEmployees.map(emp => ({
                 ...emp,
                 subSections: emp.sub_sections_data || [],
                 gender: normalizeGender(emp.gender),
-                originalGender: emp.gender
+                originalGender: emp.gender,
+                isCurrentlyScheduled: currentScheduledIds.includes(emp.id)
             }))
         ];
 
@@ -59,37 +63,43 @@ export default function Fulfill({
             gender: e.gender,
             originalGender: e.originalGender,
             type: e.type,
-            subSection: e.subSections?.[0]?.name
+            subSection: e.subSections?.[0]?.name,
+            isCurrentlyScheduled: e.isCurrentlyScheduled
         })));
 
         return employees;
-    }, [sameSubSectionEmployees, otherSubSectionEmployees]);
+    }, [sameSubSectionEmployees, otherSubSectionEmployees, currentScheduledIds]);
 
     // Sort employees with gender priority
     const allSortedEligibleEmployees = useMemo(() => {
         const sorted = [...combinedEmployees].sort((a, b) => {
-            // 1. Priority to matching gender requirements
+            // 1. Currently scheduled employees first
+            if (a.isCurrentlyScheduled !== b.isCurrentlyScheduled) {
+                return a.isCurrentlyScheduled ? -1 : 1;
+            }
+
+            // 2. Priority to matching gender requirements
             const aGenderMatch = request.male_count > 0 && a.gender === 'male' ? 0 :
                 request.female_count > 0 && a.gender === 'female' ? 0 : 1;
             const bGenderMatch = request.male_count > 0 && b.gender === 'male' ? 0 :
                 request.female_count > 0 && b.gender === 'female' ? 0 : 1;
             if (aGenderMatch !== bGenderMatch) return aGenderMatch - bGenderMatch;
 
-            // 2. Same sub-section first
+            // 3. Same sub-section first
             const aIsSame = a.subSections.some(ss => ss.id === request.sub_section_id);
             const bIsSame = b.subSections.some(ss => ss.id === request.sub_section_id);
             if (aIsSame !== bIsSame) return aIsSame ? -1 : 1;
 
-            // 3. Bulanan before harian
+            // 4. Bulanan before harian
             if (a.type === 'bulanan' && b.type === 'harian') return -1;
             if (a.type === 'harian' && b.type === 'bulanan') return 1;
 
-            // 4. For harian, higher weight first
+            // 5. For harian, higher weight first
             if (a.type === 'harian' && b.type === 'harian') {
                 return b.working_day_weight - a.working_day_weight;
             }
 
-            // 5. Higher rating first
+            // 6. Higher rating first
             return b.calculated_rating - a.calculated_rating;
         });
 
@@ -100,14 +110,35 @@ export default function Fulfill({
             type: e.type,
             subSection: e.subSections?.[0]?.name,
             rating: e.calculated_rating,
-            weight: e.working_day_weight
+            weight: e.working_day_weight,
+            isCurrentlyScheduled: e.isCurrentlyScheduled
         })));
 
         return sorted;
     }, [combinedEmployees, request.sub_section_id, request.male_count, request.female_count]);
 
-    // Initial selection respecting gender requirements
+    // Initial selection - prioritize currently scheduled employees
     const initialSelectedIds = useMemo(() => {
+        // First try to use currently scheduled employees
+        const validCurrentIds = currentScheduledIds.filter(id => 
+            allSortedEligibleEmployees.some(e => e.id === id)
+        );
+        
+        if (validCurrentIds.length > 0) {
+            // Fill remaining slots with new selections if needed
+            if (validCurrentIds.length < request.requested_amount) {
+                const remainingCount = request.requested_amount - validCurrentIds.length;
+                const remainingEmployees = allSortedEligibleEmployees
+                    .filter(e => !validCurrentIds.includes(e.id))
+                    .slice(0, remainingCount)
+                    .map(e => e.id);
+                
+                return [...validCurrentIds, ...remainingEmployees];
+            }
+            return validCurrentIds.slice(0, request.requested_amount);
+        }
+
+        // Fall back to original selection logic if no current schedules
         const requiredMale = request.male_count || 0;
         const requiredFemale = request.female_count || 0;
         const totalRequired = requiredMale + requiredFemale;
@@ -173,11 +204,11 @@ export default function Fulfill({
         });
 
         return selected.slice(0, request.requested_amount);
-    }, [allSortedEligibleEmployees, request.requested_amount, request.male_count, request.female_count, request.sub_section_id]);
+    }, [allSortedEligibleEmployees, request.requested_amount, request.male_count, request.female_count, request.sub_section_id, currentScheduledIds]);
 
     const { data, setData, post, processing, errors } = useForm({
         employee_ids: initialSelectedIds,
-        fulfilled_by: auth.user.id // Added fulfilled_by field
+        fulfilled_by: auth.user.id
     });
 
     const [selectedIds, setSelectedIds] = useState(initialSelectedIds);
@@ -206,13 +237,17 @@ export default function Fulfill({
             female_bulanan: 0,
             female_harian: 0,
             required_male: request.male_count || 0,
-            required_female: request.female_count || 0
+            required_female: request.female_count || 0,
+            current_scheduled: 0
         };
 
         selectedIds.forEach(id => {
             const emp = allSortedEligibleEmployees.find(e => e.id === id);
             if (emp) {
                 stats.total++;
+                if (emp.isCurrentlyScheduled) {
+                    stats.current_scheduled++;
+                }
                 if (emp.gender === 'female') {
                     stats.female++;
                     stats[`female_${emp.type}`]++;
@@ -276,8 +311,8 @@ export default function Fulfill({
         const newIds = [...selectedIds];
         const currentEmpId = newIds[changingEmployeeIndex];
 
-        // Prevent duplicate selection
-        if (newIds.includes(newEmployeeId)) {
+        // Prevent duplicate selection (unless it's the same employee)
+        if (newEmployeeId !== currentEmpId && newIds.includes(newEmployeeId)) {
             alert('Karyawan ini sudah dipilih');
             return;
         }
@@ -326,7 +361,7 @@ export default function Fulfill({
         return allSortedEligibleEmployees.find(emp => emp.id === id);
     }, [allSortedEligibleEmployees]);
 
-    if (request.status === 'fulfilled') {
+    if (request.status === 'fulfilled' && !request.schedules?.length) {
         return (
             <AuthenticatedLayout
                 header={<h2 className="font-semibold text-gray-800 text-xl">Penuhi Request Man Power</h2>}
@@ -364,8 +399,22 @@ export default function Fulfill({
                     <p><strong>Tanggal:</strong> {dayjs(request.date).format('DD MMMM YYYY')}</p>
                     <p><strong>Sub Section:</strong> {request.sub_section?.name}</p>
                     <p><strong>Jumlah Diminta:</strong> {request.requested_amount}</p>
+                    <p><strong>Status:</strong> {request.status === 'fulfilled' ? 'Sudah dipenuhi' : 'Belum dipenuhi'}</p>
                     <p><strong>Diproses oleh:</strong> {auth.user.name} ({auth.user.email})</p>
                 </div>
+
+                {/* Current Schedule Info */}
+                {request.status === 'fulfilled' && (
+                    <div className="bg-blue-50 shadow-md mb-6 p-4 rounded-lg border border-blue-200">
+                        <h3 className="mb-3 font-bold text-lg text-blue-800">Informasi Jadwal Saat Ini</h3>
+                        <p className="text-blue-700">
+                            {genderStats.current_scheduled} dari {request.requested_amount} karyawan sudah dijadwalkan sebelumnya.
+                        </p>
+                        <p className="text-blue-700 mt-1">
+                            Anda dapat mengganti karyawan yang menolak atau membiarkan yang sudah menerima.
+                        </p>
+                    </div>
+                )}
 
                 {/* Gender Requirements */}
                 {(request.male_count > 0 || request.female_count > 0) && (
@@ -389,39 +438,38 @@ export default function Fulfill({
                 )}
 
                 {/* Gender Distribution */}
-                {(request.male_count > 0 || request.female_count > 0) && (
-                    <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
-                        <h3 className="mb-3 font-bold text-lg">Distribusi Gender</h3>
-                        <div className="gap-4 grid grid-cols-2 md:grid-cols-4">
-                            <div className="bg-blue-50 p-3 border border-blue-100 rounded-lg">
-                                <p className="text-blue-800 text-sm">Total Terpilih</p>
-                                <p className="font-bold text-xl">{genderStats.total}</p>
+                <div className="bg-white shadow-md mb-6 p-4 rounded-lg">
+                    <h3 className="mb-3 font-bold text-lg">Distribusi Gender</h3>
+                    <div className="gap-4 grid grid-cols-2 md:grid-cols-4">
+                        <div className="bg-blue-50 p-3 border border-blue-100 rounded-lg">
+                            <p className="text-blue-800 text-sm">Total Terpilih</p>
+                            <p className="font-bold text-xl">{genderStats.total}</p>
+                        </div>
+                        {request.male_count > 0 && (
+                            <div className="bg-blue-100 p-3 border border-blue-200 rounded-lg">
+                                <p className="text-blue-900 text-sm">Laki-laki</p>
+                                <p className="font-bold text-xl">{genderStats.male}</p>
                             </div>
-                            {request.male_count > 0 && (
-                                <div className="bg-blue-100 p-3 border border-blue-200 rounded-lg">
-                                    <p className="text-blue-900 text-sm">Laki-laki</p>
-                                    <p className="font-bold text-xl">{genderStats.male}</p>
-                                </div>
-                            )}
-                            {request.female_count > 0 && (
-                                <div className="bg-pink-100 p-3 border border-pink-200 rounded-lg">
-                                    <p className="text-pink-900 text-sm">Perempuan</p>
-                                    <p className="font-bold text-xl">{genderStats.female}</p>
-                                </div>
-                            )}
-                            <div className="bg-gray-50 p-3 border border-gray-200 rounded-lg">
-                                {genderStats.male_bulanan > 0 && <p className="text-sm">Laki Bulanan: {genderStats.male_bulanan}</p>}
-                                {genderStats.female_bulanan > 0 && <p className="text-sm">Perempuan Bulanan: {genderStats.female_bulanan}</p>}
-                                {genderStats.male_harian > 0 && <p className="text-sm">Laki Harian: {genderStats.male_harian}</p>}
-                                {genderStats.female_harian > 0 && <p className="text-sm">Perempuan Harian: {genderStats.female_harian}</p>}
-                                {(genderStats.male_bulanan === 0 && genderStats.female_bulanan === 0 &&
-                                    genderStats.male_harian === 0 && genderStats.female_harian === 0) && (
-                                        <p className="text-gray-400 text-sm">Tidak ada data</p>
-                                    )}
+                        )}
+                        {request.female_count > 0 && (
+                            <div className="bg-pink-100 p-3 border border-pink-200 rounded-lg">
+                                <p className="text-pink-900 text-sm">Perempuan</p>
+                                <p className="font-bold text-xl">{genderStats.female}</p>
                             </div>
+                        )}
+                        <div className="bg-gray-50 p-3 border border-gray-200 rounded-lg">
+                            {genderStats.male_bulanan > 0 && <p className="text-sm">Laki Bulanan: {genderStats.male_bulanan}</p>}
+                            {genderStats.female_bulanan > 0 && <p className="text-sm">Perempuan Bulanan: {genderStats.female_bulanan}</p>}
+                            {genderStats.male_harian > 0 && <p className="text-sm">Laki Harian: {genderStats.male_harian}</p>}
+                            {genderStats.female_harian > 0 && <p className="text-sm">Perempuan Harian: {genderStats.female_harian}</p>}
+                            {genderStats.current_scheduled > 0 && <p className="text-sm text-green-600">Sudah dijadwalkan: {genderStats.current_scheduled}</p>}
+                            {(genderStats.male_bulanan === 0 && genderStats.female_bulanan === 0 &&
+                                genderStats.male_harian === 0 && genderStats.female_harian === 0) && (
+                                    <p className="text-gray-400 text-sm">Tidak ada data</p>
+                                )}
                         </div>
                     </div>
-                )}
+                </div>
 
                 {backendError && (
                     <div className="bg-red-100 mb-4 p-3 border border-red-400 rounded-lg text-red-700">
@@ -446,20 +494,30 @@ export default function Fulfill({
                                 const isEmptySlot = !employeeId;
                                 const employeeSubSection = employee?.subSections?.find(ss => ss.id === request.sub_section_id);
                                 const isFemale = employee?.gender === 'female';
+                                const isCurrentlyScheduled = employee?.isCurrentlyScheduled;
 
                                 return (
-                                    <div key={employeeId || `slot-${index}`} className="flex justify-between items-center space-x-3 bg-gray-100 p-3 rounded-md">
+                                    <div key={employeeId || `slot-${index}`} className={`flex justify-between items-center space-x-3 p-3 rounded-md ${
+                                        isCurrentlyScheduled ? 'bg-green-50 border border-green-200' : 'bg-gray-100'
+                                    }`}>
                                         <div className="flex items-center space-x-2">
                                             <input
                                                 type="checkbox"
                                                 checked={!isEmptySlot}
                                                 readOnly
-                                                className="w-5 h-5 text-green-600 form-checkbox"
+                                                className={`w-5 h-5 form-checkbox ${
+                                                    isCurrentlyScheduled ? 'text-green-600' : 'text-blue-600'
+                                                }`}
                                             />
                                             <span>
                                                 <strong>{isEmptySlot ? `Slot ${index + 1} Kosong` : employee?.name}</strong> ({employee?.nik || 'N/A'})
                                                 {employee && (
                                                     <div className="mt-1 text-gray-500 text-xs">
+                                                        {isCurrentlyScheduled && (
+                                                            <span className="inline-block px-1 rounded bg-green-100 text-green-800 mr-1">
+                                                                Sudah dijadwalkan
+                                                            </span>
+                                                        )}
                                                         <span className={`inline-block px-1 rounded ${isFemale
                                                                 ? 'bg-pink-100 text-pink-800'
                                                                 : 'bg-blue-100 text-blue-800'
@@ -475,7 +533,9 @@ export default function Fulfill({
                                         <button
                                             type="button"
                                             onClick={() => openChangeModal(index)}
-                                            className="text-blue-600 hover:text-blue-800 text-sm"
+                                            className={`text-sm ${
+                                                isCurrentlyScheduled ? 'text-green-600 hover:text-green-800' : 'text-blue-600 hover:text-blue-800'
+                                            }`}
                                         >
                                             {isEmptySlot ? 'Pilih' : 'Ubah'}
                                         </button>
@@ -522,6 +582,7 @@ export default function Fulfill({
                                 <div className="gap-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                                     {allSortedEligibleEmployees.map(emp => {
                                         const isSelected = selectedIds.includes(emp.id);
+                                        const isCurrentlyScheduled = emp.isCurrentlyScheduled;
                                         const empSubSection = emp.subSections?.find(ss => ss.id === request.sub_section_id);
                                         const isSameSubSection = empSubSection?.id === request.sub_section_id;
                                         const isFemale = emp.gender === 'female';
@@ -531,12 +592,15 @@ export default function Fulfill({
                                                 key={emp.id}
                                                 onClick={() => !isSelected && selectNewEmployee(emp.id)}
                                                 disabled={isSelected}
-                                                className={`text-left p-3 rounded-md border transition ${isSelected
+                                                className={`text-left p-3 rounded-md border transition ${
+                                                    isSelected
                                                         ? 'bg-blue-50 border-blue-200 cursor-not-allowed'
-                                                        : isFemale
-                                                            ? 'hover:bg-pink-50 border-pink-200'
-                                                            : 'hover:bg-blue-50 border-blue-200'
-                                                    }`}
+                                                        : isCurrentlyScheduled
+                                                            ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                                                            : isFemale
+                                                                ? 'hover:bg-pink-50 border-pink-200'
+                                                                : 'hover:bg-blue-50 border-blue-200'
+                                                }`}
                                             >
                                                 <div className="flex justify-between items-start">
                                                     <div>
@@ -547,12 +611,20 @@ export default function Fulfill({
                                                             <p>Sub: {empSubSection?.name || 'Lain'}</p>
                                                         </div>
                                                     </div>
-                                                    <span className={`text-xs px-1 rounded ${isFemale
-                                                            ? 'bg-pink-100 text-pink-800'
-                                                            : 'bg-blue-100 text-blue-800'
+                                                    <div className="flex flex-col items-end">
+                                                        <span className={`text-xs px-1 rounded mb-1 ${
+                                                            isFemale
+                                                                ? 'bg-pink-100 text-pink-800'
+                                                                : 'bg-blue-100 text-blue-800'
                                                         }`}>
-                                                        {isFemale ? 'P' : 'L'}
-                                                    </span>
+                                                            {isFemale ? 'P' : 'L'}
+                                                        </span>
+                                                        {isCurrentlyScheduled && (
+                                                            <span className="text-xs px-1 rounded bg-green-100 text-green-800">
+                                                                Sudah dijadwalkan
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </button>
                                         );

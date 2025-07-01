@@ -18,7 +18,8 @@ class ManPowerRequestFulfillmentController extends Controller
         $request = ManPowerRequest::with([
             'subSection.section', 
             'shift', 
-            'fulfilledBy'
+            'fulfilledBy',
+            'schedules.employee.subSections.section' // Load existing schedules with employee data
         ])->findOrFail($id);
 
         if ($request->status === 'fulfilled') {
@@ -36,13 +37,21 @@ class ManPowerRequestFulfillmentController extends Controller
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
+        // Get IDs of employees already scheduled for this date (excluding current request)
         $scheduledEmployeeIdsOnRequestDate = Schedule::whereDate('date', $request->date)
+            ->where('man_power_request_id', '!=', $request->id)
             ->pluck('employee_id')
             ->toArray();
 
-        $eligibleEmployees = Employee::where('status', 'available')
+        // Include currently scheduled employees for this request (if re-fulfilling)
+        $currentScheduledIds = $request->schedules->pluck('employee_id')->toArray();
+
+        $eligibleEmployees = Employee::where(function($query) use ($currentScheduledIds) {
+                $query->where('status', 'available')
+                    ->orWhereIn('id', $currentScheduledIds); // Include currently scheduled employees
+            })
             ->where('cuti', 'no')
-            ->whereNotIn('id', $scheduledEmployeeIdsOnRequestDate)
+            ->whereNotIn('id', array_diff($scheduledEmployeeIdsOnRequestDate, $currentScheduledIds))
             ->with(['subSections.section'])
             ->withCount(['schedules' => function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
@@ -125,6 +134,7 @@ class ManPowerRequestFulfillmentController extends Controller
             'request' => $request,
             'sameSubSectionEmployees' => $sortedSameSubSectionEmployees,
             'otherSubSectionEmployees' => $sortedOtherSubSectionEmployees,
+            'currentScheduledIds' => $currentScheduledIds,
             'auth' => [
                 'user' => auth()->user()
             ]
@@ -139,31 +149,46 @@ class ManPowerRequestFulfillmentController extends Controller
             'fulfilled_by' => 'required|exists:users,id'
         ]);
 
-        $req = ManPowerRequest::with('fulfilledBy')->findOrFail($id);
-
-        if ($req->status === 'fulfilled') {
-            return back()->withErrors([
-                'fulfillment_error' => 'Permintaan ini sudah terpenuhi sebelumnya.'
-            ]);
-        }
+        $req = ManPowerRequest::with(['schedules.employee'])->findOrFail($id);
 
         try {
             DB::transaction(function () use ($validated, $req) {
-                $selectedEmployees = [];
+                // Get current schedules
+                $currentSchedules = $req->schedules;
+                $currentEmployeeIds = $currentSchedules->pluck('employee_id')->toArray();
+                $newEmployeeIds = $validated['employee_ids'];
                 
-                foreach ($validated['employee_ids'] as $employeeId) {
+                // Determine employees to remove
+                $employeesToRemove = array_diff($currentEmployeeIds, $newEmployeeIds);
+                foreach ($employeesToRemove as $employeeId) {
+                    $schedule = $currentSchedules->where('employee_id', $employeeId)->first();
+                    if ($schedule) {
+                        $employee = $schedule->employee;
+                        $employee->status = 'available';
+                        $employee->save();
+                        $schedule->delete();
+                    }
+                }
+                
+                // Add new employees
+                $employeesToAdd = array_diff($newEmployeeIds, $currentEmployeeIds);
+                foreach ($employeesToAdd as $employeeId) {
                     $employee = Employee::where('id', $employeeId)
-                        ->where('status', 'available')
+                        ->where(function($query) {
+                            $query->where('status', 'available')
+                                ->orWhere('status', 'assigned'); // Allow already assigned (current schedules)
+                        })
                         ->where('cuti', 'no')
                         ->whereDoesntHave('schedules', function ($query) use ($req) {
-                            $query->where('date', $req->date);
+                            $query->where('date', $req->date)
+                                ->where('man_power_request_id', '!=', $req->id);
                         })
                         ->first();
-                
+                    
                     if (!$employee) {
                         throw new \Exception("Karyawan ID {$employeeId} tidak tersedia, sedang cuti, atau sudah dijadwalkan pada tanggal ini.");
                     }
-                
+                    
                     Schedule::create([
                         'employee_id' => $employeeId,
                         'sub_section_id' => $req->sub_section_id,
@@ -173,19 +198,18 @@ class ManPowerRequestFulfillmentController extends Controller
 
                     $employee->status = 'assigned';
                     $employee->save();
-                    
-                    $selectedEmployees[] = $employee->name;
                 }
-            
+                
                 $req->status = 'fulfilled';
                 $req->fulfilled_by = $validated['fulfilled_by'];
                 $req->save();
-                $req->date = Carbon::parse($req->date); // Ensure it's a Carbon instance
+                $req->date = Carbon::parse($req->date);
 
                 Log::info('Manpower request fulfilled', [
                     'request_id' => $req->id,
                     'fulfilled_by' => $validated['fulfilled_by'],
-                    'employees' => $selectedEmployees,
+                    'employees_added' => $employeesToAdd,
+                    'employees_removed' => $employeesToRemove,
                     'date' => $req->date->format('Y-m-d')
                 ]);
             });
