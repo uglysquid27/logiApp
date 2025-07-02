@@ -345,7 +345,7 @@ export default function Dashboard() {
 
                 <div className="py-6 px-4 sm:px-6 lg:px-8">
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-4">
                         {cardData.map((card, index) => (
                             <div
                                 key={index}
@@ -354,10 +354,10 @@ export default function Dashboard() {
                             >
                                 <h3 className="text-sm font-medium text-gray-600">{card.title}</h3>
                                 <div className="mt-2 flex items-baseline">
-                                    <span className={`text-3xl font-bold text-${card.color}-600`}>
+                                    <span className={`text-2xl sm:text-3xl font-bold text-${card.color}-600`}>
                                         {typeof card.value === 'number' ? card.value.toLocaleString() : 'N/A'}
                                     </span>
-                                    <span className="ml-2 text-sm text-gray-500">
+                                    <span className="ml-2 text-xs sm:text-sm text-gray-500">
                                         / {typeof card.total === 'number' ? card.total.toLocaleString() : 'N/A'}
                                     </span>
                                 </div>

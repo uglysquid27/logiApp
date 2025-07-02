@@ -22,6 +22,11 @@ class ManPowerRequest extends Model
         'fulfilled_by'
     ];
 
+    // In your ManPowerRequest model
+protected $casts = [
+    'date' => 'date',
+];
+
     // Add this relationship
     public function fulfilledBy()
     {

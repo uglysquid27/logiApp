@@ -101,43 +101,50 @@ class ManPowerRequestController extends Controller
     }
 
     public function edit(string $id): Response
-    {
-        $manPowerRequest = ManPowerRequest::findOrFail($id);
-        
-        // Only allow editing if status is pending or revision_requested
-        if (!in_array($manPowerRequest->status, ['pending', 'revision_requested'])) {
-            abort(403, 'Permintaan ini tidak dapat diedit karena statusnya ' . $manPowerRequest->status);
-        }
-
-        $relatedRequests = ManPowerRequest::where('date', $manPowerRequest->date)
-            ->where('sub_section_id', $manPowerRequest->sub_section_id)
-            ->with('shift')
-            ->get();
-
-        $timeSlots = [];
-        foreach ($relatedRequests as $req) {
-            $timeSlots[$req->shift_id] = [
-                'id' => $req->id,
-                'requested_amount' => $req->requested_amount,
-                'male_count' => $req->male_count,
-                'female_count' => $req->female_count,
-                'start_time' => $req->start_time,
-                'end_time' => $req->end_time,
-            ];
-        }
-
-        return Inertia::render('ManpowerRequests/Edit', [
-            'manpowerRequestData' => [
-                'id' => $manPowerRequest->id,
-                'sub_section_id' => $manPowerRequest->sub_section_id,
-                'date' => $manPowerRequest->date->format('Y-m-d'),
-                'time_slots' => $timeSlots,
-                'status' => $manPowerRequest->status,
-            ],
-            'subSections' => SubSection::with('section')->get(),
-            'shifts' => Shift::all(),
-        ]);
+{
+    $manPowerRequest = ManPowerRequest::findOrFail($id);
+    
+    // Only allow editing if status is pending or revision_requested
+    if (!in_array($manPowerRequest->status, ['pending', 'revision_requested'])) {
+        abort(403, 'Permintaan ini tidak dapat diedit karena statusnya ' . $manPowerRequest->status);
     }
+
+    $relatedRequests = ManPowerRequest::where('date', $manPowerRequest->date)
+        ->where('sub_section_id', $manPowerRequest->sub_section_id)
+        ->with('shift')
+        ->get();
+
+    $timeSlots = [];
+    foreach ($relatedRequests as $req) {
+        $timeSlots[$req->shift_id] = [
+            'id' => $req->id,
+            'requested_amount' => $req->requested_amount,
+            'male_count' => $req->male_count,
+            'female_count' => $req->female_count,
+            'start_time' => $req->start_time,
+            'end_time' => $req->end_time,
+        ];
+    }
+
+    // Parse the date safely
+    try {
+        $date = Carbon::parse($manPowerRequest->date)->format('Y-m-d');
+    } catch (\Exception $e) {
+        $date = now()->format('Y-m-d'); // fallback to today if parsing fails
+    }
+
+    return Inertia::render('ManpowerRequests/Edit', [
+        'manpowerRequestData' => [
+            'id' => $manPowerRequest->id,
+            'sub_section_id' => $manPowerRequest->sub_section_id,
+            'date' => $date,
+            'time_slots' => $timeSlots,
+            'status' => $manPowerRequest->status,
+        ],
+        'subSections' => SubSection::with('section')->get(),
+        'shifts' => Shift::all(),
+    ]);
+}
 
     public function update(Request $request, ManPowerRequest $manpowerRequest)
     {

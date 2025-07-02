@@ -29,8 +29,8 @@ class DatabaseSeeder extends Seeder
             EmployeeSubSectionSeeder::class, // Depends on Employees and SubSections
 
             // Main application data
-            ManPowerRequestSeeder::class, // Depends on SubSections and Shifts
-            ScheduleSeeder::class,        // Depends on Employees, SubSections, and ManPowerRequests
+            // ManPowerRequestSeeder::class, // Depends on SubSections and Shifts
+            // ScheduleSeeder::class,        // Depends on Employees, SubSections, and ManPowerRequests
         ]);
     }
 }

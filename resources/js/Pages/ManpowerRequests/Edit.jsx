@@ -9,6 +9,16 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState('error');
 
+    // Group subSections by section for better organization
+    const sectionsWithSubs = subSections.reduce((acc, subSection) => {
+        const sectionName = subSection.section?.name || 'Uncategorized';
+        if (!acc[sectionName]) {
+            acc[sectionName] = [];
+        }
+        acc[sectionName].push(subSection);
+        return acc;
+    }, {});
+
     const showCustomAlert = (message, type = 'error') => {
         setAlertMessage(message);
         setAlertType(type);
@@ -220,7 +230,7 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
                             </div>
 
                             <form onSubmit={submit} className="space-y-6">
-                                {/* Sub Section Field */}
+                                {/* Enhanced Sub Section Field with Section Grouping */}
                                 <div>
                                     <label htmlFor="sub_section_id" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
                                         Sub Section <span className="text-red-500">*</span>
@@ -234,10 +244,18 @@ export default function Edit({ manpowerRequestData, subSections, shifts }) {
                                         required
                                     >
                                         <option value="">-- Pilih Sub Section --</option>
-                                        {subSections.map((s) => (
-                                            <option key={s.id} value={s.id}>
-                                                {s.name}
-                                            </option>
+                                        {Object.entries(sectionsWithSubs).map(([sectionName, subSections]) => (
+                                            <optgroup key={sectionName} label={sectionName} className="text-gray-900 dark:text-gray-100">
+                                                {subSections.map((subSection) => (
+                                                    <option 
+                                                        key={subSection.id} 
+                                                        value={subSection.id}
+                                                        className="py-2 hover:bg-indigo-100 dark:hover:bg-gray-600"
+                                                    >
+                                                        {subSection.name}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
                                         ))}
                                     </select>
                                     {errors.sub_section_id && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.sub_section_id}</p>}

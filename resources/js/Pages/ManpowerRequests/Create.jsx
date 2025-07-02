@@ -3,6 +3,16 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useEffect } from 'react';
 
 export default function Create({ subSections, shifts }) {
+  // Group subSections by section for better organization
+  const sectionsWithSubs = subSections.reduce((acc, subSection) => {
+    const sectionName = subSection.section?.name || 'Uncategorized';
+    if (!acc[sectionName]) {
+      acc[sectionName] = [];
+    }
+    acc[sectionName].push(subSection);
+    return acc;
+  }, {});
+
   // Initialize timeSlots with gender fields
   const initialTimeSlots = {};
   if (shifts && Array.isArray(shifts)) {
@@ -147,7 +157,7 @@ export default function Create({ subSections, shifts }) {
               </div>
 
               <form onSubmit={submit} className="space-y-6">
-                {/* Sub Section Field */}
+                {/* Sub Section Field - Enhanced with Section Grouping */}
                 <div>
                   <label htmlFor="sub_section_id" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
                     Sub Section <span className="text-red-500">*</span>
@@ -161,15 +171,24 @@ export default function Create({ subSections, shifts }) {
                     required
                   >
                     <option value="">-- Pilih Sub Section --</option>
-                    {subSections.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
+                    {Object.entries(sectionsWithSubs).map(([sectionName, subSections]) => (
+                      <optgroup key={sectionName} label={sectionName} className="text-gray-900 dark:text-gray-100">
+                        {subSections.map((subSection) => (
+                          <option
+                            key={subSection.id}
+                            value={subSection.id}
+                            className="py-2 hover:bg-indigo-100 dark:hover:bg-gray-600"
+                          >
+                            {subSection.name}
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                   {errors.sub_section_id && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.sub_section_id}</p>}
                 </div>
 
+                {/* Rest of your form remains the same */}
                 {/* Date Field */}
                 <div>
                   <label htmlFor="date" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
@@ -196,7 +215,7 @@ export default function Create({ subSections, shifts }) {
                   <p className="mb-4 text-gray-600 dark:text-gray-400 text-sm italic">
                     Isi hanya shift yang Anda butuhkan *manpower*nya. Shift lain akan diabaikan.
                   </p>
-                  
+
                   {shifts && Array.isArray(shifts) && shifts.map((shift) => {
                     const slotData = data.time_slots[shift.id] || {};
                     const requestedAmount = parseInt(slotData.requested_amount) || 0;
@@ -207,7 +226,7 @@ export default function Create({ subSections, shifts }) {
                       <div key={shift.id} className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-md space-y-3">
                         {/* Shift Name */}
                         <h4 className="font-medium text-gray-700 dark:text-gray-300">
-                          {shift.name} 
+                          {shift.name}
                         </h4>
 
                         {/* Requested Amount */}
@@ -303,7 +322,7 @@ export default function Create({ subSections, shifts }) {
                                 </div>
                               </div>
                               {/* Validation message if gender counts exceed requested amount */}
-                              {(parseInt(slotData.male_count || 0) + parseInt(slotData.female_count || 0)) > requestedAmount && (
+                              {(parseInt(slotData.male_count || 0) + parseInt(slotData.female_count || 0) > requestedAmount) && (
                                 <p className="mt-2 text-red-600 dark:text-red-400 text-sm">
                                   Total gender melebihi jumlah yang diminta!
                                 </p>
