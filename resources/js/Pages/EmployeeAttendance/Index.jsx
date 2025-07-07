@@ -103,12 +103,20 @@ export default function Index() {
                 <h1 className="font-bold text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">
                   Ringkasan Penugasan Pegawai
                 </h1>
-                <button
-                  onClick={handleResetAllStatuses}
-                  className="bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
-                >
-                  Reset Semua Status
-                </button>
+                <div className="flex gap-3">
+                  <Link
+                    href={route('employee-attendance.create')}
+                    className="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
+                  >
+                    Tambah Pegawai Baru
+                  </Link>
+                  <button
+                    onClick={handleResetAllStatuses}
+                    className="bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
+                  >
+                    Reset Semua Status
+                  </button>
+                </div>
               </div>
 
               {/* Mobile Filters */}
@@ -283,7 +291,7 @@ export default function Index() {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2 text-sm mt-3">
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">Gender</p>
@@ -302,7 +310,7 @@ export default function Index() {
                           <p>{employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-2 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">Total</p>
@@ -400,7 +408,7 @@ export default function Index() {
                       className={`px-3 py-1 rounded-md text-sm ${link.active
                         ? 'bg-indigo-600 text-white'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      } ${!link.url && 'pointer-events-none opacity-50'}`}
+                        } ${!link.url && 'pointer-events-none opacity-50'}`}
                       dangerouslySetInnerHTML={{ __html: link.label }}
                       preserveScroll
                     />

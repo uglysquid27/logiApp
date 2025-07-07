@@ -11,6 +11,9 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\Rules;
 
 class EmployeeSum extends Controller
 {
@@ -68,7 +71,7 @@ class EmployeeSum extends Controller
                         return $schedule->manPowerRequest->shift->hours ?? 0;
                     });
 
-                // Rating logic (unchanged)
+                // Rating logic
                 $weeklyScheduleCount = $employee->schedules_count_weekly;
                 $rating = match (true) {
                     $weeklyScheduleCount >= 5 => 5,
@@ -99,7 +102,7 @@ class EmployeeSum extends Controller
             });
 
         // Fetch filter dropdown options
-        $allStatuses = ['All', 'available', 'assigned']; // Hardcoded since we override DB status
+        $allStatuses = ['All', 'available', 'assigned'];
         $allSections = Section::select('name')->distinct()->pluck('name')->toArray();
         $allSubSections = SubSection::select('name')->distinct()->pluck('name')->toArray();
 
@@ -127,5 +130,130 @@ class EmployeeSum extends Controller
             Log::error('Error resetting employee statuses: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to reset statuses. Please try again.');
         }
+    }
+
+    public function create(): Response
+    {
+        $sections = Section::all();
+        $subSections = SubSection::all();
+        
+        $uniqueSections = $sections->pluck('name')->unique()->prepend('All');
+        $uniqueSubSections = $subSections->pluck('name')->unique()->prepend('All');
+
+        return Inertia::render('EmployeeAttendance/Create', [
+            'uniqueSections' => $uniqueSections,
+            'uniqueSubSections' => $uniqueSubSections,
+        ]);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'nik' => 'required|string|max:255|unique:employees,nik',
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'type' => 'required|in:harian,bulanan',
+            'status' => 'required|in:available,assigned,on leave',
+            'cuti' => 'required|in:yes,no',
+            'gender' => 'required|in:male,female',
+            'sub_sections' => 'array',
+            'sub_sections.*' => 'string|exists:sub_sections,name',
+        ]);
+
+        $employee = Employee::create([
+            'name' => $validated['name'],
+            'nik' => $validated['nik'],
+            'password' => Hash::make($validated['password']),
+            'type' => $validated['type'],
+            'status' => $validated['status'],
+            'cuti' => $validated['cuti'],
+            'gender' => $validated['gender'],
+        ]);
+
+        if (!empty($validated['sub_sections'])) {
+            $subSectionIds = SubSection::whereIn('name', $validated['sub_sections'])
+                ->pluck('id')
+                ->toArray();
+            
+            $employee->subSections()->attach($subSectionIds);
+        }
+
+        return Redirect::route('employee-attendance.index')->with('success', 'Pegawai berhasil ditambahkan.');
+    }
+
+    public function show(Employee $employee)
+    {
+        return Inertia::render('Employees/Show', [
+            'employee' => $employee->load('subSections.section'),
+        ]);
+    }
+
+    public function edit(Employee $employee)
+    {
+        $sections = Section::all();
+        $subSections = SubSection::all();
+        
+        $uniqueSections = $sections->pluck('name')->unique()->prepend('All');
+        $uniqueSubSections = $subSections->pluck('name')->unique()->prepend('All');
+
+        return Inertia::render('Employees/Edit', [
+            'employee' => $employee->load('subSections'),
+            'uniqueSections' => $uniqueSections,
+            'uniqueSubSections' => $uniqueSubSections,
+        ]);
+    }
+
+    public function update(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'nik' => 'required|string|max:255|unique:employees,nik,' . $employee->id,
+            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'type' => 'required|in:harian,bulanan',
+            'status' => 'required|in:available,assigned,on leave',
+            'cuti' => 'required|in:yes,no',
+            'gender' => 'required|in:male,female',
+            'sub_sections' => 'array',
+            'sub_sections.*' => 'string|exists:sub_sections,name',
+        ]);
+
+        $updateData = [
+            'name' => $validated['name'],
+            'nik' => $validated['nik'],
+            'type' => $validated['type'],
+            'status' => $validated['status'],
+            'cuti' => $validated['cuti'],
+            'gender' => $validated['gender'],
+        ];
+
+        if (!empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $employee->update($updateData);
+
+        if (isset($validated['sub_sections'])) {
+            $subSectionIds = SubSection::whereIn('name', $validated['sub_sections'])
+                ->pluck('id')
+                ->toArray();
+            
+            $employee->subSections()->sync($subSectionIds);
+        } else {
+            $employee->subSections()->detach();
+        }
+
+        return Redirect::route('employee-attendance.index')->with('success', 'Pegawai berhasil diperbarui.');
+    }
+
+    public function destroy(Employee $employee)
+    {
+        if ($employee->schedules()->exists()) {
+            return Redirect::back()->with('error', 'Tidak dapat menghapus pegawai yang memiliki jadwal.');
+        }
+
+        $employee->subSections()->detach();
+        $employee->delete();
+
+        return Redirect::route('employee-attendance.index')->with('success', 'Pegawai berhasil dihapus.');
     }
 }
