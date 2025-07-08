@@ -71,26 +71,30 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/inactive', [EmployeeSum::class, 'inactive'])->name('employee-attendance.inactive');
 
     // Employee Attendance routes (keeping old naming convention)
-    Route::prefix('employee-attendance')->group(function () {
-        Route::get('/', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
-        Route::get('/create', [EmployeeSum::class, 'create'])->name('employee-attendance.create');
-        Route::post('/', [EmployeeSum::class, 'store'])->name('employee-attendance.store');
-        
-        // Individual employee routes
-        Route::prefix('/{employee}')->group(function () {
-            Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
-            Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
-            Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
-            Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
-            Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])->name('employee-attendance.process-deactivation');
-            Route::delete('/', [EmployeeSum::class, 'destroy'])->name('employee-attendance.destroy');
-        });
-        
-        // Special routes
-        Route::post('/reset-all-statuses', [EmployeeSum::class, 'resetAllStatuses'])
-            ->name('employee-attendance.reset-all-statuses');
-       
+   // Employee Attendance routes (inside auth:web group)
+Route::prefix('employee-attendance')->group(function () {
+    Route::get('/', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
+    Route::get('/create', [EmployeeSum::class, 'create'])->name('employee-attendance.create');
+    Route::post('/', [EmployeeSum::class, 'store'])->name('employee-attendance.store');
+    Route::get('/inactive', [EmployeeSum::class, 'inactive'])->name('employee-attendance.inactive');
+    Route::post('/reset-all-statuses', [EmployeeSum::class, 'resetAllStatuses'])
+        ->name('employee-attendance.reset-all-statuses');
+    
+    // Individual employee routes
+    Route::prefix('/{employee}')->group(function () {
+        Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
+        Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
+        Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
+        Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
+        Route::post('/activate', [EmployeeSum::class, 'activate']) // Fixed activation route
+            ->name('employee-attendance.activate');
+        Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
+            ->name('employee-attendance.process-deactivation');
+        Route::delete('/', [EmployeeSum::class, 'destroy'])->name('employee-attendance.destroy');
     });
+});
+
+// Remove the duplicate /inactive route from outside this group
 
     // Manpower routes
     Route::resource('manpower-requests', ManpowerRequestController::class);

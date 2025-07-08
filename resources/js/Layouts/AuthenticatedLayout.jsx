@@ -62,9 +62,9 @@ export default function AuthenticatedLayout({ header, children }) {
     const isEmployee = user && typeof user.nik === 'string' && user.nik.trim() !== '';
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased">
+        <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased ">
             {/* Mobile Header */}
-            <header className="md:hidden bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center sticky top-0 z-50">
+            <header className="md:hidden bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center sticky top-0 z-40">
                 <button 
                     onClick={toggleMobileMenu}
                     className="text-gray-600 dark:text-gray-300 focus:outline-none transition-transform hover:scale-110"
@@ -208,7 +208,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
             <div className="flex-1 flex flex-col">
                 {header && (
-                    <header className="hidden md:block bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-4 sticky top-0 z-40">
+                    <header className="hidden md:block bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-4 sticky top-0 z-50">
                         <div className="p-4 shadow-md rounded-md bg-white dark:bg-gray-800 flex justify-between items-center transition-colors duration-200">
                             <div className="flex-grow">
                                 {header}

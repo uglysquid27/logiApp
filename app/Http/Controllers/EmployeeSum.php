@@ -302,6 +302,26 @@ class EmployeeSum extends Controller
         ]);
     }
 
+    public function activate(Employee $employee)
+{
+    try {
+        DB::transaction(function () use ($employee) {
+            $employee->update([
+                'status' => 'available',
+                'deactivated_at' => null,
+                'deactivated_by' => null,
+                'deactivation_reason' => null,
+                'deactivation_notes' => null
+            ]);
+        });
+
+        return redirect()->back()->with('success', 'Employee activated successfully.');
+    } catch (\Exception $e) {
+        Log::error('Failed to activate employee: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to activate employee.');
+    }
+}
+
     public function processDeactivation(Request $request, Employee $employee)
     {
         $validated = $request->validate([

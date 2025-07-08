@@ -7,8 +7,15 @@ export default function Inactive() {
   const employees = paginationData.data;
   const paginationLinks = paginationData.links;
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
+  const [showModal, setShowModal] = useState(false);
+  const [modalConfig, setModalConfig] = useState({
+    title: '',
+    message: '',
+    action: null,
+    employeeName: '',
+  });
 
-  // Status badge styling (consistent with Index)
+  // Status badge styling
   const getStatusClasses = (status) => {
     switch (status.toLowerCase()) {
       case 'available':
@@ -34,6 +41,40 @@ export default function Inactive() {
     });
   };
 
+  // Show activation modal
+  const showActivateModal = (employeeId, employeeName) => {
+    setModalConfig({
+      title: 'Aktifkan Pegawai',
+      message: `Apakah Anda yakin ingin mengaktifkan pegawai ${employeeName}? Pegawai akan kembali ke daftar aktif.`,
+      action: () => {
+        router.post(route('employee-attendance.activate', employeeId), {}, {
+          preserveScroll: true,
+          onSuccess: () => router.reload()
+        });
+        setShowModal(false);
+      },
+      employeeName,
+    });
+    setShowModal(true);
+  };
+
+  // Show delete modal
+  const showDeleteModal = (employeeId, employeeName) => {
+    setModalConfig({
+      title: 'Hapus Pegawai',
+      message: `Apakah Anda yakin ingin menghapus data pegawai ${employeeName}? Data yang dihapus tidak dapat dikembalikan.`,
+      action: () => {
+        router.delete(route('employee-attendance.destroy', employeeId), {
+          preserveScroll: true,
+          onSuccess: () => router.reload(),
+        }); // Fixed: Added missing closing parenthesis here
+        setShowModal(false);
+      },
+      employeeName,
+    });
+    setShowModal(true);
+  };
+
   return (
     <AuthenticatedLayout
       header={
@@ -42,6 +83,34 @@ export default function Inactive() {
         </h2>
       }
     >
+      {/* Custom Confirmation Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              {modalConfig.title}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {modalConfig.message}
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={modalConfig.action}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+              >
+                Konfirmasi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="py-4 sm:py-8">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg overflow-hidden">
@@ -115,20 +184,18 @@ export default function Inactive() {
                       </div>
 
                       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-2">
-                        <Link
-                          href={route('employee-attendance.edit', employee.id)}
-                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                        <button
+                          onClick={() => showActivateModal(employee.id, employee.name)}
+                          className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
                         >
-                          Edit
-                        </Link>
-                        <Link
-                          method="delete"
-                          href={route('employee-attendance.destroy', employee.id)}
+                          Aktifkan
+                        </button>
+                        <button
+                          onClick={() => showDeleteModal(employee.id, employee.name)}
                           className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
-                          as="button"
                         >
                           Hapus
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   ))
@@ -177,20 +244,18 @@ export default function Inactive() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <Link
-                              href={route('employee-attendance.edit', employee.id)}
-                              className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3"
+                            <button
+                              onClick={() => showActivateModal(employee.id, employee.name)}
+                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 mr-3"
                             >
-                              Edit
-                            </Link>
-                            <Link
-                              method="delete"
-                              href={route('employee-attendance.destroy', employee.id)}
+                              Aktifkan
+                            </button>
+                            <button
+                              onClick={() => showDeleteModal(employee.id, employee.name)}
                               className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                              as="button"
                             >
                               Hapus
-                            </Link>
+                            </button>
                           </td>
                         </tr>
                       ))
