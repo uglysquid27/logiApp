@@ -13,6 +13,8 @@ import { Bar } from 'react-chartjs-2';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { fadeIn, staggerContainer, slideIn, cardVariants } from '@/Animations';
 
 dayjs.locale('id');
 
@@ -46,7 +48,6 @@ const DetailModal = ({
     formatDate,
     onFilterOrPaginate
 }) => {
-    // Safely handle null/undefined data
     const items = data?.data || [];
     const paginationLinks = data?.links || [];
     const isPaginated = paginationLinks.length > 0;
@@ -82,88 +83,124 @@ const DetailModal = ({
         }
     }, [isOpen, data, columns]);
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-                {/* Modal header */}
-                <div className="flex justify-between items-center p-4 border-b">
-                    <h3 className="text-xl font-semibold">{title}</h3>
-                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                        &times;
-                    </button>
-                </div>
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
+                >
+                    <motion.div
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 50, opacity: 0 }}
+                        transition={{ type: 'spring', damping: 25 }}
+                        className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+                    >
+                        {/* Modal header */}
+                        <div className="flex justify-between items-center p-4 border-b">
+                            <h3 className="text-xl font-semibold">{title}</h3>
+                            <motion.button 
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={onClose} 
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                &times;
+                            </motion.button>
+                        </div>
 
-                {/* Modal content */}
-                <div className="p-4">
-                    {/* Filter section */}
-                    <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {columns.map((col, index) => (
-                            col.filterable && (
-                                <div key={index} className="space-y-1">
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        {col.header}
-                                    </label>
-                                    {/* Render appropriate filter input based on type */}
-                                </div>
-                            )
-                        ))}
-                    </div>
+                        {/* Modal content */}
+                        <div className="p-4">
+                            {/* Filter section */}
+                            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {columns.map((col, index) => (
+                                    col.filterable && (
+                                        <motion.div 
+                                            key={index}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.1 }}
+                                            className="space-y-1"
+                                        >
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                {col.header}
+                                            </label>
+                                            {/* Render appropriate filter input based on type */}
+                                        </motion.div>
+                                    )
+                                ))}
+                            </div>
 
-                    {/* Data table */}
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    {columns.map((col, idx) => (
-                                        <th key={idx} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                                            {col.header}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {items.length > 0 ? (
-                                    items.map((item) => (
-                                        <tr key={item.id || `${item.date}_${item.sub_section?.id || '0'}_${item.shift?.id || '0'}`}>
-                                            {columns.map((col, colIdx) => (
-                                                <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
-                                                    {col.render ? col.render(item, formatDate) : (item[col.field] || 'N/A')}
-                                                </td>
+                            {/* Data table */}
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            {columns.map((col, idx) => (
+                                                <th key={idx} className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                                                    {col.header}
+                                                </th>
                                             ))}
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={columns.length} className="px-4 py-4 text-center text-sm text-gray-500">
-                                            No data available
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {items.length > 0 ? (
+                                            items.map((item, rowIndex) => (
+                                                <motion.tr 
+                                                    key={item.id || `${item.date}_${item.sub_section?.id || '0'}_${item.shift?.id || '0'}`}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: rowIndex * 0.05 }}
+                                                    whileHover={{ backgroundColor: 'rgba(243, 244, 246, 1)' }}
+                                                >
+                                                    {columns.map((col, colIdx) => (
+                                                        <td key={colIdx} className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                                                            {col.render ? col.render(item, formatDate) : (item[col.field] || 'N/A')}
+                                                        </td>
+                                                    ))}
+                                                </motion.tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={columns.length} className="px-4 py-4 text-center text-sm text-gray-500">
+                                                    No data available
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                    {/* Pagination */}
-                    {isPaginated && paginationLinks.length > 0 && (
-                        <div className="mt-4 flex justify-center">
-                            <nav className="flex space-x-1">
-                                {paginationLinks.map((link, idx) => (
-                                    <button
-                                        key={`${link.label}_${idx}`}  // Combine label and index for uniqueness
-                                        onClick={() => link.url && onFilterOrPaginate(link.url)}
-                                        className={`px-3 py-1 rounded-md ${link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                        disabled={!link.url}
-                                    />
-                                ))}
-                            </nav>
+                            {/* Pagination */}
+                            {isPaginated && paginationLinks.length > 0 && (
+                                <motion.div 
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="mt-4 flex justify-center"
+                                >
+                                    <nav className="flex space-x-1">
+                                        {paginationLinks.map((link, idx) => (
+                                            <motion.button
+                                                key={`${link.label}_${idx}`}
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={() => link.url && onFilterOrPaginate(link.url)}
+                                                className={`px-3 py-1 rounded-md ${link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}`}
+                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                                disabled={!link.url}
+                                            />
+                                        ))}
+                                    </nav>
+                                </motion.div>
+                            )}
                         </div>
-                    )}
-                </div>
-            </div>
-        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 };
 
@@ -264,7 +301,16 @@ export default function Dashboard() {
         responsive: true,
         plugins: {
             legend: { position: 'top' },
-            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}` } }
+            tooltip: { 
+                callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw}` },
+                animation: {
+                    duration: 300
+                }
+            }
+        },
+        animation: {
+            duration: 1000,
+            easing: 'easeOutQuart'
         },
         onClick
     });
@@ -343,14 +389,25 @@ export default function Dashboard() {
             >
                 <Head title="Dashboard" />
 
-                <div className="py-6 px-4 sm:px-6 lg:px-8">
+                <motion.div 
+                    initial="hidden"
+                    animate="show"
+                    variants={staggerContainer}
+                    className="py-6 px-4 sm:px-6 lg:px-8"
+                >
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-4">
+                    <motion.div 
+                        variants={staggerContainer}
+                        className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-4"
+                    >
                         {cardData.map((card, index) => (
-                            <div
+                            <motion.div
                                 key={index}
+                                variants={cardVariants}
                                 onClick={card.onClick}
-                                className={`bg-white p-4 rounded-lg shadow cursor-pointer transition hover:shadow-md hover:translate-y-[-2px] border-t-4 border-${card.color}-500`}
+                                whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                                whileTap={{ scale: 0.98 }}
+                                className={`bg-white p-4 rounded-lg shadow cursor-pointer transition-all border-t-4 border-${card.color}-500`}
                             >
                                 <h3 className="text-sm font-medium text-gray-600">{card.title}</h3>
                                 <div className="mt-2 flex items-baseline">
@@ -361,13 +418,19 @@ export default function Dashboard() {
                                         / {typeof card.total === 'number' ? card.total.toLocaleString() : 'N/A'}
                                     </span>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
 
                     {/* Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div className="bg-white p-4 rounded-lg shadow">
+                    <motion.div 
+                        variants={staggerContainer}
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
+                    >
+                        <motion.div 
+                            variants={fadeIn('right', 'tween', 0.2, 1)}
+                            className="bg-white p-4 rounded-lg shadow"
+                        >
                             <h3 className="text-lg font-medium mb-4">Manpower Request Trends</h3>
                             <div className="h-64">
                                 <Bar
@@ -379,8 +442,11 @@ export default function Dashboard() {
                                     })}
                                 />
                             </div>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow">
+                        </motion.div>
+                        <motion.div 
+                            variants={fadeIn('left', 'tween', 0.4, 1)}
+                            className="bg-white p-4 rounded-lg shadow"
+                        >
                             <h3 className="text-lg font-medium mb-4">Employee Assignments</h3>
                             <div className="h-64">
                                 <Bar
@@ -392,12 +458,18 @@ export default function Dashboard() {
                                     })}
                                 />
                             </div>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
 
                     {/* Recent Tables */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-white p-4 rounded-lg shadow">
+                    <motion.div 
+                        variants={staggerContainer}
+                        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                    >
+                        <motion.div 
+                            variants={slideIn('left', 'tween', 0.2, 1)}
+                            className="bg-white p-4 rounded-lg shadow"
+                        >
                             <h3 className="text-lg font-medium mb-4">Recent Pending Requests</h3>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -411,13 +483,19 @@ export default function Dashboard() {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {recentPendingRequests.length > 0 ? (
-                                            recentPendingRequests.map((request) => (
-                                                <tr key={request.id} className="hover:bg-gray-50">
+                                            recentPendingRequests.map((request, index) => (
+                                                <motion.tr 
+                                                    key={request.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                    className="hover:bg-gray-50"
+                                                >
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(request.date)}</td>
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{request.sub_section?.name || 'N/A'}</td>
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{request.shift?.name || 'N/A'}</td>
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{request.requested_amount}</td>
-                                                </tr>
+                                                </motion.tr>
                                             ))
                                         ) : (
                                             <tr>
@@ -429,9 +507,12 @@ export default function Dashboard() {
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
+                        </motion.div>
 
-                        <div className="bg-white p-4 rounded-lg shadow">
+                        <motion.div 
+                            variants={slideIn('right', 'tween', 0.4, 1)}
+                            className="bg-white p-4 rounded-lg shadow"
+                        >
                             <h3 className="text-lg font-medium mb-4">Upcoming Schedules</h3>
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -445,13 +526,19 @@ export default function Dashboard() {
                                     </thead>
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {upcomingSchedules.length > 0 ? (
-                                            upcomingSchedules.map((schedule) => (
-                                                <tr key={schedule.id} className="hover:bg-gray-50">
+                                            upcomingSchedules.map((schedule, index) => (
+                                                <motion.tr 
+                                                    key={schedule.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                    className="hover:bg-gray-50"
+                                                >
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(schedule.date)}</td>
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.employee?.name || 'N/A'}</td>
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.sub_section?.name || 'N/A'}</td>
                                                     <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.man_power_request?.shift?.name || 'N/A'}</td>
-                                                </tr>
+                                                </motion.tr>
                                             ))
                                         ) : (
                                             <tr>
@@ -463,9 +550,9 @@ export default function Dashboard() {
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                        </motion.div>
+                    </motion.div>
+                </motion.div>
 
                 {/* Modals */}
                 <DetailModal
