@@ -20,6 +20,8 @@ export default function Index() {
         return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100';
       case 'assigned':
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100';
+      case 'deactivated':
+        return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
       default:
         return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
     }
@@ -109,6 +111,12 @@ export default function Index() {
                     className="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
                   >
                     Tambah Pegawai Baru
+                  </Link>
+                  <Link
+                    href={route('employee-attendance.inactive')}
+                    className="bg-gray-600 hover:bg-gray-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
+                  >
+                    Lihat Pegawai Nonaktif
                   </Link>
                   <button
                     onClick={handleResetAllStatuses}
@@ -291,7 +299,7 @@ export default function Index() {
                           </span>
                         </div>
                       </div>
-
+                      
                       <div className="grid grid-cols-2 gap-2 text-sm mt-3">
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">Gender</p>
@@ -310,7 +318,7 @@ export default function Index() {
                           <p>{employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}</p>
                         </div>
                       </div>
-
+                      
                       <div className="grid grid-cols-3 gap-2 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">Total</p>
@@ -324,6 +332,21 @@ export default function Index() {
                           <p className="text-gray-500 dark:text-gray-400">Workload</p>
                           <p>{employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}</p>
                         </div>
+                      </div>
+
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-2">
+                        <Link
+                          href={route('employee-attendance.edit', employee.id)}
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                        >
+                          Edit
+                        </Link>
+                        <Link
+                          href={route('employee-attendance.deactivate', employee.id)}
+                          className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
+                        >
+                          Deactivate
+                        </Link>
                       </div>
                     </div>
                   ))
@@ -346,12 +369,13 @@ export default function Index() {
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Workload</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cuti</th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {employees.length === 0 ? (
                       <tr>
-                        <td colSpan="11" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
+                        <td colSpan="12" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
                           Tidak ada data pegawai dengan kriteria filter atau pencarian ini.
                         </td>
                       </tr>
@@ -385,6 +409,22 @@ export default function Index() {
                               {employee.cuti}
                             </span>
                           </td>
+                          <td className="px-4 py-4 text-sm whitespace-nowrap">
+                            <div className="flex space-x-2">
+                              <Link
+                                href={route('employee-attendance.edit', employee.id)}
+                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                              >
+                                Edit
+                              </Link>
+                              <Link
+                                href={route('employee-attendance.deactivate', employee.id)}
+                                className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+                              >
+                                Deactivate
+                              </Link>
+                            </div>
+                          </td>
                         </tr>
                       ))
                     )}
@@ -392,7 +432,7 @@ export default function Index() {
                       <td colSpan="6" className="px-4 py-3 text-right">Total Penugasan:</td>
                       <td className="px-4 py-3 text-center">{totalSchedulesCount}</td>
                       <td className="px-4 py-3 text-center">{totalWeeklySchedulesCount}</td>
-                      <td colSpan="3" className="px-4 py-3 text-center"></td>
+                      <td colSpan="4" className="px-4 py-3 text-center"></td>
                     </tr>
                   </tbody>
                 </table>
@@ -408,7 +448,7 @@ export default function Index() {
                       className={`px-3 py-1 rounded-md text-sm ${link.active
                         ? 'bg-indigo-600 text-white'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                        } ${!link.url && 'pointer-events-none opacity-50'}`}
+                      } ${!link.url && 'pointer-events-none opacity-50'}`}
                       dangerouslySetInnerHTML={{ __html: link.label }}
                       preserveScroll
                     />

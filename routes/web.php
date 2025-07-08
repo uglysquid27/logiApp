@@ -68,18 +68,28 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/inactive', [EmployeeSum::class, 'inactive'])->name('employee-attendance.inactive');
 
     // Employee Attendance routes (keeping old naming convention)
     Route::prefix('employee-attendance')->group(function () {
         Route::get('/', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
         Route::get('/create', [EmployeeSum::class, 'create'])->name('employee-attendance.create');
         Route::post('/', [EmployeeSum::class, 'store'])->name('employee-attendance.store');
-        Route::get('/{employee}', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
-        Route::get('/{employee}/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
-        Route::put('/{employee}', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
-        Route::delete('/{employee}', [EmployeeSum::class, 'destroy'])->name('employee-attendance.destroy');
+        
+        // Individual employee routes
+        Route::prefix('/{employee}')->group(function () {
+            Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
+            Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
+            Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
+            Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
+            Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])->name('employee-attendance.process-deactivation');
+            Route::delete('/', [EmployeeSum::class, 'destroy'])->name('employee-attendance.destroy');
+        });
+        
+        // Special routes
         Route::post('/reset-all-statuses', [EmployeeSum::class, 'resetAllStatuses'])
             ->name('employee-attendance.reset-all-statuses');
+       
     });
 
     // Manpower routes

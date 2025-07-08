@@ -19,6 +19,8 @@ class Employee extends Authenticatable
         'nik',
         'type',
         'status',
+          'deactivation_reason',
+    'deactivated_at',
         'cuti',
         'gender',
     ];
@@ -30,7 +32,18 @@ class Employee extends Authenticatable
 
     protected $casts = [
         'password' => 'hashed',
+          'deactivated_at' => 'datetime'
     ];
+    
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deactivated_at');
+    }
+    
+    public function scopeInactive($query)
+    {
+        return $query->whereNotNull('deactivated_at');
+    }
 
     public function subSections(): BelongsToMany
     {

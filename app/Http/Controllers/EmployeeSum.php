@@ -14,9 +14,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rules;
+use App\Http\Requests\DeactivateEmployeeRequest;
+
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class EmployeeSum extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request): Response
     {
         $startDate = Carbon::now()->subDays(6)->startOfDay();
@@ -245,15 +249,88 @@ class EmployeeSum extends Controller
         return Redirect::route('employee-attendance.index')->with('success', 'Pegawai berhasil diperbarui.');
     }
 
+
+    public function inactive(Request $request)
+    {
+        try {
+            Log::info('Accessing inactive employees list', [
+                'user_id' => auth()->id(),
+                'time' => now(),
+                'request_params' => $request->all()
+            ]);
+    
+            $query = Employee::where('status', 'deactivated')
+                ->orWhereNotNull('deactivated_at')
+                ->with(['subSections.section']); // Removed deactivatedBy
+    
+            if ($request->has('search') && $request->input('search') !== null) {
+                $searchTerm = $request->input('search');
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('name', 'like', '%'.$searchTerm.'%')
+                      ->orWhere('nik', 'like', '%'.$searchTerm.'%');
+                });
+            }
+    
+            $employees = $query->paginate(10);
+    
+            return Inertia::render('EmployeeAttendance/Inactive', [
+                'employees' => $employees,
+                'filters' => $request->only('search')
+            ]);
+    
+        } catch (\Exception $e) {
+            Log::error('Failed to retrieve inactive employees', [
+                'error' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id()
+            ]);
+    
+            return back()->with('error', 'Failed to load inactive employees. Please try again.');
+        }
+    }
+
+    public function deactivate(Employee $employee)
+    {
+        return Inertia::render('EmployeeAttendance/Deactivate', [
+            'employee' => $employee->only('id', 'name', 'nik'),
+            'reasons' => [
+                'resignation' => 'Resignation',
+                'termination' => 'Termination',
+                'retirement' => 'Retirement',
+                'other' => 'Other'
+            ]
+        ]);
+    }
+
+    public function processDeactivation(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'deactivation_reason' => 'required|string|max:255',
+            'deactivation_notes' => 'nullable|string'
+        ]);
+
+        $employee->update([
+            'status' => 'deactivated',
+            'deactivation_reason' => $validated['deactivation_reason'],
+            'deactivation_notes' => $validated['deactivation_notes'],
+            'deactivated_at' => now(),
+            'deactivated_by' => auth()->id()
+        ]);
+
+        return redirect()->route('employee-attendance.inactive')
+            ->with('success', 'Employee deactivated successfully');
+    }
+
     public function destroy(Employee $employee)
     {
-        if ($employee->schedules()->exists()) {
-            return Redirect::back()->with('error', 'Tidak dapat menghapus pegawai yang memiliki jadwal.');
+        if ($employee->status !== 'deactivated') {
+            return back()->with('error', 'Only deactivated employees can be deleted');
         }
 
-        $employee->subSections()->detach();
         $employee->delete();
 
-        return Redirect::route('employee-attendance.index')->with('success', 'Pegawai berhasil dihapus.');
+        return redirect()->route('employee-attendance.inactive')
+            ->with('success', 'Employee permanently deleted');
     }
+
 }
