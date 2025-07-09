@@ -35,7 +35,7 @@ class ManPowerRequestFulfillmentController extends Controller
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
-        $scheduledEmployeeIdsOnRequestDate = Schedule::whereDate('date', $request->date)
+        $scheduledEmployeeIdsOnRequestDate = Schedule::where('date', $request->date)
             ->where('man_power_request_id', '!=', $request->id)
             ->pluck('employee_id')
             ->toArray();

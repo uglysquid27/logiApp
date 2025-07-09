@@ -53,7 +53,7 @@ class ScheduleController extends Controller
         $startDate = Carbon::now()->subDays(6)->startOfDay(); // Define for schedule count
         $endDate = Carbon::now()->endOfDay(); // Define for schedule count
 
-        $scheduledEmployeeIdsOnRequestDate = Schedule::whereDate('date', $request->date)
+        $scheduledEmployeeIdsOnRequestDate = Schedule::where(DB::raw('DATE(date)'), $request->date)
             ->pluck('employee_id')
             ->toArray();
 
@@ -139,7 +139,7 @@ class ScheduleController extends Controller
                 $assignedEmployeeIds = [];
 
                 // 1. Dapatkan ID karyawan yang sudah dijadwalkan pada tanggal permintaan
-                $scheduledEmployeeIdsOnRequestDate = Schedule::whereDate('date', $manPowerRequest->date)
+                $scheduledEmployeeIdsOnRequestDate = Schedule::where('date', $manPowerRequest->date)
                     ->pluck('employee_id')
                     ->toArray();
 

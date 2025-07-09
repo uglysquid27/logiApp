@@ -83,7 +83,7 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
                         <ul className="list-inside list-disc space-y-1">
                             {assignedEmployees.map((empItem, index) => (
                                 <li key={index} className="text-gray-700 dark:text-gray-300">
-                                    {empItem.name} (NIK: {empItem.nik})
+                                    {empItem.name} (NIK: {empItem.nik}) - Status: {empItem.pivot?.status || 'pending'}
                                 </li>
                             ))}
                         </ul>
@@ -113,6 +113,19 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
             return dayjs(dateString).format('dddd, DD MMMM YYYY');
         } catch (error) {
             return dateString;
+        }
+    };
+
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case 'accepted':
+                return <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Diterima</span>;
+            case 'rejected':
+                return <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Ditolak</span>;
+            case 'pending':
+                return <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">Menunggu</span>;
+            default:
+                return <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">Unknown</span>;
         }
     };
 
@@ -146,6 +159,9 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
                                 <th scope="col" className="hidden px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 md:table-cell sm:px-6 sm:py-3">
                                     Sub-Section
                                 </th>
+                                <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">
+                                    Status
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-800">
@@ -166,6 +182,12 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
                                     <td className="hidden whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 md:table-cell sm:px-6 sm:py-4">
                                         {scheduleItem.sub_section?.name || 'N/A'}
                                     </td>
+                                    <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 sm:px-6 sm:py-4">
+                                        {getStatusBadge(scheduleItem.status)}
+                                        {scheduleItem.rejection_reason && (
+                                            <p className="text-xs text-red-500">Alasan: {scheduleItem.rejection_reason}</p>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -184,7 +206,21 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
     );
 };
 
+
 const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModal }) => {
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case 'accepted':
+                return <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">Diterima</span>;
+            case 'rejected':
+                return <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">Ditolak</span>;
+            case 'pending':
+                return <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">Menunggu</span>;
+            default:
+                return <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">Unknown</span>;
+        }
+    };
+
     return (
         <div className="flex-1 min-w-[300px] rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
             <div className="flex items-center justify-between">
@@ -193,7 +229,15 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
                     <button
                         onClick={() => openManPowerRequestModal(
                             Object.values(schedulesBySubSection)[0][0].man_power_request,
-                            Object.values(schedulesBySubSection).flatMap(subSection => subSection.map(item => item.employee))
+                            Object.values(schedulesBySubSection).flatMap(subSection => 
+                                subSection.map(item => ({
+                                    ...item.employee,
+                                    pivot: {
+                                        status: item.status,
+                                        rejection_reason: item.rejection_reason
+                                    }
+                                }))
+                            ) // Fixed: Added missing closing parenthesis here
                         )}
                         className="ml-2 flex-shrink-0 rounded-full bg-blue-500 p-1 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:bg-blue-600 dark:focus:ring-offset-gray-800"
                         title={`Lihat detail Request untuk ${title}`}
@@ -222,7 +266,7 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
                                         <th scope="col" className="hidden px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:table-cell sm:px-6 sm:py-3">
                                             Tipe
                                         </th>
-                                        <th scope="col" className="hidden px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 md:table-cell sm:px-6 sm:py-3">
+                                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">
                                             Status
                                         </th>
                                     </tr>
@@ -239,8 +283,11 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
                                             <td className="hidden whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 sm:table-cell sm:px-6 sm:py-4">
                                                 {item.employee.type || '-'}
                                             </td>
-                                            <td className="hidden whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 md:table-cell sm:px-6 sm:py-4">
-                                                {item.employee.status || '-'}
+                                            <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 sm:px-6 sm:py-4">
+                                                {getStatusBadge(item.status)}
+                                                {item.rejection_reason && (
+                                                    <p className="text-xs text-red-500">Alasan: {item.rejection_reason}</p>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -253,6 +300,7 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
         </div>
     );
 };
+
 
 const Index = () => {
     const { schedules, filters } = usePage().props;
@@ -310,7 +358,9 @@ const Index = () => {
             acc[dateKey].shifts[shiftName].subSections[subSectionName].push({
                 employee: schedule.employee,
                 sub_section: schedule.sub_section,
-                man_power_request: schedule.man_power_request
+                man_power_request: schedule.man_power_request,
+                status: schedule.status,
+                rejection_reason: schedule.rejection_reason
             });
 
             return acc;

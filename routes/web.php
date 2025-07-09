@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AdminPermitController;
 use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -14,6 +13,7 @@ use App\Http\Controllers\ManPowerRequestFulfillmentController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeDashboardController;
+use App\Http\Middleware\PreventBackAfterLogout;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,28 +31,40 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-Route::post('/login', [AuthenticatedSessionController::class, 'store']);
-Route::post('/employee/login', [AuthenticatedSessionController::class, 'store'])->name('employee.login');
+// Authentication routes
+Route::middleware(['prevent.back'])->group(function () {
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('/employee/login', [AuthenticatedSessionController::class, 'store'])->name('employee.login');
+    
+    // Unified Logout Route with session cleanup
+    Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+        ->middleware(['auth:web,employee'])
+        ->name('logout');
+});
 
-// Unified Logout Route
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('logout');
+// Public routes that need cache prevention
+Route::middleware(['prevent.back'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware(['auth', 'verified'])
+        ->name('dashboard');
 
-// Dashboard for standard users/admins
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+    // Dashboard summary detail routes
+    Route::get('/dashboard/employees/active', [DashboardController::class, 'getActiveEmployees'])
+        ->name('dashboard.employees.active');
+    Route::get('/dashboard/requests/pending', [DashboardController::class, 'getPendingRequests'])
+        ->name('dashboard.requests.pending');
+    Route::get('/dashboard/requests/fulfilled', [DashboardController::class, 'getFulfilledRequests'])
+        ->name('dashboard.requests.fulfilled');
+    Route::get('/dashboard/schedules/upcoming', [DashboardController::class, 'getUpcomingSchedules'])
+        ->name('dashboard.schedules.upcoming');
 
-// Dashboard summary detail routes
-Route::get('/dashboard/employees/active', [DashboardController::class, 'getActiveEmployees'])->name('dashboard.employees.active');
-Route::get('/dashboard/requests/pending', [DashboardController::class, 'getPendingRequests'])->name('dashboard.requests.pending');
-Route::get('/dashboard/requests/fulfilled', [DashboardController::class, 'getFulfilledRequests'])->name('dashboard.requests.fulfilled');
-Route::get('/dashboard/schedules/upcoming', [DashboardController::class, 'getUpcomingSchedules'])->name('dashboard.schedules.upcoming');
+    Route::get('/permits', [PermitController::class, 'index'])->name('permits.index');
+    Route::post('/permits', [PermitController::class, 'store'])->name('permits.store');
+});
 
-Route::get('/permits', [PermitController::class, 'index'])->name('permits.index');
-Route::post('/permits', [PermitController::class, 'store'])->name('permits.store');
-
-Route::middleware(['auth:employee'])
+// Employee routes with proper session handling
+Route::middleware(['auth:employee', 'prevent.back'])
     ->prefix('employee')
     ->as('employee.')
     ->group(function () {
@@ -63,46 +75,45 @@ Route::middleware(['auth:employee'])
         Route::resource('permits', PermitController::class);
     });
 
-Route::middleware('auth:web')->group(function () {
+// Admin routes with session protection
+Route::middleware(['auth:web', 'prevent.back'])->group(function () {
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/inactive', [EmployeeSum::class, 'inactive'])->name('employee-attendance.inactive');
 
-    // Employee Attendance routes (keeping old naming convention)
-   // Employee Attendance routes (inside auth:web group)
-Route::prefix('employee-attendance')->group(function () {
-    Route::get('/', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
-    Route::get('/create', [EmployeeSum::class, 'create'])->name('employee-attendance.create');
-    Route::post('/', [EmployeeSum::class, 'store'])->name('employee-attendance.store');
-    Route::get('/inactive', [EmployeeSum::class, 'inactive'])->name('employee-attendance.inactive');
-    Route::post('/reset-all-statuses', [EmployeeSum::class, 'resetAllStatuses'])
-        ->name('employee-attendance.reset-all-statuses');
-    
-    // Individual employee routes
-    Route::prefix('/{employee}')->group(function () {
-        Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
-        Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
-        Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
-        Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
-        Route::post('/activate', [EmployeeSum::class, 'activate']) // Fixed activation route
-            ->name('employee-attendance.activate');
-        Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
-            ->name('employee-attendance.process-deactivation');
-        Route::delete('/', [EmployeeSum::class, 'destroy'])->name('employee-attendance.destroy');
+    // Employee Attendance routes
+    Route::prefix('employee-attendance')->group(function () {
+        Route::get('/', [EmployeeSum::class, 'index'])->name('employee-attendance.index');
+        Route::get('/create', [EmployeeSum::class, 'create'])->name('employee-attendance.create');
+        Route::post('/', [EmployeeSum::class, 'store'])->name('employee-attendance.store');
+        Route::post('/reset-all-statuses', [EmployeeSum::class, 'resetAllStatuses'])
+            ->name('employee-attendance.reset-all-statuses');
+        
+        // Individual employee routes
+        Route::prefix('/{employee}')->group(function () {
+            Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
+            Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
+            Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
+            Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
+            Route::post('/activate', [EmployeeSum::class, 'activate'])
+                ->name('employee-attendance.activate');
+            Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
+                ->name('employee-attendance.process-deactivation');
+            Route::delete('/', [EmployeeSum::class, 'destroy'])->name('employee-attendance.destroy');
+        });
     });
-});
-
-// Remove the duplicate /inactive route from outside this group
 
     // Manpower routes
-    Route::resource('manpower-requests', ManpowerRequestController::class);
-    Route::get('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'create'])->name('manpower-requests.fulfill');
-    Route::post('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'store'])->name('manpower-requests.fulfill.store');
-    Route::post('/manpower-requests/{manpower_request}/request-revision', [ManpowerRequestController::class, 'requestRevision'])
+    Route::resource('manpower-requests', ManPowerRequestController::class);
+    Route::get('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'create'])
+        ->name('manpower-requests.fulfill');
+    Route::post('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'store'])
+        ->name('manpower-requests.fulfill.store');
+    Route::post('/manpower-requests/{manpower_request}/request-revision', [ManPowerRequestController::class, 'requestRevision'])
         ->name('manpower-requests.request-revision');
-    Route::get('/manpower-requests/{manpower_request}/revision', [ManpowerRequestController::class, 'edit'])
+    Route::get('/manpower-requests/{manpower_request}/revision', [ManPowerRequestController::class, 'edit'])
         ->name('manpower-requests.revision.edit');
 
     // Additional dashboard routes
@@ -121,7 +132,6 @@ Route::prefix('employee-attendance')->group(function () {
 
     // Admin permit routes
     Route::get('/admin/permits', [AdminPermitController::class, 'index'])->name('admin.permits.index');
-    Route::post('/admin/permits/{permit}/respond', [AdminPermitController::class, 'respond'])->name('admin.permits.respond');
+    Route::post('/admin/permits/{permit}/respond', [AdminPermitController::class, 'respond'])
+        ->name('admin.permits.respond');
 });
-
-require __DIR__ . '/auth.php';

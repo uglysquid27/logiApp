@@ -225,7 +225,7 @@ public function update(Request $request, ManPowerRequest $manpowerRequest)
 
     // Parse the date safely
     try {
-        $date = Carbon::parse($manPowerRequest->date)->format('Y-m-d');
+        $date = Carbon::parse((string) $manPowerRequest->date)->format('Y-m-d');
     } catch (\Exception $e) {
         $date = now()->format('Y-m-d'); // fallback to today if parsing fails
     }
