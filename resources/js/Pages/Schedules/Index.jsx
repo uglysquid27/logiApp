@@ -47,7 +47,7 @@ const ShiftDetailModal = ({ shift, onClose }) => {
     );
 };
 
-const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => {
+const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose, onFulfill }) => {
     if (!request) return null;
 
     const formatDate = (dateString) => {
@@ -58,6 +58,10 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
             return dateString;
         }
     };
+
+    const hasRejectedEmployees = useMemo(() => {
+        return assignedEmployees.some(emp => emp.pivot?.status === 'rejected');
+    }, [assignedEmployees]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50 p-4">
@@ -84,6 +88,9 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
                             {assignedEmployees.map((empItem, index) => (
                                 <li key={index} className="text-gray-700 dark:text-gray-300">
                                     {empItem.name} (NIK: {empItem.nik}) - Status: {empItem.pivot?.status || 'pending'}
+                                    {empItem.pivot?.status === 'rejected' && (
+                                        <span className="ml-2 text-xs text-red-500">Alasan: {empItem.pivot?.rejection_reason}</span>
+                                    )}
                                 </li>
                             ))}
                         </ul>
@@ -91,7 +98,15 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
                         <p className="italic text-gray-600 dark:text-gray-400">Belum ada pegawai yang ditugaskan untuk request ini.</p>
                     )}
                 </div>
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-between">
+                    {hasRejectedEmployees && (
+                        <button
+                            onClick={onFulfill}
+                            className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
+                        >
+                            Penuhi Kembali
+                        </button>
+                    )}
                     <button
                         onClick={onClose}
                         className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
@@ -104,7 +119,7 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => 
     );
 };
 
-const ScheduleDetailList = ({ title, schedules, onClose }) => {
+const ScheduleDetailList = ({ title, schedules, onClose, onFulfill }) => {
     if (!schedules || schedules.length === 0) return null;
 
     const formatDate = (dateString) => {
@@ -128,6 +143,10 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
                 return <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">Unknown</span>;
         }
     };
+
+    const hasRejectedSchedules = useMemo(() => {
+        return schedules.some(schedule => schedule.status === 'rejected');
+    }, [schedules]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50 p-4">
@@ -193,7 +212,15 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
                         </tbody>
                     </table>
                 </div>
-                <div className="mt-6 flex justify-end">
+                <div className="mt-6 flex justify-between">
+                    {hasRejectedSchedules && (
+                        <button
+                            onClick={onFulfill}
+                            className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
+                        >
+                            Penuhi Kembali
+                        </button>
+                    )}
                     <button
                         onClick={onClose}
                         className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
@@ -206,8 +233,7 @@ const ScheduleDetailList = ({ title, schedules, onClose }) => {
     );
 };
 
-
-const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModal }) => {
+const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModal, onFulfill }) => {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'accepted':
@@ -237,7 +263,8 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
                                         rejection_reason: item.rejection_reason
                                     }
                                 }))
-                            ) // Fixed: Added missing closing parenthesis here
+                            ),
+                            onFulfill
                         )}
                         className="ml-2 flex-shrink-0 rounded-full bg-blue-500 p-1 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:bg-blue-600 dark:focus:ring-offset-gray-800"
                         title={`Lihat detail Request untuk ${title}`}
@@ -300,7 +327,6 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
         </div>
     );
 };
-
 
 const Index = () => {
     const { schedules, filters } = usePage().props;
@@ -427,7 +453,7 @@ const Index = () => {
         setCurrentShiftDetails(null);
     };
 
-    const openManPowerRequestModal = (requestDetails, employees) => {
+    const openManPowerRequestModal = (requestDetails, employees, fulfillHandler) => {
         setCurrentManPowerRequestDetails(requestDetails);
         setAssignedEmployeesForModal(employees);
         setShowManPowerRequestModal(true);
@@ -437,6 +463,26 @@ const Index = () => {
         setShowManPowerRequestModal(false);
         setCurrentManPowerRequestDetails(null);
         setAssignedEmployeesForModal([]);
+    };
+
+    const handleFulfillRequest = async (requestId) => {
+        try {
+            await router.post(route('schedules.store'), {
+                request_id: requestId
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    router.reload();
+                },
+                onError: (errors) => {
+                    console.error('Error fulfilling request:', errors);
+                    alert('Gagal memenuhi permintaan. Silakan coba lagi.');
+                }
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Terjadi kesalahan. Silakan coba lagi.');
+        }
     };
 
     const totalSchedulesDisplayed = schedules.length;
@@ -542,6 +588,12 @@ const Index = () => {
                                                     title={`Shift ${shiftName}`}
                                                     schedulesBySubSection={shiftsForDate[shiftName].subSections}
                                                     openManPowerRequestModal={openManPowerRequestModal}
+                                                    onFulfill={() => {
+                                                        const requestId = shiftsForDate[shiftName].subSections[Object.keys(shiftsForDate[shiftName].subSections)[0]][0].man_power_request?.id;
+                                                        if (requestId) {
+                                                            handleFulfillRequest(requestId);
+                                                        }
+                                                    }}
                                                 />
                                                 <button
                                                     onClick={() => openShiftModal(shiftsForDate[shiftName].details)}
@@ -614,6 +666,12 @@ const Index = () => {
                         title="Detail Semua Penjadwalan Ditampilkan"
                         schedules={schedules}
                         onClose={() => setShowDisplayedDetails(false)}
+                        onFulfill={() => {
+                            const requestId = schedules[0]?.man_power_request_id;
+                            if (requestId) {
+                                handleFulfillRequest(requestId);
+                            }
+                        }}
                     />
                 )}
                 {showWeeklyDetails && (
@@ -621,6 +679,12 @@ const Index = () => {
                         title="Detail Penjadwalan Minggu Ini"
                         schedules={schedulesThisWeek}
                         onClose={() => setShowWeeklyDetails(false)}
+                        onFulfill={() => {
+                            const requestId = schedulesThisWeek[0]?.man_power_request_id;
+                            if (requestId) {
+                                handleFulfillRequest(requestId);
+                            }
+                        }}
                     />
                 )}
 
@@ -633,6 +697,11 @@ const Index = () => {
                     request={currentManPowerRequestDetails}
                     assignedEmployees={assignedEmployeesForModal}
                     onClose={closeManPowerRequestModal}
+                    onFulfill={() => {
+                        if (currentManPowerRequestDetails?.id) {
+                            handleFulfillRequest(currentManPowerRequestDetails.id);
+                        }
+                    }}
                 />
             </div>
         </AuthenticatedLayout>

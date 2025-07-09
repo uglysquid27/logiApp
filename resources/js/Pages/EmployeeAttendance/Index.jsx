@@ -411,12 +411,12 @@ export default function Index() {
                           </td>
                           <td className="px-4 py-4 text-sm whitespace-nowrap">
                             <div className="flex space-x-2">
-                              <Link
+                              {/* <Link
                                 href={route('employee-attendance.edit', employee.id)}
                                 className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                               >
                                 Edit
-                              </Link>
+                              </Link> */}
                               <Link
                                 href={route('employee-attendance.deactivate', employee.id)}
                                 className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
