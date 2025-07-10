@@ -13,6 +13,7 @@ use App\Http\Controllers\ManPowerRequestFulfillmentController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeDashboardController;
+use App\Http\Controllers\LunchCouponController;
 use App\Http\Middleware\PreventBackAfterLogout;
 
 /*
@@ -126,6 +127,10 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/schedules/{id}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+
+    // Lunch routes
+    Route::get('/lunch-coupons', [LunchCouponController::class, 'index'])
+        ->name('lunch-coupons.index');
 
     // Shift routes
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');

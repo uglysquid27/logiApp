@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { usePage, router } from '@inertiajs/react';
+import { usePage, router, Link } from '@inertiajs/react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -47,7 +47,7 @@ const ShiftDetailModal = ({ shift, onClose }) => {
     );
 };
 
-const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose, onFulfill }) => {
+const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose }) => {
     if (!request) return null;
 
     const formatDate = (dateString) => {
@@ -100,12 +100,12 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose, onFul
                 </div>
                 <div className="mt-6 flex justify-between">
                     {hasRejectedEmployees && (
-                        <button
-                            onClick={onFulfill}
+                        <Link
+                            href={route('manpower-requests.fulfill', request.id)}
                             className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
                         >
                             Penuhi Kembali
-                        </button>
+                        </Link>
                     )}
                     <button
                         onClick={onClose}
@@ -119,7 +119,7 @@ const ManPowerRequestDetailModal = ({ request, assignedEmployees, onClose, onFul
     );
 };
 
-const ScheduleDetailList = ({ title, schedules, onClose, onFulfill }) => {
+const ScheduleDetailList = ({ title, schedules, onClose }) => {
     if (!schedules || schedules.length === 0) return null;
 
     const formatDate = (dateString) => {
@@ -147,6 +147,8 @@ const ScheduleDetailList = ({ title, schedules, onClose, onFulfill }) => {
     const hasRejectedSchedules = useMemo(() => {
         return schedules.some(schedule => schedule.status === 'rejected');
     }, [schedules]);
+
+    const requestId = schedules[0]?.man_power_request_id;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-600 bg-opacity-50 p-4">
@@ -213,13 +215,13 @@ const ScheduleDetailList = ({ title, schedules, onClose, onFulfill }) => {
                     </table>
                 </div>
                 <div className="mt-6 flex justify-between">
-                    {hasRejectedSchedules && (
-                        <button
-                            onClick={onFulfill}
+                    {hasRejectedSchedules && requestId && (
+                        <Link
+                            href={route('manpower-requests.fulfill', requestId)}
                             className="rounded-md bg-indigo-600 px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-700 dark:focus:ring-offset-gray-800"
                         >
                             Penuhi Kembali
-                        </button>
+                        </Link>
                     )}
                     <button
                         onClick={onClose}
@@ -233,7 +235,7 @@ const ScheduleDetailList = ({ title, schedules, onClose, onFulfill }) => {
     );
 };
 
-const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModal, onFulfill }) => {
+const ScheduleSection = ({ title, schedulesByShift, openManPowerRequestModal }) => {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'accepted':
@@ -249,53 +251,22 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
 
     return (
         <div className="flex-1 min-w-[300px] rounded-lg bg-white p-4 shadow-md dark:bg-gray-800">
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 sm:text-xl">{title}</h2>
-                {Object.values(schedulesBySubSection)[0]?.[0]?.man_power_request && (
-                    <button
-                        onClick={() => openManPowerRequestModal(
-                            Object.values(schedulesBySubSection)[0][0].man_power_request,
-                            Object.values(schedulesBySubSection).flatMap(subSection => 
-                                subSection.map(item => ({
-                                    ...item.employee,
-                                    pivot: {
-                                        status: item.status,
-                                        rejection_reason: item.rejection_reason
-                                    }
-                                }))
-                            ),
-                            onFulfill
-                        )}
-                        className="ml-2 flex-shrink-0 rounded-full bg-blue-500 p-1 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:bg-blue-600 dark:focus:ring-offset-gray-800"
-                        title={`Lihat detail Request untuk ${title}`}
-                    >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </button>
-                )}
-            </div>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 sm:text-xl mb-4">{title}</h2>
             
-            {Object.keys(schedulesBySubSection).length === 0 ? (
-                <p className="mt-4 italic text-gray-600 dark:text-gray-400">Tidak ada penjadwalan di bagian ini.</p>
+            {Object.keys(schedulesByShift).length === 0 ? (
+                <p className="italic text-gray-600 dark:text-gray-400">Tidak ada penjadwalan di bagian ini.</p>
             ) : (
-                Object.entries(schedulesBySubSection).map(([subSectionName, employeesWithDetails]) => (
-                    <div key={subSectionName} className="mt-4 border-b border-gray-200 pb-4 last:border-b-0 last:pb-0 dark:border-gray-700">
-                        <h3 className="text-md mb-3 font-medium text-blue-700 dark:text-blue-400 sm:text-lg">{subSectionName}</h3>
+                Object.entries(schedulesByShift).map(([shiftName, employeesWithDetails]) => (
+                    <div key={shiftName} className="mb-6">
+                        <h3 className="text-md font-medium text-blue-700 dark:text-blue-400 sm:text-lg mb-2">Shift {shiftName}</h3>
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">
-                                            Nama
-                                        </th>
-                                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">
-                                            NIK
-                                        </th>
-                                        <th scope="col" className="hidden px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:table-cell sm:px-6 sm:py-3">
-                                            Tipe
-                                        </th>
-                                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">
-                                            Status
-                                        </th>
+                                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">Nama</th>
+                                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">NIK</th>
+                                        <th scope="col" className="hidden px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:table-cell sm:px-6 sm:py-3">Sub-Section</th>
+                                        <th scope="col" className="px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6 sm:py-3">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
@@ -308,7 +279,7 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
                                                 {item.employee.nik || '-'}
                                             </td>
                                             <td className="hidden whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 sm:table-cell sm:px-6 sm:py-4">
-                                                {item.employee.type || '-'}
+                                                {item.sub_section?.name || '-'}
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-2 text-sm text-gray-700 dark:text-gray-300 sm:px-6 sm:py-4">
                                                 {getStatusBadge(item.status)}
@@ -321,6 +292,28 @@ const ScheduleSection = ({ title, schedulesBySubSection, openManPowerRequestModa
                                 </tbody>
                             </table>
                         </div>
+                        {employeesWithDetails[0]?.man_power_request && (
+                            <div className="mt-2 flex justify-end">
+                                <button
+                                    onClick={() => openManPowerRequestModal(
+                                        employeesWithDetails[0].man_power_request,
+                                        employeesWithDetails.map(item => ({
+                                            ...item.employee,
+                                            pivot: {
+                                                status: item.status,
+                                                rejection_reason: item.rejection_reason
+                                            }
+                                        }))
+                                    )}
+                                    className="flex items-center text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                >
+                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Lihat Detail Request
+                                </button>
+                            </div>
+                        )}
                     </div>
                 ))
             )}
@@ -341,7 +334,7 @@ const Index = () => {
     const [showWeeklyDetails, setShowWeeklyDetails] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     const itemsPerPage = 3;
 
     useEffect(() => {
@@ -350,38 +343,36 @@ const Index = () => {
         setCurrentPage(1);
     }, [filters]);
 
-    const groupedSchedulesByDateShiftSubSection = useMemo(() => {
+    const groupedSchedulesByDateDivisionShift = useMemo(() => {
         return schedules.reduce((acc, schedule) => {
             if (!schedule.employee || !schedule.sub_section || !schedule.man_power_request?.shift || !schedule.man_power_request?.sub_section?.section) {
-                console.warn('Schedule missing essential data (employee, sub_section, shift, or section):', schedule);
+                console.warn('Schedule missing essential data:', schedule);
                 return acc;
             }
 
             const dateKey = dayjs(schedule.date).format('YYYY-MM-DD');
             const displayDate = dayjs(schedule.date).format('dddd, DD MMMM YYYY');
-            const shiftObj = schedule.man_power_request.shift;
-            const shiftName = shiftObj.name;
-            const subSectionName = schedule.sub_section.name || 'Lain-lain';
+            const divisionName = schedule.man_power_request.sub_section.section.name || 'Lain-lain';
+            const shiftName = schedule.man_power_request.shift.name;
 
             if (!acc[dateKey]) {
                 acc[dateKey] = {
                     displayDate: displayDate,
+                    divisions: {}
+                };
+            }
+
+            if (!acc[dateKey].divisions[divisionName]) {
+                acc[dateKey].divisions[divisionName] = {
                     shifts: {}
                 };
             }
 
-            if (!acc[dateKey].shifts[shiftName]) {
-                acc[dateKey].shifts[shiftName] = {
-                    details: shiftObj,
-                    subSections: {}
-                };
+            if (!acc[dateKey].divisions[divisionName].shifts[shiftName]) {
+                acc[dateKey].divisions[divisionName].shifts[shiftName] = [];
             }
 
-            if (!acc[dateKey].shifts[shiftName].subSections[subSectionName]) {
-                acc[dateKey].shifts[shiftName].subSections[subSectionName] = [];
-            }
-
-            acc[dateKey].shifts[shiftName].subSections[subSectionName].push({
+            acc[dateKey].divisions[divisionName].shifts[shiftName].push({
                 employee: schedule.employee,
                 sub_section: schedule.sub_section,
                 man_power_request: schedule.man_power_request,
@@ -393,11 +384,11 @@ const Index = () => {
         }, {});
     }, [schedules]);
 
-    const sortedDates = useMemo(() => 
-        Object.keys(groupedSchedulesByDateShiftSubSection).sort((a, b) => 
+    const sortedDates = useMemo(() =>
+        Object.keys(groupedSchedulesByDateDivisionShift).sort((a, b) =>
             dayjs(a).valueOf() - dayjs(b).valueOf()
-        ), 
-        [groupedSchedulesByDateShiftSubSection]
+        ),
+        [groupedSchedulesByDateDivisionShift]
     );
 
     const totalPages = Math.ceil(sortedDates.length / itemsPerPage);
@@ -414,7 +405,7 @@ const Index = () => {
                 return;
             }
         }
-        
+
         setIsLoading(true);
         try {
             await router.get(route('schedules.index'), {
@@ -453,7 +444,7 @@ const Index = () => {
         setCurrentShiftDetails(null);
     };
 
-    const openManPowerRequestModal = (requestDetails, employees, fulfillHandler) => {
+    const openManPowerRequestModal = (requestDetails, employees) => {
         setCurrentManPowerRequestDetails(requestDetails);
         setAssignedEmployeesForModal(employees);
         setShowManPowerRequestModal(true);
@@ -465,28 +456,8 @@ const Index = () => {
         setAssignedEmployeesForModal([]);
     };
 
-    const handleFulfillRequest = async (requestId) => {
-        try {
-            await router.post(route('schedules.store'), {
-                request_id: requestId
-            }, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    router.reload();
-                },
-                onError: (errors) => {
-                    console.error('Error fulfilling request:', errors);
-                    alert('Gagal memenuhi permintaan. Silakan coba lagi.');
-                }
-            });
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Terjadi kesalahan. Silakan coba lagi.');
-        }
-    };
-
     const totalSchedulesDisplayed = schedules.length;
-    
+
     const today = dayjs().startOf('day');
     const sevenDaysAgo = dayjs().subtract(6, 'day').startOf('day');
     const schedulesThisWeek = schedules.filter(schedule =>
@@ -561,7 +532,7 @@ const Index = () => {
                     </div>
                 )}
 
-                {Object.keys(groupedSchedulesByDateShiftSubSection).length === 0 ? (
+                {Object.keys(groupedSchedulesByDateDivisionShift).length === 0 ? (
                     <div className="rounded-md border-l-4 border-blue-500 bg-blue-100 p-4 text-blue-700 dark:border-blue-700 dark:bg-blue-900 dark:text-blue-200" role="alert">
                         <p className="font-bold">Informasi:</p>
                         <p>Tidak ada penjadwalan dalam rentang tanggal yang dipilih.</p>
@@ -569,46 +540,28 @@ const Index = () => {
                 ) : (
                     <>
                         {paginatedDates.map(dateKey => {
-                            const dateData = groupedSchedulesByDateShiftSubSection[dateKey];
-                            const shiftsForDate = dateData.shifts;
-
-                            const sortedShiftsForDate = Object.keys(shiftsForDate).sort((a, b) => {
-                                return (shiftOrder[a] || 99) - (shiftOrder[b] || 99);
-                            });
+                            const dateData = groupedSchedulesByDateDivisionShift[dateKey];
+                            const divisionsForDate = dateData.divisions;
 
                             return (
                                 <div key={dateKey} className="mb-8">
                                     <h2 className="mb-4 rounded-lg bg-gray-100 p-3 text-xl font-bold text-gray-800 shadow-sm dark:bg-gray-700 dark:text-gray-100 sm:p-4 sm:text-2xl">
                                         {dateData.displayDate}
                                     </h2>
-                                    <div className="flex flex-row flex-wrap gap-4">
-                                        {sortedShiftsForDate.map(shiftName => (
-                                            <React.Fragment key={`${dateKey}-${shiftName}`}>
-                                                <ScheduleSection
-                                                    title={`Shift ${shiftName}`}
-                                                    schedulesBySubSection={shiftsForDate[shiftName].subSections}
-                                                    openManPowerRequestModal={openManPowerRequestModal}
-                                                    onFulfill={() => {
-                                                        const requestId = shiftsForDate[shiftName].subSections[Object.keys(shiftsForDate[shiftName].subSections)[0]][0].man_power_request?.id;
-                                                        if (requestId) {
-                                                            handleFulfillRequest(requestId);
-                                                        }
-                                                    }}
-                                                />
-                                                <button
-                                                    onClick={() => openShiftModal(shiftsForDate[shiftName].details)}
-                                                    className="self-start rounded-full bg-indigo-500 p-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 hover:bg-indigo-600 dark:focus:ring-offset-gray-800"
-                                                    title={`Lihat detail Shift ${shiftName}`}
-                                                >
-                                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                </button>
-                                            </React.Fragment>
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                                        {Object.entries(divisionsForDate).map(([divisionName, divisionData]) => (
+                                            <ScheduleSection
+                                                key={divisionName}
+                                                title={divisionName}
+                                                schedulesByShift={divisionData.shifts}
+                                                openManPowerRequestModal={openManPowerRequestModal}
+                                            />
                                         ))}
                                     </div>
                                 </div>
                             );
                         })}
-                        
+
                         {totalPages > 1 && (
                             <div className="mt-6 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
                                 <button
@@ -618,11 +571,11 @@ const Index = () => {
                                 >
                                     Previous
                                 </button>
-                                
+
                                 <span className="text-gray-700 dark:text-gray-300">
                                     Halaman {currentPage} dari {totalPages}
                                 </span>
-                                
+
                                 <button
                                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                     disabled={currentPage === totalPages}
@@ -639,7 +592,7 @@ const Index = () => {
                     <h3 className="mb-4 text-lg font-bold text-gray-800 dark:text-gray-100 sm:text-xl">Ringkasan Penjadwalan</h3>
                     <div className="grid grid-cols-1 gap-4 text-gray-700 dark:text-gray-300 sm:grid-cols-2">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <strong className="mb-2 sm:mb-0">Total Penjadwalan Ditampilkan:</strong> 
+                            <strong className="mb-2 sm:mb-0">Total Penjadwalan Ditampilkan:</strong>
                             <span className="sm:ml-2">{totalSchedulesDisplayed}</span>
                             <button
                                 onClick={() => setShowDisplayedDetails(!showDisplayedDetails)}
@@ -649,7 +602,7 @@ const Index = () => {
                             </button>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                            <strong className="mb-2 sm:mb-0">Total Penjadwalan Minggu Ini:</strong> 
+                            <strong className="mb-2 sm:mb-0">Total Penjadwalan Minggu Ini:</strong>
                             <span className="sm:ml-2">{totalSchedulesThisWeek}</span>
                             <button
                                 onClick={() => setShowWeeklyDetails(!showWeeklyDetails)}
@@ -666,12 +619,6 @@ const Index = () => {
                         title="Detail Semua Penjadwalan Ditampilkan"
                         schedules={schedules}
                         onClose={() => setShowDisplayedDetails(false)}
-                        onFulfill={() => {
-                            const requestId = schedules[0]?.man_power_request_id;
-                            if (requestId) {
-                                handleFulfillRequest(requestId);
-                            }
-                        }}
                     />
                 )}
                 {showWeeklyDetails && (
@@ -679,12 +626,6 @@ const Index = () => {
                         title="Detail Penjadwalan Minggu Ini"
                         schedules={schedulesThisWeek}
                         onClose={() => setShowWeeklyDetails(false)}
-                        onFulfill={() => {
-                            const requestId = schedulesThisWeek[0]?.man_power_request_id;
-                            if (requestId) {
-                                handleFulfillRequest(requestId);
-                            }
-                        }}
                     />
                 )}
 
@@ -697,11 +638,6 @@ const Index = () => {
                     request={currentManPowerRequestDetails}
                     assignedEmployees={assignedEmployeesForModal}
                     onClose={closeManPowerRequestModal}
-                    onFulfill={() => {
-                        if (currentManPowerRequestDetails?.id) {
-                            handleFulfillRequest(currentManPowerRequestDetails.id);
-                        }
-                    }}
                 />
             </div>
         </AuthenticatedLayout>
