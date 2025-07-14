@@ -102,7 +102,8 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
                 ->name('employee-attendance.activate');
             Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
                 ->name('employee-attendance.process-deactivation');
-            Route::delete('/', [EmployeeSum::class, 'destroy'])->name('employee-attendance.destroy');
+                Route::delete('manpower-requests/{id}', [ManPowerRequestController::class, 'destroy'])
+                ->name('manpower-requests.destroy');
         });
     });
 
@@ -116,6 +117,8 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         ->name('manpower-requests.request-revision');
     Route::get('/manpower-requests/{manpower_request}/revision', [ManPowerRequestController::class, 'edit'])
         ->name('manpower-requests.revision.edit');
+        Route::delete('/manpower-requests/{manpowerRequest}', [ManPowerRequestController::class, 'destroy'])
+        ->name('manpower-requests.destroy');
 
     // Additional dashboard routes
     Route::get('/dashboard/requests/{month}/{status}', [DashboardController::class, 'getManpowerRequestsByMonth'])

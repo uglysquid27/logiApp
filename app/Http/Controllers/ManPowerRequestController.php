@@ -243,22 +243,66 @@ public function update(Request $request, ManPowerRequest $manpowerRequest)
     ]);
 }
 
-    public function destroy(ManPowerRequest $manPowerRequest)
-    {
-        try {
-            DB::transaction(function () use ($manPowerRequest) {
-                ManPowerRequest::where('sub_section_id', $manPowerRequest->sub_section_id)
-                    ->where('date', $manPowerRequest->date)
-                    ->delete();
-            });
+public function destroy($id)
+{
+    try {
+        DB::beginTransaction();
 
-            return redirect()->route('manpower-requests.index')->with('success', 'Permintaan tenaga kerja berhasil dihapus!');
-        } catch (\Exception $e) {
-            Log::error('Error deleting manpower request: ' . $e->getMessage());
-            return back()->with('error', 'Gagal menghapus permintaan. Silakan coba lagi.');
+        $manPowerRequest = ManPowerRequest::findOrFail($id);
+
+        Log::info('Attempting to delete manpower request', [
+            'request_id' => $manPowerRequest->id,
+            'user_id' => auth()->id(),
+            'status' => $manPowerRequest->status
+        ]);
+
+        // Allow deletion for fulfilled requests with confirmation
+        if ($manPowerRequest->status === 'fulfilled') {
+            // Additional check - maybe verify with another condition
+            if ($manPowerRequest->created_at->diffInDays(now()) > 7) {
+                Log::warning('Attempt to delete fulfilled request older than 7 days', [
+                    'request_id' => $manPowerRequest->id,
+                    'status' => $manPowerRequest->status,
+                    'user_id' => auth()->id()
+                ]);
+                return back()->with('error', 'Cannot delete fulfilled requests older than 7 days');
+            }
         }
-    }
+        // Original status check
+        elseif (!in_array($manPowerRequest->status, ['pending', 'revision_requested'])) {
+            Log::warning('Invalid delete attempt', [
+                'request_id' => $manPowerRequest->id,
+                'status' => $manPowerRequest->status,
+                'user_id' => auth()->id()
+            ]);
+            return back()->with('error', 'Cannot delete request in current status');
+        }
 
+        $manPowerRequest->delete();
+
+        DB::commit();
+
+        Log::info('Successfully deleted request', [
+            'request_id' => $id,
+            'user_id' => auth()->id()
+        ]);
+
+        return redirect()->route('manpower-requests.index')
+            ->with('success', 'Request deleted successfully');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        
+        Log::error('Delete failed', [
+            'error' => $e->getMessage(),
+            'request_id' => $id ?? 'unknown',
+            'user_id' => auth()->id(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return back()->with('error', 'Failed to delete request');
+    }
+}
     public function fulfill(ManPowerRequest $manPowerRequest)
     {
         try {
