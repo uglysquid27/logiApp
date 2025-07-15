@@ -1,6 +1,6 @@
 import { useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function Create({ subSections, shifts }) {
   // Group subSections by section for better organization
@@ -29,9 +29,14 @@ export default function Create({ subSections, shifts }) {
 
   const { data, setData, post, processing, errors, reset } = useForm({
     sub_section_id: '',
+    sub_section_name: '', // To display the selected sub-section name
     date: '',
     time_slots: initialTimeSlots,
   });
+
+  // Modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const currentShiftIds = Object.keys(data.time_slots).map(Number);
@@ -53,6 +58,15 @@ export default function Create({ subSections, shifts }) {
   }, [shifts]);
 
   const handleSlotChange = (shiftId, field, value) => {
+    // Remove leading zeros from number inputs
+    if (field === 'requested_amount' || field === 'male_count' || field === 'female_count') {
+      if (value === '' || value === '0') {
+        value = '';
+      } else if (value.startsWith('0') && value.length > 1) {
+        value = value.replace(/^0+/, '');
+      }
+    }
+
     setData(prevData => {
       const newTimeSlots = {
         ...prevData.time_slots,
@@ -129,6 +143,36 @@ export default function Create({ subSections, shifts }) {
 
   const today = new Date().toISOString().split('T')[0];
 
+  // Filter sub-sections based on search term
+  const filteredSections = Object.keys(sectionsWithSubs).reduce((acc, sectionName) => {
+    const filteredSubs = sectionsWithSubs[sectionName].filter(subSection =>
+      subSection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sectionName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (filteredSubs.length > 0) {
+      acc[sectionName] = filteredSubs;
+    }
+    return acc;
+  }, {});
+
+  const selectSubSection = (subSection) => {
+    setData({
+      ...data,
+      sub_section_id: subSection.id,
+      sub_section_name: subSection.name
+    });
+    setIsModalOpen(false);
+    setSearchTerm('');
+  };
+
+  // Handle number input focus to clear initial zero
+  const handleNumberFocus = (e) => {
+    if (e.target.value === '0') {
+      e.target.value = '';
+    }
+  };
+
   return (
     <AuthenticatedLayout
       header={
@@ -157,34 +201,23 @@ export default function Create({ subSections, shifts }) {
               </div>
 
               <form onSubmit={submit} className="space-y-6">
-                {/* Sub Section Field - Enhanced with Section Grouping */}
+                {/* Sub Section Field - Now using a modal */}
                 <div>
                   <label htmlFor="sub_section_id" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
                     Sub Section <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    id="sub_section_id"
-                    name="sub_section_id"
-                    value={data.sub_section_id}
-                    onChange={(e) => setData('sub_section_id', e.target.value)}
-                    className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.sub_section_id ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                    required
+                  
+                  {/* Selected sub-section display */}
+                  <div 
+                    onClick={() => setIsModalOpen(true)}
+                    className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.sub_section_id ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100 cursor-pointer`}
                   >
-                    <option value="">-- Pilih Sub Section --</option>
-                    {Object.entries(sectionsWithSubs).map(([sectionName, subSections]) => (
-                      <optgroup key={sectionName} label={sectionName} className="text-gray-900 dark:text-gray-100">
-                        {subSections.map((subSection) => (
-                          <option
-                            key={subSection.id}
-                            value={subSection.id}
-                            className="py-2 hover:bg-indigo-100 dark:hover:bg-gray-600"
-                          >
-                            {subSection.name}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    {data.sub_section_name ? (
+                      <span className="block truncate">{data.sub_section_name}</span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-400">-- Pilih Sub Section --</span>
+                    )}
+                  </div>
                   {errors.sub_section_id && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.sub_section_id}</p>}
                 </div>
 
@@ -240,6 +273,7 @@ export default function Create({ subSections, shifts }) {
                             min="0"
                             value={slotData.requested_amount}
                             onChange={(e) => handleSlotChange(shift.id, 'requested_amount', e.target.value)}
+                            onFocus={handleNumberFocus}
                             placeholder="Jumlah"
                             className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.requested_amount`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
                           />
@@ -303,6 +337,7 @@ export default function Create({ subSections, shifts }) {
                                     max={requestedAmount}
                                     value={slotData.male_count}
                                     onChange={(e) => handleSlotChange(shift.id, 'male_count', e.target.value)}
+                                    onFocus={handleNumberFocus}
                                     className="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
                                   />
                                 </div>
@@ -317,6 +352,7 @@ export default function Create({ subSections, shifts }) {
                                     max={requestedAmount}
                                     value={slotData.female_count}
                                     onChange={(e) => handleSlotChange(shift.id, 'female_count', e.target.value)}
+                                    onFocus={handleNumberFocus}
                                     className="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
                                   />
                                 </div>
@@ -362,6 +398,79 @@ export default function Create({ subSections, shifts }) {
           </div>
         </div>
       </div>
+
+      {/* Sub-section Selection Modal - Centered */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+          <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 transition-opacity" onClick={() => setIsModalOpen(false)}></div>
+          
+          <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
+            <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
+                Pilih Sub Section
+              </h3>
+              
+              {/* Search input */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Cari sub section..."
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              
+              {/* Sub-sections list */}
+              <div className="max-h-96 overflow-y-auto">
+                {Object.keys(filteredSections).length > 0 ? (
+                  Object.entries(filteredSections).map(([sectionName, subSections]) => (
+                    <div key={sectionName} className="mb-4">
+                      <h4 className="font-medium text-gray-700 dark:text-gray-300 text-sm mb-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
+                        {sectionName}
+                      </h4>
+                      <ul className="space-y-1">
+                        {subSections.map((subSection) => (
+                          <li key={subSection.id}>
+                            <button
+                              type="button"
+                              className={`w-full text-left px-3 py-2 text-sm rounded-md hover:bg-indigo-100 dark:hover:bg-gray-600 ${data.sub_section_id === subSection.id ? 'bg-indigo-50 dark:bg-gray-700 border border-indigo-200 dark:border-gray-600' : ''}`}
+                              onClick={() => selectSubSection(subSection)}
+                            >
+                              <div className="flex items-center">
+                                <span className="block truncate">{subSection.name}</span>
+                                {data.sub_section_id === subSection.id && (
+                                  <svg className="ml-2 h-4 w-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 text-sm py-4 text-center">
+                    Tidak ada sub section yang cocok dengan pencarian Anda
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={() => setIsModalOpen(false)}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthenticatedLayout>
   );
 }

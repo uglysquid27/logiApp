@@ -2,9 +2,12 @@ import { Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useState } from 'react';
 
 export default function Index({ requests, auth }) {
   const { post, delete: destroy } = useForm({});
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [requestToDelete, setRequestToDelete] = useState(null);
 
   // Status styling configuration
   const statusClasses = {
@@ -53,24 +56,27 @@ export default function Index({ requests, auth }) {
 
   // Handle delete request
   const handleDeleteRequest = (requestId) => {
-    if (!confirm('Are you sure you want to delete this request?')) return;
-  
-    console.log('Attempting to delete request ID:', requestId); // Debug log
+    setRequestToDelete(requestId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (!requestToDelete) return;
     
-    destroy(route('manpower-requests.destroy', requestId), {
+    console.log('Attempting to delete request ID:', requestToDelete);
+    
+    destroy(route('manpower-requests.destroy', requestToDelete), {
       preserveScroll: true,
       onSuccess: () => {
         toast.success('Request deleted successfully');
+        setShowDeleteModal(false);
+        setRequestToDelete(null);
       },
       onError: (errors) => {
         console.error('Delete error:', errors);
         toast.error(errors.message || 'Failed to delete request');
-        
-        // Additional debug logging
-        if (errors.response) {
-          console.log('Response data:', errors.response.data);
-          console.log('Response status:', errors.response.status);
-        }
+        setShowDeleteModal(false);
+        setRequestToDelete(null);
       }
     });
   };
@@ -153,11 +159,54 @@ export default function Index({ requests, auth }) {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal - Centered */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 transition-opacity"></div>
+          
+          <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50">
+                <svg className="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                  Delete Request
+                </h3>
+                <div className="mt-2">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Are you sure you want to delete this request? This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse justify-center sm:justify-start">
+              <button
+                type="button"
+                className="w-full sm:w-auto inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:text-sm"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+              <button
+                type="button"
+                className="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-600 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthenticatedLayout>
   );
 }
 
-// Sub-components for better organization
+// Sub-components
 function EmptyState() {
   return (
     <div className="text-center py-8">
@@ -203,15 +252,15 @@ function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, fo
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-sm mb-3">
-        <div>
+        <div className="text-center">
           <div className="text-gray-500 dark:text-gray-400">Total</div>
           <div>{request.requested_amount}</div>
         </div>
-        <div>
+        <div className="text-center">
           <div className="text-gray-500 dark:text-gray-400">Male</div>
           <div>{request.male_count}</div>
         </div>
-        <div>
+        <div className="text-center">
           <div className="text-gray-500 dark:text-gray-400">Female</div>
           <div>{request.female_count}</div>
         </div>
@@ -222,43 +271,57 @@ function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, fo
           <>
             <Link
               href={route('manpower-requests.edit', request.id)}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium px-2 py-1"
+              className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+              title="Edit"
             >
-              Edit
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             </Link>
             <Link
               href={route('manpower-requests.fulfill', request.id)}
-              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium px-2 py-1"
+              className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+              title="Fulfill"
             >
-              Fulfill
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </Link>
             <button
               onClick={() => onDelete(request.id)}
-              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 text-sm font-medium px-2 py-1"
+              className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+              title="Cancel"
             >
-              Cancel
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </>
         )}
         {request.status === 'fulfilled' && (
           <>
-            <span className="text-green-600 dark:text-green-400 text-sm italic flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <span className="p-2 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 inline-flex items-center" title="Fulfilled">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              Fulfilled
             </span>
             <button
               onClick={() => onRevision(request.id)}
-              className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 text-sm font-medium px-2 py-1"
+              className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
+              title="Revise"
             >
-              Revise
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             </button>
             <button
               onClick={() => onDelete(request.id)}
-              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 text-sm font-medium px-2 py-1"
+              className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+              title="Cancel"
             >
-              Cancel
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </>
         )}
@@ -266,15 +329,21 @@ function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, fo
           <>
             <Link
               href={route('manpower-requests.revision.edit', request.id)}
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 text-sm font-medium px-2 py-1"
+              className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+              title="Edit"
             >
-              Edit
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
             </Link>
             <button
               onClick={() => onDelete(request.id)}
-              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 text-sm font-medium px-2 py-1"
+              className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+              title="Cancel"
             >
-              Cancel
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </>
         )}
@@ -291,12 +360,12 @@ function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses,
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sub Section</th>
           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Shift</th>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Male</th>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Female</th>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">By</th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Male</th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Female</th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">By</th>
         </tr>
       </thead>
       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -327,12 +396,12 @@ function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses,
               <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 text-center">
                 {req.female_count}
               </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm">
+              <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
                 <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusClasses(req.status)}`}>
                   {req.status.replace('_', ' ')}
                 </span>
               </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-right">
+              <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-center">
                 {req.status === 'pending' && (
                   <PendingActions requestId={req.id} onDelete={onDelete} />
                 )}
@@ -356,24 +425,33 @@ function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses,
 
 function PendingActions({ requestId, onDelete }) {
   return (
-    <div className="flex justify-end items-center space-x-3">
+    <div className="flex justify-center items-center space-x-2">
       <Link
         href={route('manpower-requests.edit', requestId)}
-        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 font-semibold"
+        className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+        title="Edit"
       >
-        Edit
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
       </Link>
       <Link
         href={route('manpower-requests.fulfill', requestId)}
-        className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 font-semibold"
+        className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+        title="Fulfill"
       >
-        Fulfill
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
       </Link>
       <button
         onClick={() => onDelete(requestId)}
-        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 font-semibold"
+        className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+        title="Cancel"
       >
-        Cancel
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
   );
@@ -381,24 +459,32 @@ function PendingActions({ requestId, onDelete }) {
 
 function FulfilledActions({ requestId, onDelete, onRevision }) {
   return (
-    <div className="flex justify-end items-center space-x-3">
-      <span className="text-green-600 dark:text-green-400 italic inline-flex items-center">
-        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+    <div className="flex justify-center items-center space-x-2">
+      <span 
+        className="p-2 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 inline-flex items-center"
+        title="Fulfilled"
+      >
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
-        Fulfilled
       </span>
       <button
         onClick={() => onRevision(requestId)}
-        className="text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-300 font-semibold"
+        className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
+        title="Revise"
       >
-        Revise
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
       </button>
       <button
         onClick={() => onDelete(requestId)}
-        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 font-semibold"
+        className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+        title="Cancel"
       >
-        Cancel
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
   );
@@ -406,18 +492,24 @@ function FulfilledActions({ requestId, onDelete, onRevision }) {
 
 function RevisionActions({ requestId, onDelete }) {
   return (
-    <div className="flex justify-end items-center space-x-3">
+    <div className="flex justify-center items-center space-x-2">
       <Link
         href={route('manpower-requests.revision.edit', requestId)}
-        className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 font-semibold"
+        className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+        title="Edit"
       >
-        Edit
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
       </Link>
       <button
         onClick={() => onDelete(requestId)}
-        className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 font-semibold"
+        className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+        title="Cancel"
       >
-        Cancel
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
     </div>
   );
