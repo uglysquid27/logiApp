@@ -181,7 +181,7 @@ const LunchCouponsIndex = () => {
                                         </span>
                                     </div>
                                     <button className="rounded-md bg-green-600 px-4 py-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-700 dark:focus:ring-offset-gray-800">
-                                        Print Coupons
+                                        Save Coupons
                                     </button>
                                 </div>
                             </div>

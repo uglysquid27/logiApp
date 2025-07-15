@@ -11,13 +11,13 @@ export default defineConfig({
         react(),
     ],
     
-    // server: {
-    //     host: '0.0.0.0', // Biar bisa diakses dari device lain
-    //     port: 5173,
-    //     cors: true,
-    //     hmr: {
-    //         host: '192.168.1.9', // <--- Ganti ini dengan IP kamu (en0)
-    //         protocol: 'ws',
-    //     },
-    // },
+    server: {
+        host: '0.0.0.0', // Biar bisa diakses dari device lain
+        port: 5173,
+        cors: true,
+        hmr: {
+            host: '192.168.1.15', // <--- Ganti ini dengan IP kamu (en0)
+            protocol: 'ws',
+        },
+    },
 });
