@@ -152,30 +152,30 @@ export default function Create({ subSections, shifts }) {
   const submit = async (e) => {
     e.preventDefault();
     console.log('Submission started', { data });
-  
+
     // Validate required fields
     if (!data.sub_section_id || !data.date || !hasAtLeastOneShiftFilled()) {
       const missingFields = [];
       if (!data.sub_section_id) missingFields.push('sub_section_id');
       if (!data.date) missingFields.push('date');
       if (!hasAtLeastOneShiftFilled()) missingFields.push('no valid shifts');
-      
+
       console.error('Validation failed - missing fields:', missingFields);
       alert('Please fill all required fields and at least one shift');
       return;
     }
-  
+
     // Check for duplicates
     try {
       console.log('Checking for duplicates...');
       const { duplicates, has_duplicates } = await checkForDuplicates();
       console.log('Duplicate check result:', { duplicates, has_duplicates });
-  
+
       if (has_duplicates) {
         console.log('Found duplicates, showing warning');
         setDuplicateRequests(duplicates);
         setShowDuplicateWarning(true);
-  
+
         // Update the form data to mark duplicates as additional
         setData(prevData => {
           const newTimeSlots = { ...prevData.time_slots };
@@ -193,7 +193,7 @@ export default function Create({ subSections, shifts }) {
         });
         return;
       }
-  
+
       // If no duplicates, proceed with submission
       console.log('No duplicates found, proceeding with submission');
       await processSubmission();
@@ -202,42 +202,46 @@ export default function Create({ subSections, shifts }) {
       alert('An error occurred during submission. Please try again.');
     }
   };
-  
+
   const processSubmission = async () => {
     console.log('Preparing submission payload...');
     const payloadTimeSlots = [];
-  
+
     Object.keys(data.time_slots).forEach(shiftId => {
       const slot = data.time_slots[shiftId];
-      const requestedAmount = slot.requested_amount === '' ? 0 : parseInt(slot.requested_amount, 10);
-      console.log(`Processing shift ${shiftId}:`, slot);
-  
+      // Ensure proper number conversion
+      const requestedAmount = slot.requested_amount ? parseInt(slot.requested_amount, 10) : 0;
+      console.log(`Processing shift ${shiftId}:`, {
+        rawValue: slot.requested_amount,
+        convertedValue: requestedAmount
+      });
+
       if (requestedAmount > 0) {
         const payloadSlot = {
           shift_id: parseInt(shiftId, 10),
-          requested_amount: requestedAmount,
+          requested_amount: requestedAmount, // Use the properly converted value
           male_count: parseInt(slot.male_count) || 0,
           female_count: parseInt(slot.female_count) || 0,
           start_time: formatTimeToSeconds(slot.start_time),
           end_time: formatTimeToSeconds(slot.end_time),
           is_additional: slot.is_additional || false,
         };
-  
+
         // Only include reason if it's an additional request
         if (payloadSlot.is_additional) {
           payloadSlot.reason = slot.reason || 'Duplicate request - additional manpower needed';
         }
-  
+
         payloadTimeSlots.push(payloadSlot);
       }
     });
-  
+
     console.log('Final payload being sent:', {
       sub_section_id: data.sub_section_id,
       date: data.date,
       time_slots: payloadTimeSlots
     });
-  
+
     try {
       console.log('Sending POST request...');
       await post('/manpower-requests', {
@@ -391,6 +395,7 @@ export default function Create({ subSections, shifts }) {
                             value={slotData.requested_amount}
                             onChange={(e) => handleSlotChange(shift.id, 'requested_amount', e.target.value)}
                             onFocus={handleNumberFocus}
+                            onWheel={(e) => e.target.blur()}
                             placeholder="Jumlah"
                             className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.requested_amount`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
                           />
@@ -470,6 +475,7 @@ export default function Create({ subSections, shifts }) {
                                     value={slotData.male_count}
                                     onChange={(e) => handleSlotChange(shift.id, 'male_count', e.target.value)}
                                     onFocus={handleNumberFocus}
+                                    onWheel={(e) => e.target.blur()}
                                     className="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
                                   />
                                 </div>
@@ -485,6 +491,7 @@ export default function Create({ subSections, shifts }) {
                                     value={slotData.female_count}
                                     onChange={(e) => handleSlotChange(shift.id, 'female_count', e.target.value)}
                                     onFocus={handleNumberFocus}
+                                    onWheel={(e) => e.target.blur()}
                                     className="w-full px-3 py-2 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
                                   />
                                 </div>
