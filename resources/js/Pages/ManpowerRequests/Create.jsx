@@ -23,13 +23,15 @@ export default function Create({ subSections, shifts }) {
         female_count: 0,
         start_time: shift.start_time || '',
         end_time: shift.end_time || '',
+        reason: '',
+        is_additional: false,
       };
     });
   }
 
   const { data, setData, post, processing, errors, reset } = useForm({
     sub_section_id: '',
-    sub_section_name: '', // To display the selected sub-section name
+    sub_section_name: '',
     date: '',
     time_slots: initialTimeSlots,
   });
@@ -37,6 +39,8 @@ export default function Create({ subSections, shifts }) {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [duplicateRequests, setDuplicateRequests] = useState([]);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
   useEffect(() => {
     const currentShiftIds = Object.keys(data.time_slots).map(Number);
@@ -51,6 +55,8 @@ export default function Create({ subSections, shifts }) {
           female_count: 0,
           start_time: shift.start_time || '',
           end_time: shift.end_time || '',
+          reason: '',
+          is_additional: false,
         };
       });
       setData('time_slots', newInitialTimeSlots);
@@ -86,7 +92,9 @@ export default function Create({ subSections, shifts }) {
             start_time: originalShift?.start_time || '',
             end_time: originalShift?.end_time || '',
             male_count: 0,
-            female_count: 0
+            female_count: 0,
+            is_additional: false,
+            reason: '',
           };
         }
       }
@@ -105,40 +113,149 @@ export default function Create({ subSections, shifts }) {
     return null;
   };
 
-  const submit = (e) => {
+  const checkForDuplicates = async () => {
+    try {
+      const response = await fetch(route('manpower-requests.check-duplicates'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({
+          sub_section_id: data.sub_section_id,
+          date: data.date,
+          shift_ids: Object.keys(data.time_slots)
+            .filter(shiftId => data.time_slots[shiftId].requested_amount > 0)
+            .map(Number),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      return result; // This will include { duplicates: [], has_duplicates: boolean }
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+      return { duplicates: [], has_duplicates: false };
+    }
+  };
+
+  const hasAtLeastOneShiftFilled = () => {
+    return Object.values(data.time_slots).some(
+      slot => slot.requested_amount && parseInt(slot.requested_amount) > 0
+    );
+  };
+
+  const submit = async (e) => {
     e.preventDefault();
-
+    console.log('Submission started', { data });
+  
+    // Validate required fields
+    if (!data.sub_section_id || !data.date || !hasAtLeastOneShiftFilled()) {
+      const missingFields = [];
+      if (!data.sub_section_id) missingFields.push('sub_section_id');
+      if (!data.date) missingFields.push('date');
+      if (!hasAtLeastOneShiftFilled()) missingFields.push('no valid shifts');
+      
+      console.error('Validation failed - missing fields:', missingFields);
+      alert('Please fill all required fields and at least one shift');
+      return;
+    }
+  
+    // Check for duplicates
+    try {
+      console.log('Checking for duplicates...');
+      const { duplicates, has_duplicates } = await checkForDuplicates();
+      console.log('Duplicate check result:', { duplicates, has_duplicates });
+  
+      if (has_duplicates) {
+        console.log('Found duplicates, showing warning');
+        setDuplicateRequests(duplicates);
+        setShowDuplicateWarning(true);
+  
+        // Update the form data to mark duplicates as additional
+        setData(prevData => {
+          const newTimeSlots = { ...prevData.time_slots };
+          duplicates.forEach(dup => {
+            if (newTimeSlots[dup.shift_id]) {
+              newTimeSlots[dup.shift_id] = {
+                ...newTimeSlots[dup.shift_id],
+                is_additional: true,
+                reason: newTimeSlots[dup.shift_id].reason || 'Duplicate request - additional manpower needed'
+              };
+            }
+          });
+          console.log('Updated time slots with duplicates:', newTimeSlots);
+          return { ...prevData, time_slots: newTimeSlots };
+        });
+        return;
+      }
+  
+      // If no duplicates, proceed with submission
+      console.log('No duplicates found, proceeding with submission');
+      await processSubmission();
+    } catch (error) {
+      console.error('Error during submission:', error);
+      alert('An error occurred during submission. Please try again.');
+    }
+  };
+  
+  const processSubmission = async () => {
+    console.log('Preparing submission payload...');
     const payloadTimeSlots = [];
-
+  
     Object.keys(data.time_slots).forEach(shiftId => {
       const slot = data.time_slots[shiftId];
       const requestedAmount = slot.requested_amount === '' ? 0 : parseInt(slot.requested_amount, 10);
-
+      console.log(`Processing shift ${shiftId}:`, slot);
+  
       if (requestedAmount > 0) {
-        payloadTimeSlots.push({
+        const payloadSlot = {
           shift_id: parseInt(shiftId, 10),
           requested_amount: requestedAmount,
           male_count: parseInt(slot.male_count) || 0,
           female_count: parseInt(slot.female_count) || 0,
           start_time: formatTimeToSeconds(slot.start_time),
           end_time: formatTimeToSeconds(slot.end_time),
-        });
+          is_additional: slot.is_additional || false,
+        };
+  
+        // Only include reason if it's an additional request
+        if (payloadSlot.is_additional) {
+          payloadSlot.reason = slot.reason || 'Duplicate request - additional manpower needed';
+        }
+  
+        payloadTimeSlots.push(payloadSlot);
       }
     });
-
-    if (payloadTimeSlots.length === 0) {
-      alert('Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.');
-      return;
-    }
-
-    post('/manpower-requests', {
+  
+    console.log('Final payload being sent:', {
       sub_section_id: data.sub_section_id,
       date: data.date,
-      time_slots: payloadTimeSlots,
-    }, {
-      onSuccess: () => reset(),
-      onError: (formErrors) => console.error('Validation Errors:', formErrors),
+      time_slots: payloadTimeSlots
     });
+  
+    try {
+      console.log('Sending POST request...');
+      await post('/manpower-requests', {
+        sub_section_id: data.sub_section_id,
+        date: data.date,
+        time_slots: payloadTimeSlots,
+      }, {
+        onSuccess: () => {
+          console.log('Submission successful');
+          reset();
+        },
+        onError: (errors) => {
+          console.error('Submission errors:', errors);
+        },
+      });
+    } catch (error) {
+      console.error('Submission failed:', error);
+    }
   };
 
   const today = new Date().toISOString().split('T')[0];
@@ -149,7 +266,7 @@ export default function Create({ subSections, shifts }) {
       subSection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sectionName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     if (filteredSubs.length > 0) {
       acc[sectionName] = filteredSubs;
     }
@@ -201,14 +318,14 @@ export default function Create({ subSections, shifts }) {
               </div>
 
               <form onSubmit={submit} className="space-y-6">
-                {/* Sub Section Field - Now using a modal */}
+                {/* Sub Section Field */}
                 <div>
                   <label htmlFor="sub_section_id" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
                     Sub Section <span className="text-red-500">*</span>
                   </label>
-                  
+
                   {/* Selected sub-section display */}
-                  <div 
+                  <div
                     onClick={() => setIsModalOpen(true)}
                     className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.sub_section_id ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100 cursor-pointer`}
                   >
@@ -221,7 +338,6 @@ export default function Create({ subSections, shifts }) {
                   {errors.sub_section_id && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.sub_section_id}</p>}
                 </div>
 
-                {/* Rest of your form remains the same */}
                 {/* Date Field */}
                 <div>
                   <label htmlFor="date" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
@@ -254,9 +370,10 @@ export default function Create({ subSections, shifts }) {
                     const requestedAmount = parseInt(slotData.requested_amount) || 0;
                     const showGenderFields = requestedAmount > 0;
                     const isTimeRequired = showGenderFields;
+                    const isDuplicate = duplicateRequests.some(req => req.shift_id == shift.id);
 
                     return (
-                      <div key={shift.id} className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-md space-y-3">
+                      <div key={shift.id} className={`p-3 sm:p-4 border ${isDuplicate ? 'border-yellow-500 dark:border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-gray-200 dark:border-gray-700'} rounded-md space-y-3`}>
                         {/* Shift Name */}
                         <h4 className="font-medium text-gray-700 dark:text-gray-300">
                           {shift.name}
@@ -265,7 +382,7 @@ export default function Create({ subSections, shifts }) {
                         {/* Requested Amount */}
                         <div>
                           <label htmlFor={`amount_${shift.id}`} className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                            Jumlah Karyawan Diminta <span className="text-red-500">*</span>
+                            Jumlah Karyawan Diminta
                           </label>
                           <input
                             type="number"
@@ -282,13 +399,30 @@ export default function Create({ subSections, shifts }) {
                           )}
                         </div>
 
+                        {/* Reason for additional request (shown only for duplicates) */}
+                        {isDuplicate && showDuplicateWarning && (
+                          <div>
+                            <label htmlFor={`reason_${shift.id}`} className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
+                              Alasan Tambahan Request <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                              id={`reason_${shift.id}`}
+                              value={slotData.reason || ''}
+                              onChange={(e) => handleSlotChange(shift.id, 'reason', e.target.value)}
+                              className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
+                              placeholder="Jelaskan mengapa Anda membutuhkan tambahan manpower"
+                              required
+                            />
+                          </div>
+                        )}
+
                         {/* Time Fields - Only shown when requested_amount > 0 */}
                         {showGenderFields && (
                           <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                               <div>
                                 <label htmlFor={`start_time_${shift.id}`} className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                                  Waktu Mulai <span className="text-red-500">*</span>
+                                  Waktu Mulai
                                 </label>
                                 <input
                                   type="time"
@@ -296,7 +430,6 @@ export default function Create({ subSections, shifts }) {
                                   value={slotData.start_time || ''}
                                   onChange={(e) => handleSlotChange(shift.id, 'start_time', e.target.value)}
                                   className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.start_time`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                                  required={isTimeRequired}
                                 />
                                 {errors[`time_slots.${shift.id}.start_time`] && (
                                   <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors[`time_slots.${shift.id}.start_time`]}</p>
@@ -304,7 +437,7 @@ export default function Create({ subSections, shifts }) {
                               </div>
                               <div>
                                 <label htmlFor={`end_time_${shift.id}`} className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                                  Waktu Selesai <span className="text-red-500">*</span>
+                                  Waktu Selesai
                                 </label>
                                 <input
                                   type="time"
@@ -312,7 +445,6 @@ export default function Create({ subSections, shifts }) {
                                   value={slotData.end_time || ''}
                                   onChange={(e) => handleSlotChange(shift.id, 'end_time', e.target.value)}
                                   className={`w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors[`time_slots.${shift.id}.end_time`] ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                                  required={isTimeRequired}
                                 />
                                 {errors[`time_slots.${shift.id}.end_time`] && (
                                   <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors[`time_slots.${shift.id}.end_time`]}</p>
@@ -379,37 +511,97 @@ export default function Create({ subSections, shifts }) {
                       </div>
                     );
                   })}
-                  {/* General time_slots error */}
-                  {errors.time_slots && typeof errors.time_slots === 'string' && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.time_slots}</p>}
                 </div>
 
-                {/* Submit Button */}
-                <div className="flex justify-end items-center pt-2">
-                  <button
-                    type="submit"
-                    className="inline-flex justify-center bg-indigo-600 hover:bg-indigo-700 disabled:opacity-75 shadow-sm px-4 sm:px-6 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 font-medium text-white text-sm disabled:cursor-not-allowed"
-                    disabled={processing}
-                  >
-                    {processing ? 'Menyimpan...' : 'Submit Request'}
-                  </button>
-                </div>
+                {/* Duplicate Requests Warning */}
+                {showDuplicateWarning && (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-500 p-4 rounded">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-yellow-400 dark:text-yellow-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                          Permintaan serupa sudah ada
+                        </h3>
+                        <div className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                          <p>
+                            Kami menemukan permintaan yang sama untuk shift berikut:
+                          </p>
+                          <ul className="list-disc pl-5 mt-1">
+                            {duplicateRequests.map(req => (
+                              <li key={req.id}>
+                                {req.shift_name} - {req.requested_amount} orang
+                              </li>
+                            ))}
+                          </ul>
+                          <p className="mt-2">
+                            Silakan berikan alasan untuk permintaan tambahan ini.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex justify-end space-x-3">
+                      <button
+                        type="button"
+                        onClick={() => setShowDuplicateWarning(false)}
+                        className="inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-600 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={processSubmission}
+                        className="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-yellow-600 text-base font-medium text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 sm:text-sm"
+                      >
+                        Submit Permintaan Tambahan
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button - Only show if no duplicates or warning dismissed */}
+                {!showDuplicateWarning && (
+                  <div className="flex justify-end items-center pt-2">
+                    <button
+                      type="submit"
+                      className={`inline-flex justify-center bg-indigo-600 hover:bg-indigo-700 disabled:opacity-75 shadow-sm px-4 sm:px-6 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 font-medium text-white text-sm disabled:cursor-not-allowed ${processing ? 'opacity-75' : ''
+                        }`}
+                      disabled={processing}
+                    >
+                      {processing ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Menyimpan...
+                        </>
+                      ) : (
+                        'Submit Request'
+                      )}
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sub-section Selection Modal - Centered */}
+      {/* Sub-section Selection Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
           <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 transition-opacity" onClick={() => setIsModalOpen(false)}></div>
-          
+
           <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
             <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
                 Pilih Sub Section
               </h3>
-              
+
               {/* Search input */}
               <div className="mb-4">
                 <input
@@ -421,7 +613,7 @@ export default function Create({ subSections, shifts }) {
                   autoFocus
                 />
               </div>
-              
+
               {/* Sub-sections list */}
               <div className="max-h-96 overflow-y-auto">
                 {Object.keys(filteredSections).length > 0 ? (

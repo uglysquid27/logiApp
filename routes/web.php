@@ -119,6 +119,8 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         ->name('manpower-requests.revision.edit');
         Route::delete('/manpower-requests/{manpowerRequest}', [ManPowerRequestController::class, 'destroy'])
         ->name('manpower-requests.destroy');
+        Route::post('/manpower-requests/check-duplicates', [ManPowerRequestController::class, 'checkDuplicates'])
+        ->name('manpower-requests.check-duplicates');
 
     // Additional dashboard routes
     Route::get('/dashboard/requests/{month}/{status}', [DashboardController::class, 'getManpowerRequestsByMonth'])

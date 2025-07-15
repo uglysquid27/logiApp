@@ -19,21 +19,21 @@ class ManPowerRequest extends Model
         'male_count',
         'female_count',
         'status',
-        'fulfilled_by'
+        'fulfilled_by',
+        'reason', // Added
+        'is_additional' // Added
     ];
 
-    // In your ManPowerRequest model
-protected $casts = [
-    'date' => 'date',
-];
+    protected $casts = [
+        'date' => 'date',
+        'is_additional' => 'boolean', // Added
+    ];
 
-    // Add this relationship
     public function fulfilledBy()
     {
         return $this->belongsTo(User::class, 'fulfilled_by');
     }
 
-    // Existing relationships...
     public function subSection()
     {
         return $this->belongsTo(SubSection::class);
@@ -48,4 +48,31 @@ protected $casts = [
     {
         return $this->hasMany(Schedule::class);
     }
+
+    // Helper method to check if this is an additional request
+    public function isAdditional(): bool
+    {
+        return $this->is_additional;
+    }
+
+    // Scope for additional requests
+    public function scopeAdditional($query)
+    {
+        return $query->where('is_additional', true);
+    }
+
+    // Scope for original requests
+    public function scopeOriginal($query)
+    {
+        return $query->where('is_additional', false);
+    }
+
+    public static function hasExistingRequest($subSectionId, $shiftId, $date)
+{
+    return static::where('sub_section_id', $subSectionId)
+        ->where('shift_id', $shiftId)
+        ->whereDate('date', $date)
+        ->where('status', '!=', 'rejected')
+        ->exists();
+}
 }
