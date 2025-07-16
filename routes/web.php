@@ -138,7 +138,8 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         ->name('lunch-coupons.index');
 
     // Shift routes
-    Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
+    Route::resource('shifts', ShiftController::class);
+    // Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
 
     // Admin permit routes
     Route::get('/admin/permits', [AdminPermitController::class, 'index'])->name('admin.permits.index');
