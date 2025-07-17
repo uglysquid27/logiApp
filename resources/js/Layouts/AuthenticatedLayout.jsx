@@ -145,6 +145,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <span className="block">Employees</span>
                             </NavLink>
                             <NavLink
+                                href={route('employee-blind-test.index')}
+                                active={route().current('employee-blind-test.index')}
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                            >
+                                <span className="block">Blind Tests</span>
+                            </NavLink>
+                            <NavLink
                                 href={route('shifts.index')}
                                 active={route().current('shifts.index')}
                                 className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"

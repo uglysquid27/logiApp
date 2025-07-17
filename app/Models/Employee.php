@@ -39,6 +39,12 @@ class Employee extends Authenticatable
     {
         return $query->whereNull('deactivated_at');
     }
+
+    // In App\Models\Employee
+public function blindTests()
+{
+    return $this->hasMany(BlindTest::class);
+}
     
     public function scopeInactive($query)
     {

@@ -12,6 +12,7 @@ use App\Http\Controllers\ManPowerRequestController;
 use App\Http\Controllers\ManPowerRequestFulfillmentController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmployeeBlindTestController;
 use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\LunchCouponController;
 use App\Http\Middleware\PreventBackAfterLogout;
@@ -147,6 +148,22 @@ Route::get('/dashboard/schedules/sub-section/{subSectionId}', [DashboardControll
     // Lunch routes
     Route::get('/lunch-coupons', [LunchCouponController::class, 'index'])
         ->name('lunch-coupons.index');
+
+     // Blind Test Routes
+     Route::get('/employee-blind-test', [EmployeeBlindTestController::class, 'index'])
+     ->name('employee-blind-test.index');
+     
+ Route::get('/employee-blind-test/create/{employee}', [EmployeeBlindTestController::class, 'create'])
+     ->name('employee-blind-test.create');
+     
+ Route::post('/employee-blind-test/store/{employee}', [EmployeeBlindTestController::class, 'store'])
+     ->name('employee-blind-test.store');
+     
+ Route::get('/employee-blind-test/{employee}', [EmployeeBlindTestController::class, 'show'])
+     ->name('employee-blind-test.show');
+     
+ Route::delete('/employee-blind-test/{blindTest}', [EmployeeBlindTestController::class, 'destroy'])
+     ->name('employee-blind-test.destroy');
 
     // Shift routes
     Route::resource('shifts', ShiftController::class);
