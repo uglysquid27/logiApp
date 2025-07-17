@@ -25,8 +25,8 @@ class ManPowerRequest extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
-        'is_additional' => 'boolean', // Added
+        'date' => 'date:Y-m-d', // Explicit format
+        'is_additional' => 'boolean',
     ];
 
     public function fulfilledBy()

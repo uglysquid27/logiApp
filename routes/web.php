@@ -127,6 +127,17 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         ->name('dashboard.requests.byMonth');
     Route::get('/dashboard/schedules/by-subsection/{subSectionId}', [DashboardController::class, 'getSchedulesBySubSection'])
         ->name('dashboard.schedules.bySubSection');
+        Route::get('/dashboard/manpower-requests/filtered', [DashboardController::class, 'getFilteredManpowerRequests'])
+    ->name('dashboard.manpower.requests.filtered');
+
+    Route::get('/dashboard/employee-assignments/filtered', [DashboardController::class, 'getFilteredEmployeeAssignments'])
+    ->name('dashboard.employee.assignments.filtered');
+
+Route::get('/dashboard/schedules/sub-section/{subSectionId}', [DashboardController::class, 'getSchedulesBySubSection'])
+    ->name('dashboard.schedules.bySubSection');
+
+    Route::get('/dashboard/requests/{periodType}/{period}/{status}', [DashboardController::class, 'getManpowerRequestsByPeriod'])
+    ->name('dashboard.requests.byPeriod');
 
     // Schedule routes
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
