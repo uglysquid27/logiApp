@@ -13,7 +13,7 @@ class EmployeeBlindTestController extends Controller
     public function index(Request $request)
     {
         $query = Employee::with(['blindTests' => function($query) {
-            $query->orderBy('test_date', 'desc'); 
+            $query->orderBy('test_date', 'desc');
         }])->active();
 
         if ($request->has('search')) {
@@ -44,7 +44,7 @@ class EmployeeBlindTestController extends Controller
     {
         $validated = $request->validate([
             'test_date' => 'required|date',
-            'result' => 'required|string|max:255'
+            'result' => 'required|numeric|min:0|max:100'
         ]);
 
         $employee->blindTests()->create($validated);

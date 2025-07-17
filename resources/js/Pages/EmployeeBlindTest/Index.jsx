@@ -19,22 +19,10 @@ export default function Index() {
     });
   };
 
-  // Function to get the latest test result
-  const getLatestResult = (blindTests) => {
-    if (!blindTests || blindTests.length === 0) return null;
-    
-    // Sort by test_date descending to get the latest
-    const sortedTests = [...blindTests].sort((a, b) => 
-      new Date(b.test_date) - new Date(a.test_date)
-    );
-    
-    return sortedTests[0];
-  };
-
   return (
     <AuthenticatedLayout
       header={
-        <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-xl leading-tight">
+        <h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
           Blind Test Management
         </h2>
       }
@@ -78,7 +66,7 @@ export default function Index() {
                       </tr>
                     ) : (
                       employees.data.map((employee) => {
-                        const latestTest = getLatestResult(employee.blind_tests);
+                        const latestTest = employee.blind_tests[0]; // First item is latest due to backend sorting
                         
                         return (
                           <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
@@ -125,7 +113,6 @@ export default function Index() {
                 </table>
               </div>
 
-              {/* Pagination */}
               {employees.links.length > 3 && (
                 <div className="flex flex-wrap justify-center sm:justify-end gap-2 mt-6">
                   {employees.links.map((link, index) => (
