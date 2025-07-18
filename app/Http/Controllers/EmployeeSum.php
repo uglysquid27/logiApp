@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Section;
 use App\Models\SubSection;
+use App\Models\BlindTest; // Import the BlindTest model
 use Inertia\Inertia;
 use Inertia\Response;
 use Carbon\Carbon;
@@ -33,7 +34,10 @@ class EmployeeSum extends Controller
             ->with(['schedules' => function ($query) {
                 $query->whereDate('date', Carbon::today())
                     ->with('manPowerRequest.shift');
-            }, 'subSections.section']);
+            }, 'subSections.section'])
+            ->with(['blindTests' => function ($query) { // Eager load the latest blind test result
+                $query->orderBy('test_date', 'desc')->limit(1);
+            }]);
 
         // Apply Filters
         if ($request->has('status') && $request->input('status') !== 'All') {
@@ -75,7 +79,7 @@ class EmployeeSum extends Controller
                         return $schedule->manPowerRequest->shift->hours ?? 0;
                     });
 
-                // Rating logic
+                // Rating logic (existing calculation)
                 $weeklyScheduleCount = $employee->schedules_count_weekly;
                 $rating = match (true) {
                     $weeklyScheduleCount >= 5 => 5,
@@ -86,6 +90,7 @@ class EmployeeSum extends Controller
                     default => 0,
                 };
 
+                // Base working day weight from existing rating logic
                 $workingDayWeight = match ($rating) {
                     5 => 15,
                     4 => 45,
@@ -95,12 +100,27 @@ class EmployeeSum extends Controller
                     default => 165,
                 };
 
+                // --- Start Blind Test KPI Contribution Calculation ---
+                $blindTestKpiContribution = 0;
+                // Get the eager loaded latest blind test result
+                $latestBlindTest = $employee->blindTests->first();
+
+                if ($latestBlindTest) {
+                    // Directly add the actual value of blind test (0-100) to workload
+                    $blindTestKpiContribution = $latestBlindTest->result;
+                }
+                // --- End Blind Test KPI Contribution Calculation ---
+
+                // Add the calculated blind test contribution to the existing workingDayWeight
+                $workingDayWeight += $blindTestKpiContribution;
+
                 $employee->setAttribute('calculated_rating', $rating);
                 $employee->setAttribute('working_day_weight', $workingDayWeight);
                 $employee->setAttribute('total_assigned_hours', $totalWorkingHours);
 
-                // Remove schedules from response to reduce payload
+                // Remove schedules and blindTests from response to reduce payload
                 unset($employee->schedules);
+                unset($employee->blindTests);
 
                 return $employee;
             });
@@ -132,7 +152,7 @@ class EmployeeSum extends Controller
             return redirect()->back()->with('success', 'All employee statuses reset successfully.');
         } catch (\Exception $e) {
             Log::error('Error resetting employee statuses: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to reset statuses. Please try again.');
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat mereset status karyawan. Silakan coba lagi.');
         }
     }
 
@@ -140,7 +160,7 @@ class EmployeeSum extends Controller
     {
         $sections = Section::all();
         $subSections = SubSection::all();
-        
+
         $uniqueSections = $sections->pluck('name')->unique()->prepend('All');
         $uniqueSubSections = $subSections->pluck('name')->unique()->prepend('All');
 
@@ -178,7 +198,7 @@ class EmployeeSum extends Controller
             $subSectionIds = SubSection::whereIn('name', $validated['sub_sections'])
                 ->pluck('id')
                 ->toArray();
-            
+
             $employee->subSections()->attach($subSectionIds);
         }
 
@@ -196,7 +216,7 @@ class EmployeeSum extends Controller
     {
         $sections = Section::all();
         $subSections = SubSection::all();
-        
+
         $uniqueSections = $sections->pluck('name')->unique()->prepend('All');
         $uniqueSubSections = $subSections->pluck('name')->unique()->prepend('All');
 
@@ -240,7 +260,7 @@ class EmployeeSum extends Controller
             $subSectionIds = SubSection::whereIn('name', $validated['sub_sections'])
                 ->pluck('id')
                 ->toArray();
-            
+
             $employee->subSections()->sync($subSectionIds);
         } else {
             $employee->subSections()->detach();
@@ -258,11 +278,11 @@ class EmployeeSum extends Controller
                 'time' => now(),
                 'request_params' => $request->all()
             ]);
-    
+
             $query = Employee::where('status', 'deactivated')
                 ->orWhereNotNull('deactivated_at')
-                ->with(['subSections.section']); // Removed deactivatedBy
-    
+                ->with(['subSections.section']);
+
             if ($request->has('search') && $request->input('search') !== null) {
                 $searchTerm = $request->input('search');
                 $query->where(function($q) use ($searchTerm) {
@@ -270,21 +290,21 @@ class EmployeeSum extends Controller
                       ->orWhere('nik', 'like', '%'.$searchTerm.'%');
                 });
             }
-    
+
             $employees = $query->paginate(10);
-    
+
             return Inertia::render('EmployeeAttendance/Inactive', [
                 'employees' => $employees,
                 'filters' => $request->only('search')
             ]);
-    
+
         } catch (\Exception $e) {
             Log::error('Failed to retrieve inactive employees', [
                 'error' => $e->getMessage(),
                 'stack_trace' => $e->getTraceAsString(),
                 'user_id' => auth()->id()
             ]);
-    
+
             return back()->with('error', 'Failed to load inactive employees. Please try again.');
         }
     }
@@ -303,24 +323,24 @@ class EmployeeSum extends Controller
     }
 
     public function activate(Employee $employee)
-{
-    try {
-        DB::transaction(function () use ($employee) {
-            $employee->update([
-                'status' => 'available',
-                'deactivated_at' => null,
-                'deactivated_by' => null,
-                'deactivation_reason' => null,
-                'deactivation_notes' => null
-            ]);
-        });
+    {
+        try {
+            DB::transaction(function () use ($employee) {
+                $employee->update([
+                    'status' => 'available',
+                    'deactivated_at' => null,
+                    'deactivated_by' => null,
+                    'deactivation_reason' => null,
+                    'deactivation_notes' => null
+                ]);
+            });
 
-        return redirect()->back()->with('success', 'Employee activated successfully.');
-    } catch (\Exception $e) {
-        Log::error('Failed to activate employee: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Failed to activate employee.');
+            return redirect()->back()->with('success', 'Employee activated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to activate employee: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to activate employee.');
+        }
     }
-}
 
     public function processDeactivation(Request $request, Employee $employee)
     {
@@ -328,29 +348,28 @@ class EmployeeSum extends Controller
             'deactivation_reason' => 'required|string|max:255',
             'deactivation_notes' => 'nullable|string'
         ]);
-
+    
         $employee->update([
             'status' => 'deactivated',
             'deactivation_reason' => $validated['deactivation_reason'],
-            'deactivation_notes' => $validated['deactivation_notes'],
+            'deactivation_notes' => $validated['deactivation_notes'], // Fixed this line
             'deactivated_at' => now(),
             'deactivated_by' => auth()->id()
         ]);
-
+    
         return redirect()->route('employee-attendance.inactive')
             ->with('success', 'Employee deactivated successfully');
     }
-
+    
     public function destroy(Employee $employee)
     {
         if ($employee->status !== 'deactivated') {
             return back()->with('error', 'Only deactivated employees can be deleted');
         }
-
+    
         $employee->delete();
-
+    
         return redirect()->route('employee-attendance.inactive')
             ->with('success', 'Employee permanently deleted');
     }
-
 }

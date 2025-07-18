@@ -15,10 +15,58 @@ import 'dayjs/locale/id';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn, staggerContainer, slideIn, cardVariants } from '@/Animations';
+import { Resizable } from 'react-resizable';
+import 'react-resizable/css/styles.css';
 
 dayjs.locale('id');
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+
+// Improved Resizable component wrapper
+const ResizableBox = ({ 
+    width, 
+    height = 400, 
+    onResize, 
+    children, 
+    minConstraints = [300, 200], 
+    maxConstraints = [Infinity, Infinity],
+    className = '' 
+}) => {
+    return (
+        <Resizable
+            width={width}
+            height={height}
+            onResize={onResize}
+            resizeHandles={['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']}
+            minConstraints={minConstraints}
+            maxConstraints={maxConstraints}
+            handle={(handleAxis, ref) => (
+                <div
+                    ref={ref}
+                    className={`react-resizable-handle react-resizable-handle-${handleAxis}`}
+                    style={{
+                        [handleAxis.includes('e') ? 'width' : 'height']: '20px',
+                        [handleAxis.includes('e') ? 'right' : 'bottom']: '-10px',
+                        [handleAxis.includes('s') ? 'height' : 'width']: '20px',
+                        backgroundColor: 'transparent',
+                        zIndex: 10,
+                    }}
+                />
+            )}
+        >
+            <div 
+                style={{ 
+                    width: `${width}px`, 
+                    height: `${height}px`,
+                    position: 'relative' 
+                }} 
+                className={className}
+            >
+                {children}
+            </div>
+        </Resizable>
+    );
+};
 
 class ErrorBoundary extends React.Component {
     state = { hasError: false };
@@ -92,7 +140,75 @@ const DetailModal = ({
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
                 >
-                    {/* Rest of your DetailModal JSX remains the same */}
+                    <motion.div
+                        initial={{ y: -20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 20, opacity: 0 }}
+                        className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col"
+                    >
+                        <div className="px-6 py-4 border-b flex justify-between items-center">
+                            <h3 className="text-lg font-medium">{title}</h3>
+                            <button
+                                onClick={onClose}
+                                className="text-gray-500 hover:text-gray-700"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="p-6 overflow-auto flex-grow">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        {columns.map((column, idx) => (
+                                            <th
+                                                key={idx}
+                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                {column.header}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {items.length > 0 ? (
+                                        items.map((item, itemIdx) => (
+                                            <tr key={itemIdx} className="hover:bg-gray-50">
+                                                {columns.map((column, colIdx) => (
+                                                    <td key={colIdx} className="px-4 py-4 whitespace-nowrap text-sm">
+                                                        {column.render ? column.render(item) : item[column.field]}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={columns.length} className="px-4 py-4 text-center text-sm text-gray-500">
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        {isPaginated && (
+                            <div className="px-6 py-3 border-t flex justify-between items-center bg-gray-50">
+                                <div className="flex space-x-2">
+                                    {paginationLinks.map((link, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => onFilterOrPaginate(link.url, null)}
+                                            disabled={!link.url || link.active}
+                                            className={`px-3 py-1 rounded text-sm ${link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border'} ${!link.url ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                                        >
+                                            {link.label.replace('&laquo;', '«').replace('&raquo;', '»')}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </motion.div>
                 </motion.div>
             )}
         </AnimatePresence>
@@ -110,7 +226,25 @@ export default function Dashboard() {
         sections = []
     } = props;
 
-    // State declarations
+    // State for resizable components with improved sizing
+    const [componentSizes, setComponentSizes] = useState(() => {
+        // Try to load sizes from localStorage if available
+        if (typeof window !== 'undefined') {
+            const savedSizes = localStorage.getItem('dashboardComponentSizes');
+            if (savedSizes) {
+                return JSON.parse(savedSizes);
+            }
+        }
+
+        // Default sizes
+        return {
+            chart1: { width: 600, height: 400 },
+            chart2: { width: 600, height: 400 },
+            table1: { width: 600, height: 400 },
+            table2: { width: 600, height: 400 }
+        };
+    });
+
     const [filters, setFilters] = useState({
         dateRange: {
             from: dayjs().startOf('month').format('YYYY-MM-DD'),
@@ -138,7 +272,42 @@ export default function Dashboard() {
         url: ''
     });
 
-    // Reset filters function
+    // Save sizes to localStorage when they change
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('dashboardComponentSizes', JSON.stringify(componentSizes));
+        }
+    }, [componentSizes]);
+
+    // Handle window resize while maintaining user-adjusted sizes
+    useEffect(() => {
+        const handleWindowResize = () => {
+            // Don't reset sizes on resize, just ensure they fit within the window
+            const maxWidth = window.innerWidth - 40;
+            setComponentSizes(prev => ({
+                chart1: { 
+                    width: Math.min(prev.chart1.width, maxWidth), 
+                    height: prev.chart1.height 
+                },
+                chart2: { 
+                    width: Math.min(prev.chart2.width, maxWidth), 
+                    height: prev.chart2.height 
+                },
+                table1: { 
+                    width: Math.min(prev.table1.width, maxWidth), 
+                    height: prev.table1.height 
+                },
+                table2: { 
+                    width: Math.min(prev.table2.width, maxWidth), 
+                    height: prev.table2.height 
+                }
+            }));
+        };
+
+        window.addEventListener('resize', handleWindowResize);
+        return () => window.removeEventListener('resize', handleWindowResize);
+    }, []);
+
     const resetFilters = () => {
         setFilters({
             dateRange: {
@@ -154,7 +323,6 @@ export default function Dashboard() {
         setEmployeeAssignmentChartData(initialEmployeeAssignmentChartData);
     };
 
-    // Helper functions
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = dayjs(dateString);
@@ -336,7 +504,11 @@ export default function Dashboard() {
             duration: 1000,
             easing: 'easeOutQuart'
         },
-        onClick
+        onClick,
+        responsiveAnimationDuration: 0,
+        onResize: (chart, size) => {
+            chart.resize();
+        }
     });
 
     const cardData = [
@@ -406,12 +578,56 @@ export default function Dashboard() {
         }
     ];
 
+    // Handle resize for each component
+    const handleResize = (component) => (e, { size }) => {
+        setComponentSizes(prev => ({
+            ...prev,
+            [component]: { 
+                width: Math.max(300, size.width),
+                height: Math.max(200, size.height)
+            }
+        }));
+    };
+
     return (
         <ErrorBoundary>
             <AuthenticatedLayout
                 header={<h2 className="text-xl font-semibold">Dashboard</h2>}
             >
                 <Head title="Dashboard" />
+
+                {/* Add global styles for resizable handles */}
+                <style>{`
+                    .react-resizable-handle {
+                        position: absolute;
+                        opacity: 0;
+                        transition: opacity 0.2s;
+                    }
+                    .react-resizable-handle:hover,
+                    .react-resizable-handle:active {
+                        opacity: 1;
+                        background: rgba(0, 0, 0, 0.1) !important;
+                    }
+                    .react-resizable-handle::after {
+                        content: '';
+                        position: absolute;
+                        width: 16px;
+                        height: 16px;
+                        background: rgba(0, 0, 0, 0.3);
+                        border-radius: 50%;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%, -50%);
+                        display: none;
+                    }
+                    .react-resizable-handle:hover::after,
+                    .react-resizable-handle:active::after {
+                        display: block;
+                    }
+                    .react-resizable {
+                        transition: width 0.2s ease, height 0.2s ease;
+                    }
+                `}</style>
 
                 <motion.div
                     initial="hidden"
@@ -445,248 +661,283 @@ export default function Dashboard() {
                         ))}
                     </motion.div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                        <div className="col-span-full bg-white p-4 rounded-lg shadow">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                <h3 className="text-lg font-medium whitespace-nowrap">Date Range Filter</h3>
-                                <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
-                                    <div className="flex items-center gap-2 min-w-[150px]">
-                                        <label className="text-sm text-gray-600 whitespace-nowrap">From:</label>
-                                        <input
-                                            type="date"
-                                            value={filters.dateRange.from}
-                                            onChange={(e) => setFilters(prev => ({
-                                                ...prev,
-                                                dateRange: { ...prev.dateRange, from: e.target.value }
-                                            }))}
-                                            className="border rounded px-2 py-1 text-sm w-full"
-                                        />
-                                    </div>
-                                    <div className="flex items-center gap-2 min-w-[150px]">
-                                        <label className="text-sm text-gray-600 whitespace-nowrap">To:</label>
-                                        <input
-                                            type="date"
-                                            value={filters.dateRange.to}
-                                            onChange={(e) => setFilters(prev => ({
-                                                ...prev,
-                                                dateRange: { ...prev.dateRange, to: e.target.value }
-                                            }))}
-                                            className="border rounded px-2 py-1 text-sm w-full"
-                                        />
-                                    </div>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => {
-                                            applyFilters('manpowerRequests');
-                                            applyFilters('employeeAssignments');
-                                        }}
-                                        className="bg-indigo-600 text-white px-3 py-1 rounded text-sm whitespace-nowrap h-[34px]"
-                                    >
-                                        Apply Filters
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={resetFilters}
-                                        className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm whitespace-nowrap h-[34px]"
-                                    >
-                                        Reset
-                                    </motion.button>
+                    <div className="bg-white p-4 rounded-lg shadow mb-8">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <h3 className="text-lg font-medium whitespace-nowrap">Date Range Filter</h3>
+                            <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+                                <div className="flex items-center gap-2 min-w-[150px]">
+                                    <label className="text-sm text-gray-600 whitespace-nowrap">From:</label>
+                                    <input
+                                        type="date"
+                                        value={filters.dateRange.from}
+                                        onChange={(e) => setFilters(prev => ({
+                                            ...prev,
+                                            dateRange: { ...prev.dateRange, from: e.target.value }
+                                        }))}
+                                        className="border rounded px-2 py-1 text-sm w-full"
+                                    />
                                 </div>
+                                <div className="flex items-center gap-2 min-w-[150px]">
+                                    <label className="text-sm text-gray-600 whitespace-nowrap">To:</label>
+                                    <input
+                                        type="date"
+                                        value={filters.dateRange.to}
+                                        onChange={(e) => setFilters(prev => ({
+                                            ...prev,
+                                            dateRange: { ...prev.dateRange, to: e.target.value }
+                                        }))}
+                                        className="border rounded px-2 py-1 text-sm w-full"
+                                    />
+                                </div>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => {
+                                        applyFilters('manpowerRequests');
+                                        applyFilters('employeeAssignments');
+                                    }}
+                                    className="bg-indigo-600 text-white px-3 py-1 rounded text-sm whitespace-nowrap h-[34px]"
+                                >
+                                    Apply Filters
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={resetFilters}
+                                    className="bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm whitespace-nowrap h-[34px]"
+                                >
+                                    Reset
+                                </motion.button>
                             </div>
                         </div>
-
-                        <motion.div
-                            variants={fadeIn('right', 'tween', 0.2, 1)}
-                            className="bg-white p-4 rounded-lg shadow"
-                        >
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                                <h3 className="text-lg font-medium whitespace-nowrap">Manpower Request Trends</h3>
-                            </div>
-                            <div className="h-64">
-                                {manpowerRequestChartData.labels.length > 0 ? (
-                                    <Bar
-                                        data={manpowerRequestChartData}
-                                        options={getChartOptions((e, elements) => {
-                                            if (elements.length) {
-                                                handleManpowerRequestBarClick(elements[0].datasetIndex, elements[0].index);
-                                            }
-                                        })}
-                                    />
-                                ) : (
-                                    <div className="h-full flex items-center justify-center text-gray-500">
-                                        No data available for selected date range
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            variants={fadeIn('left', 'tween', 0.4, 1)}
-                            className="bg-white p-4 rounded-lg shadow"
-                        >
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                                <h3 className="text-lg font-medium whitespace-nowrap">Employee Assignments</h3>
-                                <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
-                                    <select
-                                        value={filters.section || ''}
-                                        onChange={(e) => {
-                                            const newSection = e.target.value || null;
-                                            setFilters(prev => ({
-                                                ...prev,
-                                                section: newSection
-                                            }));
-                                        }}
-                                        className="border rounded px-2 py-1 text-sm min-w-[150px] h-[34px]"
-                                    >
-                                        <option value="">All Sections</option>
-                                        {sections?.map(section => (
-                                            <option key={section.id} value={section.id}>
-                                                {section.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="h-64">
-                                {employeeAssignmentChartData.labels.length > 0 ? (
-                                    <Bar
-                                        data={employeeAssignmentChartData}
-                                        options={getChartOptions((e, elements) => {
-                                            if (elements.length) {
-                                                handleEmployeeAssignmentBarClick(elements[0].index);
-                                            }
-                                        })}
-                                    />
-                                ) : (
-                                    <div className="h-full flex items-center justify-center text-gray-500">
-                                        No data available for selected filters
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
                     </div>
 
-                    <motion.div
-                        variants={staggerContainer}
-                        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
-                    >
-                        <motion.div
-                            variants={slideIn('left', 'tween', 0.2, 1)}
+                    <div className="flex flex-wrap gap-6 mb-8">
+                        {/* Manpower Request Trends */}
+                        <ResizableBox
+                            width={componentSizes.chart1.width}
+                            height={componentSizes.chart1.height}
+                            onResize={handleResize('chart1')}
+                            minConstraints={[300, 200]}
                             className="bg-white p-4 rounded-lg shadow"
                         >
-                            <h3 className="text-lg font-medium mb-4">Recent Pending Requests</h3>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {recentPendingRequests.length > 0 ? (
-                                            recentPendingRequests.map((request, index) => (
-                                                <motion.tr
-                                                    key={request.id}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: index * 0.05 }}
-                                                    className="hover:bg-gray-50"
-                                                >
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(request.date)}</td>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{request.sub_section?.name || 'N/A'}</td>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{request.shift?.name || 'N/A'}</td>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{request.requested_amount}</td>
-                                                </motion.tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
-                                                    No pending requests
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </motion.div>
+                            <motion.div
+                                variants={fadeIn('right', 'tween', 0.2, 1)}
+                                className="h-full flex flex-col"
+                            >
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                                    <h3 className="text-lg font-medium whitespace-nowrap">Manpower Request Trends</h3>
+                                </div>
+                                <div className="flex-grow">
+                                    {manpowerRequestChartData.labels.length > 0 ? (
+                                        <Bar
+                                            data={manpowerRequestChartData}
+                                            options={getChartOptions((e, elements) => {
+                                                if (elements.length) {
+                                                    handleManpowerRequestBarClick(elements[0].datasetIndex, elements[0].index);
+                                                }
+                                            })}
+                                            redraw={true}
+                                        />
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center text-gray-500">
+                                            No data available for selected date range
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </ResizableBox>
 
-                        <motion.div
-                            variants={slideIn('right', 'tween', 0.4, 1)}
+                        {/* Employee Assignments */}
+                        <ResizableBox
+                            width={componentSizes.chart2.width}
+                            height={componentSizes.chart2.height}
+                            onResize={handleResize('chart2')}
+                            minConstraints={[300, 200]}
                             className="bg-white p-4 rounded-lg shadow"
                         >
-                            <h3 className="text-lg font-medium mb-4">Upcoming Schedules</h3>
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
-                                        <tr>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
-                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {upcomingSchedules.length > 0 ? (
-                                            upcomingSchedules.map((schedule, index) => (
-                                                <motion.tr
-                                                    key={schedule.id}
-                                                    initial={{ opacity: 0, y: 20 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: index * 0.05 }}
-                                                    className="hover:bg-gray-50"
-                                                >
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(schedule.date)}</td>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.employee?.name || 'N/A'}</td>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.sub_section?.name || 'N/A'}</td>
-                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.man_power_request?.shift?.name || 'N/A'}</td>
-                                                </motion.tr>
-                                            ))
-                                        ) : (
+                            <motion.div
+                                variants={fadeIn('left', 'tween', 0.4, 1)}
+                                className="h-full flex flex-col"
+                            >
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                                    <h3 className="text-lg font-medium whitespace-nowrap">Employee Assignments</h3>
+                                    <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+                                        <select
+                                            value={filters.section || ''}
+                                            onChange={(e) => {
+                                                const newSection = e.target.value || null;
+                                                setFilters(prev => ({
+                                                    ...prev,
+                                                    section: newSection
+                                                }));
+                                            }}
+                                            className="border rounded px-2 py-1 text-sm min-w-[150px] h-[34px]"
+                                        >
+                                            <option value="">All Sections</option>
+                                            {sections?.map(section => (
+                                                <option key={section.id} value={section.id}>
+                                                    {section.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="flex-grow">
+                                    {employeeAssignmentChartData.labels.length > 0 ? (
+                                        <Bar
+                                            data={employeeAssignmentChartData}
+                                            options={getChartOptions((e, elements) => {
+                                                if (elements.length) {
+                                                    handleEmployeeAssignmentBarClick(elements[0].index);
+                                                }
+                                            })}
+                                            redraw={true}
+                                        />
+                                    ) : (
+                                        <div className="h-full flex items-center justify-center text-gray-500">
+                                            No data available for selected filters
+                                        </div>
+                                    )}
+                                </div>
+                            </motion.div>
+                        </ResizableBox>
+                    </div>
+
+                    <div className="flex flex-wrap gap-6">
+                        {/* Recent Pending Requests */}
+                        <ResizableBox
+                            width={componentSizes.table1.width}
+                            height={componentSizes.table1.height}
+                            onResize={handleResize('table1')}
+                            minConstraints={[300, 200]}
+                            className="bg-white p-4 rounded-lg shadow"
+                        >
+                            <motion.div
+                                variants={slideIn('left', 'tween', 0.2, 1)}
+                                className="h-full flex flex-col"
+                            >
+                                <h3 className="text-lg font-medium mb-4">Recent Pending Requests</h3>
+                                <div className="overflow-x-auto flex-grow">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
                                             <tr>
-                                                <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
-                                                    No upcoming schedules
-                                                </td>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </motion.div>
-                    </motion.div>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {recentPendingRequests.length > 0 ? (
+                                                recentPendingRequests.map((request, index) => (
+                                                    <motion.tr
+                                                        key={request.id}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                        className="hover:bg-gray-50"
+                                                    >
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(request.date)}</td>
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{request.sub_section?.name || 'N/A'}</td>
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{request.shift?.name || 'N/A'}</td>
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{request.requested_amount}</td>
+                                                    </motion.tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
+                                                        No pending requests
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </motion.div>
+                        </ResizableBox>
+
+                        {/* Upcoming Schedules */}
+                        <ResizableBox
+                            width={componentSizes.table2.width}
+                            height={componentSizes.table2.height}
+                            onResize={handleResize('table2')}
+                            minConstraints={[300, 200]}
+                            className="bg-white p-4 rounded-lg shadow"
+                        >
+                            <motion.div
+                                variants={slideIn('right', 'tween', 0.4, 1)}
+                                className="h-full flex flex-col"
+                            >
+                                <h3 className="text-lg font-medium mb-4">Upcoming Schedules</h3>
+                                <div className="overflow-x-auto flex-grow">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {upcomingSchedules.length > 0 ? (
+                                                upcomingSchedules.map((schedule, index) => (
+                                                    <motion.tr
+                                                        key={schedule.id}
+                                                        initial={{ opacity: 0, y: 20 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: index * 0.05 }}
+                                                        className="hover:bg-gray-50"
+                                                    >
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(schedule.date)}</td>
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.employee?.name || 'N/A'}</td>
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.sub_section?.name || 'N/A'}</td>
+                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.man_power_request?.shift?.name || 'N/A'}</td>
+                                                    </motion.tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
+                                                        No upcoming schedules
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </motion.div>
+                        </ResizableBox>
+                    </div>
+
+                    <DetailModal
+                        isOpen={modalState.open}
+                        onClose={() => setModalState(prev => ({ ...prev, open: false }))}
+                        title={modalState.title}
+                        data={modalState.data}
+                        columns={modalState.columns}
+                        formatDate={formatDateTime}
+                        onFilterOrPaginate={(url, query) => {
+                            return fetchModalData(url, query).then(data => {
+                                setModalState(prev => ({ ...prev, data }));
+                            });
+                        }}
+                    />
+
+                    <DetailModal
+                        isOpen={chartModalState.open}
+                        onClose={() => setChartModalState(prev => ({ ...prev, open: false }))}
+                        title={chartModalState.title}
+                        data={chartModalState.data}
+                        columns={chartModalState.columns}
+                        formatDate={formatDateTime}
+                        onFilterOrPaginate={(url, query) => {
+                            return fetchModalData(url, query).then(data => {
+                                setChartModalState(prev => ({ ...prev, data }));
+                            });
+                        }}
+                    />
                 </motion.div>
-
-                <DetailModal
-                    isOpen={modalState.open}
-                    onClose={() => setModalState(prev => ({ ...prev, open: false }))}
-                    title={modalState.title}
-                    data={modalState.data}
-                    columns={modalState.columns}
-                    formatDate={formatDateTime}
-                    onFilterOrPaginate={(url, query) => {
-                        return fetchModalData(url, query).then(data => {
-                            setModalState(prev => ({ ...prev, data }));
-                        });
-                    }}
-                />
-
-                <DetailModal
-                    isOpen={chartModalState.open}
-                    onClose={() => setChartModalState(prev => ({ ...prev, open: false }))}
-                    title={chartModalState.title}
-                    data={chartModalState.data}
-                    columns={chartModalState.columns}
-                    formatDate={formatDateTime}
-                    onFilterOrPaginate={(url, query) => {
-                        return fetchModalData(url, query).then(data => {
-                            setChartModalState(prev => ({ ...prev, data }));
-                        });
-                    }}
-                />
             </AuthenticatedLayout>
         </ErrorBoundary>
     );
