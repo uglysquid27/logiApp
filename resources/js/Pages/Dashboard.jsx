@@ -271,6 +271,7 @@ export default function Dashboard() {
         columns: [],
         url: ''
     });
+    
 
     // Save sizes to localStorage when they change
     useEffect(() => {
@@ -279,10 +280,18 @@ export default function Dashboard() {
         }
     }, [componentSizes]);
 
+    useEffect(() => {
+        const handleWindowResize = () => {
+            setComponentSizes(getInitialSizes());
+        };
+
+        window.addEventListener('resize', handleWindowResize);
+        return () => window.removeEventListener('resize', handleWindowResize);
+    }, []);
+
     // Handle window resize while maintaining user-adjusted sizes
     useEffect(() => {
         const handleWindowResize = () => {
-            // Don't reset sizes on resize, just ensure they fit within the window
             const maxWidth = window.innerWidth - 40;
             setComponentSizes(prev => ({
                 chart1: { 

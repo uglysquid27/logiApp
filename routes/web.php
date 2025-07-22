@@ -16,7 +16,7 @@ use App\Http\Controllers\EmployeeBlindTestController;
 use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\LunchCouponController;
 use App\Http\Middleware\PreventBackAfterLogout;
-
+// app/Http/Controllers/LicenseVerificationController.php
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -33,6 +33,22 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// routes/web.php
+use App\Http\Controllers\LicenseVerificationController;
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    // GET route - shows the form
+    Route::get('/license-check', [LicenseVerificationController::class, 'showForm'])
+        ->name('license.check');
+    
+    // POST route - handles form submission
+    Route::post('/verify-license', [LicenseVerificationController::class, 'verify'])
+        ->name('license.verify');
+});
+
+// API-style endpoint
+Route::middleware(['auth:sanctum'])->post('/api/verify-license', 
+    [LicenseVerificationController::class, 'verify']);
 // Authentication routes
 Route::middleware(['prevent.back'])->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
