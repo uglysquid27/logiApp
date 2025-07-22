@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Tesseract from 'tesseract.js';
 import { usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -15,16 +15,22 @@ export default function LicenseDateExtractor() {
     const [manualDate, setManualDate] = useState('');
     const fileInputRef = useRef(null);
 
-    // Patterns for extraction
+    // Enhanced patterns for both registration number and expiry date
     const regNumberPattern = /Reg:\s*([A-Z0-9\/-]+)/i;
     const datePatterns = [
-        /Berlaku\s*s\/d\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,  // "Berlaku s/d 20 SEPTEMBER 2027"
-        /Berlaku\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,          // "Berlaku 20 SEPTEMBER 2027"
-        /(\d{1,2}\s*[A-Z]+\s*20[2-9][0-9])\s*$/im         // Standalone dates
+        /Berlaku\s*(?:s\/d|s\.d|s\sd|\d+)?\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+        /(\d{1,2}\s*[A-Z]+\s*20[2-9][0-9])\s*$/im,
+        /Expire?d?:\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+        /(\d{1,2}\s*[-/]\s*\d{1,2}\s*[-/]\s*20[2-9][0-9])/
     ];
 
-    const triggerFileInput = () => {
-        fileInputRef.current.click();
+    // Reset state when new image is uploaded
+    const resetState = () => {
+        setExpiryDate(null);
+        setDebugInfo({});
+        setAttemptCount(0);
+        setShowManualInput(false);
+        setManualDate('');
     };
 
     const enhanceImage = (imageUrl) => {
@@ -34,26 +40,14 @@ export default function LicenseDateExtractor() {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Increase resolution and enhance contrast
                 const scaleFactor = 2;
                 canvas.width = img.width * scaleFactor;
                 canvas.height = img.height * scaleFactor;
                 
-                ctx.filter = 'contrast(1.4) brightness(1.1)';
+                ctx.filter = 'contrast(1.3) brightness(1.1) saturate(1.2)';
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // Convert to grayscale for better OCR
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                    data[i] = avg;     // R
-                    data[i + 1] = avg;  // G
-                    data[i + 2] = avg;  // B
-                }
-                ctx.putImageData(imageData, 0, 0);
-                
-                const enhancedImageUrl = canvas.toDataURL('image/jpeg', 0.85);
+                const enhancedImageUrl = canvas.toDataURL('image/jpeg', 0.9);
                 resolve(enhancedImageUrl);
             };
             img.src = imageUrl;
@@ -74,136 +68,164 @@ export default function LicenseDateExtractor() {
         setDebugInfo(prev => ({ ...prev, status: 'Image enhanced, ready for OCR' }));
     };
 
-    const resetState = () => {
-        setExpiryDate(null);
-        setDebugInfo({});
-        setAttemptCount(0);
-        setShowManualInput(false);
-        setManualDate('');
-    };
-
     const extractRegistrationYear = (text) => {
         const match = text.match(regNumberPattern);
         if (!match) return null;
 
+        const regNumber = match[1];
         // Extract year from formats like: 0004200922/A-0FK2/35/1X/2022
-        const yearMatch = match[1].match(/(?:^|\/)(20\d{2})(?:\/|$)/);
+        const yearMatch = regNumber.match(/(?:^|\/)(20\d{2})(?:\/|$)/);
         return yearMatch ? parseInt(yearMatch[1]) : null;
     };
 
-    const extractExpiryDateFromText = (text) => {
+    const calculateExpiryFromRegYear = (regYear) => {
+        return regYear ? `${regYear + 5}-12-31` : null; // Default to end of year +5
+    };
+
+    // Add this near the top of your component, with other constants
+const monthNames = ['JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI', 
+                   'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'];
+
+const extractExpiryDate = async () => {
+    if (!processedImage || attemptCount >= 3) return;
+
+    setLoading(true);
+    setAttemptCount(prev => prev + 1);
+    setDebugInfo(prev => ({ ...prev, status: `OCR attempt ${attemptCount + 1} of 3...` }));
+
+    try {
+        const { data: { text } } = await Tesseract.recognize(
+            processedImage,
+            'ind',
+            {
+                logger: m => setDebugInfo(prev => ({ ...prev, status: m.status })),
+                tessedit_pageseg_mode: 6,
+                tessedit_char_whitelist: '01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ/- ',
+            }
+        );
+
+        const regYear = extractRegistrationYear(text);
+        setDebugInfo(prev => ({
+            ...prev,
+            rawText: text,
+            regYear: regYear,
+            status: `Found registration year: ${regYear || 'Not detected'}`
+        }));
+
+        // Try to extract expiry date from text
+        let extractedDate = null;
+        let extractedDayMonth = null;
+        let extractedYear = null;
+        
         for (const pattern of datePatterns) {
             const match = text.match(pattern);
             if (match) {
-                return match[1]
-                    .replace(/\s+/g, ' ')
-                    .replace(/(\d)([A-Z])/g, '$1 $2')
-                    .replace(/([A-Z])(\d)/g, '$1 $2')
-                    .trim();
-            }
-        }
-        return null;
-    };
-
-    const validateExpiryDate = (expiryDate, regYear) => {
-        if (!expiryDate || !regYear) return false;
-        
-        const yearMatch = expiryDate.match(/(20\d{2})/);
-        if (!yearMatch) return false;
-        
-        const expiryYear = parseInt(yearMatch[1]);
-        return expiryYear === regYear + 5;
-    };
-
-    const extractLicenseData = async () => {
-        if (!processedImage || attemptCount >= 3) return;
-
-        setLoading(true);
-        setAttemptCount(prev => prev + 1);
-        setDebugInfo(prev => ({ ...prev, status: `Processing attempt ${attemptCount + 1} of 3` }));
-
-        try {
-            const { data: { text } } = await Tesseract.recognize(
-                processedImage,
-                'ind',
-                {
-                    logger: m => setDebugInfo(prev => ({ ...prev, status: m.status })),
-                    tessedit_pageseg_mode: 6,
-                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/- ',
-                    preserve_interword_spaces: 1
+                extractedDate = match[1].replace(/\s+/g, ' ').trim();
+                
+                // Parse the full date
+                const parsedDate = parseExtractedDate(extractedDate);
+                if (parsedDate) {
+                    extractedYear = parsedDate.getFullYear();
+                    // Save just the day and month portion (without year)
+                    extractedDayMonth = `${parsedDate.getDate()} ${monthNames[parsedDate.getMonth()]}`;
                 }
-            );
-
-            const regYear = extractRegistrationYear(text);
-            const extractedDate = extractExpiryDateFromText(text);
-            
-            setDebugInfo(prev => ({
-                ...prev,
-                rawText: text,
-                regYear: regYear,
-                extractedDate: extractedDate,
-                status: `Found registration year: ${regYear}, extracted date: ${extractedDate || 'None'}`
-            }));
-
-            // First check if extracted date is exactly 5 years after registration year
-            if (extractedDate && regYear && validateExpiryDate(extractedDate, regYear)) {
-                setExpiryDate(extractedDate);
-                setDebugInfo(prev => ({
-                    ...prev,
-                    status: 'Valid 5-year expiry date found',
-                    processedDate: extractedDate
-                }));
-                return;
+                break;
             }
-
-            // If we have a registration year but no valid expiry date, calculate it
-            if (regYear) {
-                const calculatedDate = `31 DECEMBER ${regYear + 5}`;
-                setExpiryDate(calculatedDate);
-                setDebugInfo(prev => ({
-                    ...prev,
-                    status: `Using registration year +5 (${regYear} → ${regYear + 5})`,
-                    processedDate: calculatedDate
-                }));
-                return;
-            }
-
-            // If we have an extracted date but no registration year
-            if (extractedDate) {
-                setExpiryDate(extractedDate);
-                setDebugInfo(prev => ({
-                    ...prev,
-                    status: 'Using extracted date (no registration year found)',
-                    processedDate: extractedDate
-                }));
-                return;
-            }
-
-            // Final fallback
-            if (attemptCount >= 2) {
-                setShowManualInput(true);
-                setDebugInfo(prev => ({
-                    ...prev,
-                    status: 'Automatic detection failed after 3 attempts',
-                    error: 'Please enter date manually'
-                }));
-            } else {
-                setDebugInfo(prev => ({
-                    ...prev,
-                    status: 'No valid date found. Try again with better image quality.',
-                    error: 'Detection failed'
-                }));
-            }
-        } catch (error) {
-            setDebugInfo(prev => ({
-                ...prev,
-                status: 'OCR processing failed',
-                error: error.message
-            }));
-        } finally {
-            setLoading(false);
         }
-    };
+
+        // Calculate expected expiry year (registration year + 5)
+        const expectedExpiryYear = regYear ? regYear + 5 : null;
+
+        // Determine the final expiry date
+        let finalExpiryDate = null;
+        let decisionReason = '';
+
+        if (extractedDate) {
+            if (extractedYear === expectedExpiryYear) {
+                // Perfect match - use the exact extracted date
+                finalExpiryDate = extractedDate;
+                decisionReason = 'Using exact extracted date (year matches registration year +5)';
+            } else if (extractedYear && expectedExpiryYear && Math.abs(extractedYear - expectedExpiryYear) <= 1) {
+                // Year is close - use extracted day/month but correct the year
+                finalExpiryDate = `${extractedDayMonth} ${expectedExpiryYear}`;
+                decisionReason = `Adjusted year of extracted date (${extractedYear}→${expectedExpiryYear})`;
+            } else if (extractedDayMonth && expectedExpiryYear) {
+                // Use the extracted day/month with corrected year
+                finalExpiryDate = `${extractedDayMonth} ${expectedExpiryYear}`;
+                decisionReason = `Using extracted day/month with registration year +5 (${expectedExpiryYear})`;
+            } else if (expectedExpiryYear) {
+                // Fallback to end of expected year
+                finalExpiryDate = `31 DESEMBER ${expectedExpiryYear}`;
+                decisionReason = `Using registration year +5 (${expectedExpiryYear}) with default end-of-year date`;
+            }
+        } else if (expectedExpiryYear) {
+            // No date extracted - use end of expected year
+            finalExpiryDate = `31 DESEMBER ${expectedExpiryYear}`;
+            decisionReason = `No date extracted - using registration year +5 (${expectedExpiryYear})`;
+        }
+
+        if (finalExpiryDate) {
+            setExpiryDate(finalExpiryDate);
+            setDebugInfo(prev => ({
+                ...prev,
+                status: decisionReason,
+                processedDate: finalExpiryDate,
+                warning: extractedYear && extractedYear !== expectedExpiryYear ? 
+                    `Original extracted year (${extractedYear}) was adjusted to match registration year +5` : ''
+            }));
+        } else if (attemptCount >= 2) {
+            setShowManualInput(true);
+            setDebugInfo(prev => ({
+                ...prev,
+                status: 'Failed to detect after 3 attempts. Please enter manually.',
+                error: 'Automatic detection failed'
+            }));
+        } else {
+            setDebugInfo(prev => ({
+                ...prev,
+                status: 'No valid date found. Try again with better image.',
+                error: 'Detection failed'
+            }));
+        }
+    } catch (error) {
+        setDebugInfo(prev => ({
+            ...prev,
+            status: 'OCR processing failed',
+            error: error.message
+        }));
+    } finally {
+        setLoading(false);
+    }
+};
+
+// Helper function to parse dates in Indonesian format
+const parseExtractedDate = (dateStr) => {
+    // Try format like "19 SEPTEMBER 2025"
+    const parts = dateStr.split(/\s+/);
+    if (parts.length === 3) {
+        const day = parseInt(parts[0]);
+        const month = monthNames.indexOf(parts[1].toUpperCase());
+        const year = parseInt(parts[2]);
+        
+        if (!isNaN(day) && month >= 0 && !isNaN(year)) {
+            return new Date(year, month, day);
+        }
+    }
+    
+    // Try format like "19-09-2025" or "19/09/2025"
+    const dashParts = dateStr.split(/[-/]/);
+    if (dashParts.length === 3) {
+        const day = parseInt(dashParts[0]);
+        const month = parseInt(dashParts[1]) - 1;
+        const year = parseInt(dashParts[2]);
+        
+        if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+            return new Date(year, month, day);
+        }
+    }
+    
+    return null;
+};
 
     const handleManualSubmit = (e) => {
         e.preventDefault();
@@ -215,6 +237,28 @@ export default function LicenseDateExtractor() {
                 processedDate: manualDate
             }));
         }
+    };
+
+    const triggerFileInput = () => {
+        fileInputRef.current.click();
+    };
+
+    // Format date for display
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        
+        // Try to parse different date formats
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+            // If not ISO format, return as-is (might be "20 SEPTEMBER 2025")
+            return dateStr;
+        }
+        
+        return date.toLocaleDateString('en-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        }).toUpperCase();
     };
 
     return (
@@ -229,7 +273,7 @@ export default function LicenseDateExtractor() {
                             <div className="mb-6">
                                 <h1 className="text-2xl font-bold mb-2">Extract License Expiry Date</h1>
                                 <p className="text-gray-600 dark:text-gray-400">
-                                    Upload a license image to accurately detect the 5-year expiry period
+                                    Upload a license image to extract the expiry date (automatic fallback to Reg Year +5)
                                 </p>
                             </div>
 
@@ -275,8 +319,8 @@ export default function LicenseDateExtractor() {
                                         
                                         {!showManualInput && (
                                             <button
-                                                onClick={extractLicenseData}
-                                                disabled={loading}
+                                                onClick={extractExpiryDate}
+                                                disabled={loading || !processedImage}
                                                 className="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
                                             >
                                                 {loading ? (
@@ -298,18 +342,17 @@ export default function LicenseDateExtractor() {
                             {showManualInput && (
                                 <div className="mb-6 bg-yellow-50 dark:bg-yellow-900 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
                                     <h3 className="text-lg font-medium mb-2 text-yellow-800 dark:text-yellow-200">
-                                        Manual Date Entry
+                                        Manual Date Entry Required
                                     </h3>
                                     <form onSubmit={handleManualSubmit} className="space-y-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                Expiry Date (Format: DD MMMM YYYY)
+                                                Expiry Date
                                             </label>
                                             <input
-                                                type="text"
+                                                type="date"
                                                 value={manualDate}
-                                                onChange={(e) => setManualDate(e.target.value.toUpperCase())}
-                                                placeholder="e.g. 20 SEPTEMBER 2027"
+                                                onChange={(e) => setManualDate(e.target.value)}
                                                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-800 dark:border-gray-600"
                                                 required
                                             />
@@ -331,11 +374,11 @@ export default function LicenseDateExtractor() {
                                         License Expiry Date
                                     </h3>
                                     <p className="text-2xl font-bold text-green-600 dark:text-green-300">
-                                        {expiryDate}
+                                        {formatDate(expiryDate)}
                                     </p>
                                     {debugInfo.regYear && (
                                         <p className="mt-2 text-sm text-green-700 dark:text-green-200">
-                                            Registration Year: {debugInfo.regYear} (Valid for 5 years until {debugInfo.regYear + 5})
+                                            Based on registration year: {debugInfo.regYear}
                                         </p>
                                     )}
                                 </div>
@@ -343,30 +386,21 @@ export default function LicenseDateExtractor() {
 
                             {/* Debug Information */}
                             <div className="mt-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                <h3 className="text-lg font-medium mb-2">Processing Information</h3>
+                                <h3 className="text-lg font-medium mb-2">Processing Details</h3>
                                 
                                 <div className="space-y-2">
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</p>
-                                        <p className={`text-sm ${
-                                            debugInfo.error ? 'text-red-600' : 
-                                            expiryDate ? 'text-green-600' : 'text-gray-700 dark:text-gray-300'
-                                        }`}>
-                                            {debugInfo.status || 'Waiting for image...'}
-                                        </p>
-                                    </div>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Status</p>
+                                    <p className={`text-sm ${
+                                        debugInfo.error ? 'text-red-600' : 
+                                        expiryDate ? 'text-green-600' : 'text-gray-700 dark:text-gray-300'
+                                    }`}>
+                                        {debugInfo.status || 'Waiting for image...'}
+                                    </p>
 
                                     {debugInfo.regYear !== undefined && (
                                         <div>
                                             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Registration Year</p>
                                             <p className="text-sm">{debugInfo.regYear || 'Not detected'}</p>
-                                        </div>
-                                    )}
-
-                                    {debugInfo.extractedDate !== undefined && (
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Extracted Date</p>
-                                            <p className="text-sm">{debugInfo.extractedDate || 'Not detected'}</p>
                                         </div>
                                     )}
 
@@ -377,6 +411,13 @@ export default function LicenseDateExtractor() {
                                                 {debugInfo.rawText}
                                             </pre>
                                         </details>
+                                    )}
+
+                                    {debugInfo.error && (
+                                        <div className="mt-2 p-3 bg-red-50 dark:bg-red-900 rounded border border-red-200 dark:border-red-700">
+                                            <p className="text-sm font-medium text-red-600 dark:text-red-200">Error:</p>
+                                            <p className="text-sm text-red-500 dark:text-red-300">{debugInfo.error}</p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
