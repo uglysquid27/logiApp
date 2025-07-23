@@ -119,8 +119,6 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
                 ->name('employee-attendance.activate');
             Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
                 ->name('employee-attendance.process-deactivation');
-                Route::delete('manpower-requests/{id}', [ManPowerRequestController::class, 'destroy'])
-                ->name('manpower-requests.destroy');
         });
     });
 
