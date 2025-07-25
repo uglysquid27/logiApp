@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Application;
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
@@ -12,11 +12,17 @@ if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php'))
 
 // Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
+
+// Create the application instance
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+// Get the HTTP kernel instance
+$kernel = $app->make(Kernel::class);
 
-// Bootstrap Laravel and handle the request...
-/** @var Application $app */
-$app = require_once __DIR__.'/../bootstrap/app.php';
+// Handle the incoming request
+$response = $kernel->handle(
+    $request = Request::capture()
+)->send();
 
-$app->handleRequest(Request::capture());
+// Terminate the request
+$kernel->terminate($request, $response);

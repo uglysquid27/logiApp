@@ -15,58 +15,10 @@ import 'dayjs/locale/id';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fadeIn, staggerContainer, slideIn, cardVariants } from '@/Animations';
-import { Resizable } from 'react-resizable';
-import 'react-resizable/css/styles.css';
 
 dayjs.locale('id');
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
-// Improved Resizable component wrapper
-const ResizableBox = ({ 
-    width, 
-    height = 400, 
-    onResize, 
-    children, 
-    minConstraints = [300, 200], 
-    maxConstraints = [Infinity, Infinity],
-    className = '' 
-}) => {
-    return (
-        <Resizable
-            width={width}
-            height={height}
-            onResize={onResize}
-            resizeHandles={['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']}
-            minConstraints={minConstraints}
-            maxConstraints={maxConstraints}
-            handle={(handleAxis, ref) => (
-                <div
-                    ref={ref}
-                    className={`react-resizable-handle react-resizable-handle-${handleAxis}`}
-                    style={{
-                        [handleAxis.includes('e') ? 'width' : 'height']: '20px',
-                        [handleAxis.includes('e') ? 'right' : 'bottom']: '-10px',
-                        [handleAxis.includes('s') ? 'height' : 'width']: '20px',
-                        backgroundColor: 'transparent',
-                        zIndex: 10,
-                    }}
-                />
-            )}
-        >
-            <div 
-                style={{ 
-                    width: `${width}px`, 
-                    height: `${height}px`,
-                    position: 'relative' 
-                }} 
-                className={className}
-            >
-                {children}
-            </div>
-        </Resizable>
-    );
-};
 
 class ErrorBoundary extends React.Component {
     state = { hasError: false };
@@ -226,23 +178,12 @@ export default function Dashboard() {
         sections = []
     } = props;
 
-    // State for resizable components with improved sizing
-    const [componentSizes, setComponentSizes] = useState(() => {
-        // Try to load sizes from localStorage if available
-        if (typeof window !== 'undefined') {
-            const savedSizes = localStorage.getItem('dashboardComponentSizes');
-            if (savedSizes) {
-                return JSON.parse(savedSizes);
-            }
-        }
-
-        // Default sizes
-        return {
-            chart1: { width: 600, height: 400 },
-            chart2: { width: 600, height: 400 },
-            table1: { width: 600, height: 400 },
-            table2: { width: 600, height: 400 }
-        };
+    // State for component heights
+    const [componentHeights, setComponentHeights] = useState({
+        chart1: 400,
+        chart2: 400,
+        table1: 400,
+        table2: 400
     });
 
     const [filters, setFilters] = useState({
@@ -271,51 +212,6 @@ export default function Dashboard() {
         columns: [],
         url: ''
     });
-    
-
-    // Save sizes to localStorage when they change
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('dashboardComponentSizes', JSON.stringify(componentSizes));
-        }
-    }, [componentSizes]);
-
-    useEffect(() => {
-        const handleWindowResize = () => {
-            setComponentSizes(getInitialSizes());
-        };
-
-        window.addEventListener('resize', handleWindowResize);
-        return () => window.removeEventListener('resize', handleWindowResize);
-    }, []);
-
-    // Handle window resize while maintaining user-adjusted sizes
-    useEffect(() => {
-        const handleWindowResize = () => {
-            const maxWidth = window.innerWidth - 40;
-            setComponentSizes(prev => ({
-                chart1: { 
-                    width: Math.min(prev.chart1.width, maxWidth), 
-                    height: prev.chart1.height 
-                },
-                chart2: { 
-                    width: Math.min(prev.chart2.width, maxWidth), 
-                    height: prev.chart2.height 
-                },
-                table1: { 
-                    width: Math.min(prev.table1.width, maxWidth), 
-                    height: prev.table1.height 
-                },
-                table2: { 
-                    width: Math.min(prev.table2.width, maxWidth), 
-                    height: prev.table2.height 
-                }
-            }));
-        };
-
-        window.addEventListener('resize', handleWindowResize);
-        return () => window.removeEventListener('resize', handleWindowResize);
-    }, []);
 
     const resetFilters = () => {
         setFilters({
@@ -514,10 +410,7 @@ export default function Dashboard() {
             easing: 'easeOutQuart'
         },
         onClick,
-        responsiveAnimationDuration: 0,
-        onResize: (chart, size) => {
-            chart.resize();
-        }
+        responsiveAnimationDuration: 0
     });
 
     const cardData = [
@@ -588,13 +481,11 @@ export default function Dashboard() {
     ];
 
     // Handle resize for each component
-    const handleResize = (component) => (e, { size }) => {
-        setComponentSizes(prev => ({
+    const handleResize = (component) => (e) => {
+        const newHeight = Math.max(200, e.target.value);
+        setComponentHeights(prev => ({
             ...prev,
-            [component]: { 
-                width: Math.max(300, size.width),
-                height: Math.max(200, size.height)
-            }
+            [component]: newHeight
         }));
     };
 
@@ -604,39 +495,6 @@ export default function Dashboard() {
                 header={<h2 className="text-xl font-semibold">Dashboard</h2>}
             >
                 <Head title="Dashboard" />
-
-                {/* Add global styles for resizable handles */}
-                <style>{`
-                    .react-resizable-handle {
-                        position: absolute;
-                        opacity: 0;
-                        transition: opacity 0.2s;
-                    }
-                    .react-resizable-handle:hover,
-                    .react-resizable-handle:active {
-                        opacity: 1;
-                        background: rgba(0, 0, 0, 0.1) !important;
-                    }
-                    .react-resizable-handle::after {
-                        content: '';
-                        position: absolute;
-                        width: 16px;
-                        height: 16px;
-                        background: rgba(0, 0, 0, 0.3);
-                        border-radius: 50%;
-                        left: 50%;
-                        top: 50%;
-                        transform: translate(-50%, -50%);
-                        display: none;
-                    }
-                    .react-resizable-handle:hover::after,
-                    .react-resizable-handle:active::after {
-                        display: block;
-                    }
-                    .react-resizable {
-                        transition: width 0.2s ease, height 0.2s ease;
-                    }
-                `}</style>
 
                 <motion.div
                     initial="hidden"
@@ -721,202 +579,216 @@ export default function Dashboard() {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-6 mb-8">
-                        {/* Manpower Request Trends */}
-                        <ResizableBox
-                            width={componentSizes.chart1.width}
-                            height={componentSizes.chart1.height}
-                            onResize={handleResize('chart1')}
-                            minConstraints={[300, 200]}
-                            className="bg-white p-4 rounded-lg shadow"
-                        >
-                            <motion.div
-                                variants={fadeIn('right', 'tween', 0.2, 1)}
-                                className="h-full flex flex-col"
+                    {/* Charts Row */}
+                    <div className="flex flex-col md:flex-row gap-6 mb-8">
+                        {/* Manpower Request Trends - Left Chart */}
+                        <div className="w-full md:w-1/2 bg-white p-4 rounded-lg shadow relative">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-medium">Manpower Request Trends</h3>
+                            </div>
+                            <div 
+                                className="relative" 
+                                style={{ height: `${componentHeights.chart1}px` }}
                             >
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                                    <h3 className="text-lg font-medium whitespace-nowrap">Manpower Request Trends</h3>
-                                </div>
-                                <div className="flex-grow">
-                                    {manpowerRequestChartData.labels.length > 0 ? (
-                                        <Bar
-                                            data={manpowerRequestChartData}
-                                            options={getChartOptions((e, elements) => {
-                                                if (elements.length) {
-                                                    handleManpowerRequestBarClick(elements[0].datasetIndex, elements[0].index);
-                                                }
-                                            })}
-                                            redraw={true}
-                                        />
-                                    ) : (
-                                        <div className="h-full flex items-center justify-center text-gray-500">
-                                            No data available for selected date range
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        </ResizableBox>
-
-                        {/* Employee Assignments */}
-                        <ResizableBox
-                            width={componentSizes.chart2.width}
-                            height={componentSizes.chart2.height}
-                            onResize={handleResize('chart2')}
-                            minConstraints={[300, 200]}
-                            className="bg-white p-4 rounded-lg shadow"
-                        >
-                            <motion.div
-                                variants={fadeIn('left', 'tween', 0.4, 1)}
-                                className="h-full flex flex-col"
-                            >
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                                    <h3 className="text-lg font-medium whitespace-nowrap">Employee Assignments</h3>
-                                    <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
-                                        <select
-                                            value={filters.section || ''}
-                                            onChange={(e) => {
-                                                const newSection = e.target.value || null;
-                                                setFilters(prev => ({
-                                                    ...prev,
-                                                    section: newSection
-                                                }));
-                                            }}
-                                            className="border rounded px-2 py-1 text-sm min-w-[150px] h-[34px]"
-                                        >
-                                            <option value="">All Sections</option>
-                                            {sections?.map(section => (
-                                                <option key={section.id} value={section.id}>
-                                                    {section.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                {manpowerRequestChartData.labels.length > 0 ? (
+                                    <Bar
+                                        data={manpowerRequestChartData}
+                                        options={getChartOptions((e, elements) => {
+                                            if (elements.length) {
+                                                handleManpowerRequestBarClick(elements[0].datasetIndex, elements[0].index);
+                                            }
+                                        })}
+                                        redraw={true}
+                                    />
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-gray-500">
+                                        No data available for selected date range
                                     </div>
+                                )}
+                            </div>
+                            <div className="mt-2">
+                                <label className="text-xs text-gray-500">Adjust Height:</label>
+                                <input
+                                    type="range"
+                                    min="200"
+                                    max="800"
+                                    value={componentHeights.chart1}
+                                    onChange={handleResize('chart1')}
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Employee Assignments - Right Chart */}
+                        <div className="w-full md:w-1/2 bg-white p-4 rounded-lg shadow relative">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                                <h3 className="text-lg font-medium whitespace-nowrap">Employee Assignments</h3>
+                                <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
+                                    <select
+                                        value={filters.section || ''}
+                                        onChange={(e) => {
+                                            const newSection = e.target.value || null;
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                section: newSection
+                                            }));
+                                        }}
+                                        className="border rounded px-2 py-1 text-sm min-w-[150px] h-[34px]"
+                                    >
+                                        <option value="">All Sections</option>
+                                        {sections?.map(section => (
+                                            <option key={section.id} value={section.id}>
+                                                {section.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
-                                <div className="flex-grow">
-                                    {employeeAssignmentChartData.labels.length > 0 ? (
-                                        <Bar
-                                            data={employeeAssignmentChartData}
-                                            options={getChartOptions((e, elements) => {
-                                                if (elements.length) {
-                                                    handleEmployeeAssignmentBarClick(elements[0].index);
-                                                }
-                                            })}
-                                            redraw={true}
-                                        />
-                                    ) : (
-                                        <div className="h-full flex items-center justify-center text-gray-500">
-                                            No data available for selected filters
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        </ResizableBox>
+                            </div>
+                            <div 
+                                className="relative" 
+                                style={{ height: `${componentHeights.chart2}px` }}
+                            >
+                                {employeeAssignmentChartData.labels.length > 0 ? (
+                                    <Bar
+                                        data={employeeAssignmentChartData}
+                                        options={getChartOptions((e, elements) => {
+                                            if (elements.length) {
+                                                handleEmployeeAssignmentBarClick(elements[0].index);
+                                            }
+                                        })}
+                                        redraw={true}
+                                    />
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-gray-500">
+                                        No data available for selected filters
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mt-2">
+                                <label className="text-xs text-gray-500">Adjust Height:</label>
+                                <input
+                                    type="range"
+                                    min="200"
+                                    max="800"
+                                    value={componentHeights.chart2}
+                                    onChange={handleResize('chart2')}
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-6">
-                        {/* Recent Pending Requests */}
-                        <ResizableBox
-                            width={componentSizes.table1.width}
-                            height={componentSizes.table1.height}
-                            onResize={handleResize('table1')}
-                            minConstraints={[300, 200]}
-                            className="bg-white p-4 rounded-lg shadow"
-                        >
-                            <motion.div
-                                variants={slideIn('left', 'tween', 0.2, 1)}
-                                className="h-full flex flex-col"
+                    {/* Tables Row */}
+                    <div className="flex flex-col md:flex-row gap-6">
+                        {/* Recent Pending Requests - Left Table */}
+                        <div className="w-full md:w-1/2 bg-white p-4 rounded-lg shadow relative">
+                            <h3 className="text-lg font-medium mb-4">Recent Pending Requests</h3>
+                            <div 
+                                className="overflow-auto relative"
+                                style={{ height: `${componentHeights.table1}px` }}
                             >
-                                <h3 className="text-lg font-medium mb-4">Recent Pending Requests</h3>
-                                <div className="overflow-x-auto flex-grow">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {recentPendingRequests.length > 0 ? (
+                                            recentPendingRequests.map((request, index) => (
+                                                <motion.tr
+                                                    key={request.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                    className="hover:bg-gray-50"
+                                                >
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(request.date)}</td>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{request.sub_section?.name || 'N/A'}</td>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{request.shift?.name || 'N/A'}</td>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{request.requested_amount}</td>
+                                                </motion.tr>
+                                            ))
+                                        ) : (
                                             <tr>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                                <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
+                                                    No pending requests
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {recentPendingRequests.length > 0 ? (
-                                                recentPendingRequests.map((request, index) => (
-                                                    <motion.tr
-                                                        key={request.id}
-                                                        initial={{ opacity: 0, y: 20 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ delay: index * 0.05 }}
-                                                        className="hover:bg-gray-50"
-                                                    >
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(request.date)}</td>
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{request.sub_section?.name || 'N/A'}</td>
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{request.shift?.name || 'N/A'}</td>
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{request.requested_amount}</td>
-                                                    </motion.tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
-                                                        No pending requests
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </motion.div>
-                        </ResizableBox>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-2">
+                                <label className="text-xs text-gray-500">Adjust Height:</label>
+                                <input
+                                    type="range"
+                                    min="200"
+                                    max="800"
+                                    value={componentHeights.table1}
+                                    onChange={handleResize('table1')}
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
 
-                        {/* Upcoming Schedules */}
-                        <ResizableBox
-                            width={componentSizes.table2.width}
-                            height={componentSizes.table2.height}
-                            onResize={handleResize('table2')}
-                            minConstraints={[300, 200]}
-                            className="bg-white p-4 rounded-lg shadow"
-                        >
-                            <motion.div
-                                variants={slideIn('right', 'tween', 0.4, 1)}
-                                className="h-full flex flex-col"
+                        {/* Upcoming Schedules - Right Table */}
+                        <div className="w-full md:w-1/2 bg-white p-4 rounded-lg shadow relative">
+                            <h3 className="text-lg font-medium mb-4">Upcoming Schedules</h3>
+                            <div 
+                                className="overflow-auto relative"
+                                style={{ height: `${componentHeights.table2}px` }}
                             >
-                                <h3 className="text-lg font-medium mb-4">Upcoming Schedules</h3>
-                                <div className="overflow-x-auto flex-grow">
-                                    <table className="min-w-full divide-y divide-gray-200">
-                                        <thead className="bg-gray-50">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {upcomingSchedules.length > 0 ? (
+                                            upcomingSchedules.map((schedule, index) => (
+                                                <motion.tr
+                                                    key={schedule.id}
+                                                    initial={{ opacity: 0, y: 20 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: index * 0.05 }}
+                                                    className="hover:bg-gray-50"
+                                                >
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(schedule.date)}</td>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.employee?.name || 'N/A'}</td>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.sub_section?.name || 'N/A'}</td>
+                                                    <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.man_power_request?.shift?.name || 'N/A'}</td>
+                                                </motion.tr>
+                                            ))
+                                        ) : (
                                             <tr>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub Section</th>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
+                                                <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
+                                                    No upcoming schedules
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody className="bg-white divide-y divide-gray-200">
-                                            {upcomingSchedules.length > 0 ? (
-                                                upcomingSchedules.map((schedule, index) => (
-                                                    <motion.tr
-                                                        key={schedule.id}
-                                                        initial={{ opacity: 0, y: 20 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ delay: index * 0.05 }}
-                                                        className="hover:bg-gray-50"
-                                                    >
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{formatDate(schedule.date)}</td>
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.employee?.name || 'N/A'}</td>
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.sub_section?.name || 'N/A'}</td>
-                                                        <td className="px-4 py-2 whitespace-nowrap text-sm">{schedule.man_power_request?.shift?.name || 'N/A'}</td>
-                                                    </motion.tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
-                                                        No upcoming schedules
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </motion.div>
-                        </ResizableBox>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="mt-2">
+                                <label className="text-xs text-gray-500">Adjust Height:</label>
+                                <input
+                                    type="range"
+                                    min="200"
+                                    max="800"
+                                    value={componentHeights.table2}
+                                    onChange={handleResize('table2')}
+                                    className="w-full"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <DetailModal
