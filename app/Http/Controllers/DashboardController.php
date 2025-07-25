@@ -544,10 +544,29 @@ public function getLunchCouponsByDate(Request $request, $date)
         ->where('status', 'claimed')
         ->count();
 
+    $details = Schedule::with([
+            'employee',
+            'subSection.section',
+            'lunchCoupon'
+        ])
+        ->whereDate('date', $date)
+        ->where('status', 'accepted')
+        ->get()
+        ->map(function ($schedule) {
+            return [
+                'date' => $schedule->date,
+                'employee' => $schedule->employee,
+                'section' => $schedule->subSection->section ?? null,
+                'sub_section' => $schedule->subSection,
+                'status' => $schedule->lunchCoupon->status ?? null,
+            ];
+        });
+
     return response()->json([
         'total' => $total,
         'pending' => $pending,
         'claimed' => $claimed,
+        'details' => $details,
         'date' => $date->format('Y-m-d')
     ]);
 }

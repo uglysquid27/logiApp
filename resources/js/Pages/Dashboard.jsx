@@ -207,7 +207,9 @@ export default function Dashboard() {
                     </div>
 
                     <div className="my-6">
-                        <LunchCouponsCard />
+                        <LunchCouponsCard   
+                            formatDate={formatDate} 
+                        />
                     </div>
 
                     <DetailModal
