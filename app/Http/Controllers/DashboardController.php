@@ -25,7 +25,14 @@ class DashboardController extends Controller
     $activeEmployeesCount = Employee::where('status', 'available')
                                     ->where('cuti', 'no')
                                     ->count();
+                                    
     $totalEmployeesCount = Employee::count();
+
+   $todayLunchCoupons = LunchCoupon::whereDate('date', today())->count();
+    $thisWeekLunchCoupons = LunchCoupon::whereBetween('date', [
+        now()->startOfWeek(),
+        now()->endOfWeek()
+    ])->count();
 
     // Get counts for manpower requests
     $pendingRequestsCount = ManPowerRequest::where('status', 'pending')->count();
@@ -143,12 +150,14 @@ class DashboardController extends Controller
             'todaySchedulesCount' => $todaySchedulesCount,
             'thisWeekSchedulesCount' => $thisWeekSchedulesCount,
             'totalSchedulesCount' => $totalSchedulesCount,
+             'todayLunchCoupons' => $todayLunchCoupons,
+        'thisWeekLunchCoupons' => $thisWeekLunchCoupons
         ],
         'manpowerRequestChartData' => $manpowerRequestChartData,
         'employeeAssignmentChartData' => $employeeAssignmentChartData,
         'recentPendingRequests' => $recentPendingRequests,
         'upcomingSchedules' => $upcomingSchedules,
-        'sections' => $sections, // Include sections with their subsections
+        'sections' => $sections
     ]);
 }
 

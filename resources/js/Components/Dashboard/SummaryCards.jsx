@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cardVariants } from '@/Animations';
-import dayjs from 'dayjs';
+import { router } from '@inertiajs/react';
 
 const SummaryCards = ({ summary, setModalState, formatDate }) => {
     const cardData = [
@@ -76,12 +76,24 @@ const SummaryCards = ({ summary, setModalState, formatDate }) => {
                     { header: 'Shift', field: 'shift', render: (item) => item.man_power_request?.shift?.name || 'N/A' }
                 ]
             }))
+        },
+        {
+            title: "Today's Lunch Coupons",
+            value: summary.todayLunchCoupons || 0,
+            color: 'purple',
+            onClick: () => router.visit(route('lunch-coupons.index'))
+        },
+        {
+            title: "This Week's Lunch Coupons",
+            value: summary.thisWeekLunchCoupons || 0,
+            color: 'pink',
+            onClick: () => router.visit(route('lunch-coupons.index'))
         }
     ];
 
     return (
         <motion.div
-            className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-4"
+            className="grid grid-cols-2 gap-4 mb-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6"
         >
             {cardData.map((card, index) => (
                 <motion.div
@@ -97,9 +109,11 @@ const SummaryCards = ({ summary, setModalState, formatDate }) => {
                         <span className={`text-2xl sm:text-3xl font-bold text-${card.color}-600`}>
                             {typeof card.value === 'number' ? card.value.toLocaleString() : 'N/A'}
                         </span>
-                        <span className="ml-2 text-xs sm:text-sm text-gray-500">
-                            / {typeof card.total === 'number' ? card.total.toLocaleString() : 'N/A'}
-                        </span>
+                        {card.hasOwnProperty('total') && (
+                            <span className="ml-2 text-xs sm:text-sm text-gray-500">
+                                / {typeof card.total === 'number' ? card.total.toLocaleString() : 'N/A'}
+                            </span>
+                        )}
                     </div>
                 </motion.div>
             ))}
