@@ -7,6 +7,7 @@ use App\Models\ManPowerRequest;
 use App\Models\Schedule;
 use App\Models\SubSection;
 use App\Models\Section;
+use App\Models\LunchCoupon;
 use App\Models\Shift; // <-- NEW: Import Shift model if you use it for filter options
 use Carbon\Carbon;
 use Inertia\Inertia;
@@ -525,6 +526,30 @@ public function getSchedulesBySubSection(Request $request, $subSectionId)
         ->paginate(10);
 
     return response()->json($schedules);
+}
+
+public function getLunchCouponsByDate(Request $request, $date)
+{
+    $date = Carbon::parse($date);
+    
+    $total = Schedule::whereDate('date', $date)
+        ->where('status', 'accepted')
+        ->count();
+
+    $pending = LunchCoupon::whereDate('date', $date)
+        ->where('status', 'pending')
+        ->count();
+
+    $claimed = LunchCoupon::whereDate('date', $date)
+        ->where('status', 'claimed')
+        ->count();
+
+    return response()->json([
+        'total' => $total,
+        'pending' => $pending,
+        'claimed' => $claimed,
+        'date' => $date->format('Y-m-d')
+    ]);
 }
 
 }

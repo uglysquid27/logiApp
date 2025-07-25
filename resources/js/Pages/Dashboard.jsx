@@ -11,6 +11,7 @@ import EmployeeChart from '@/Components/Dashboard/EmployeeChart';
 import PendingRequestsTable from '@/Components/Dashboard/PendingRequestsTable';
 import UpcomingSchedulesTable from '@/Components/Dashboard/UpcomingSchedulesTable';
 import DetailModal from '@/Components/Dashboard/DetailModal';
+import LunchCouponsCard from '@/Components/Dashboard/LunchCouponsCard';
 import dayjs from 'dayjs';
 
 export default function Dashboard() {
@@ -68,7 +69,7 @@ export default function Dashboard() {
             subSection: null,
             shift: null
         });
-        
+
         setManpowerRequestChartData(initialManpowerRequestChartData);
         setEmployeeAssignmentChartData(initialEmployeeAssignmentChartData);
     };
@@ -155,13 +156,13 @@ export default function Dashboard() {
                     variants={staggerContainer}
                     className="py-6 px-4 sm:px-6 lg:px-8"
                 >
-                    <SummaryCards 
-                        summary={summary} 
-                        setModalState={setModalState} 
+                    <SummaryCards
+                        summary={summary}
+                        setModalState={setModalState}
                         formatDate={formatDate}
                     />
 
-                    <DateFilter 
+                    <DateFilter
                         filters={filters}
                         setFilters={setFilters}
                         applyFilters={applyFilters}
@@ -169,7 +170,7 @@ export default function Dashboard() {
                     />
 
                     <div className="flex flex-col md:flex-row gap-6 mb-8">
-                        <ManpowerChart 
+                        <ManpowerChart
                             data={manpowerRequestChartData}
                             height={componentHeights.chart1}
                             handleResize={handleResize('chart1')}
@@ -177,7 +178,7 @@ export default function Dashboard() {
                             formatDate={formatDate}
                         />
 
-                        <EmployeeChart 
+                        <EmployeeChart
                             data={employeeAssignmentChartData}
                             height={componentHeights.chart2}
                             handleResize={handleResize('chart2')}
@@ -190,19 +191,23 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-6">
-                        <PendingRequestsTable 
+                        <PendingRequestsTable
                             data={recentPendingRequests}
                             height={componentHeights.table1}
                             handleResize={handleResize('table1')}
                             formatDate={formatDate}
                         />
 
-                        <UpcomingSchedulesTable 
+                        <UpcomingSchedulesTable
                             data={upcomingSchedules}
                             height={componentHeights.table2}
                             handleResize={handleResize('table2')}
                             formatDate={formatDate}
                         />
+                    </div>
+
+                    <div className="my-6">
+                        <LunchCouponsCard />
                     </div>
 
                     <DetailModal
