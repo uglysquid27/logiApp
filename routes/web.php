@@ -89,10 +89,12 @@ Route::middleware(['auth:employee', 'prevent.back'])
     ->as('employee.')
     ->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/license', [LicenseVerificationController::class, 'showForm'])->name('license');
         Route::post('/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('schedule.respond');
         Route::get('/schedule/{schedule}/same-shift', [EmployeeDashboardController::class, 'sameShiftEmployees'])
             ->name('schedule.same-shift');
         Route::resource('permits', PermitController::class);
+        Route::post('/operator-license', [LicenseVerificationController::class, 'store']);
     });
 
 // Admin routes with session protection

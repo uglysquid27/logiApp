@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\DomCrawler\Crawler;
 use Inertia\Inertia;
+use App\Models\OperatorLicense;
+use Illuminate\Support\Facades\Auth;
 
 class LicenseVerificationController extends Controller
 {
@@ -133,4 +135,22 @@ class LicenseVerificationController extends Controller
             'debug' => $props['results']['debug'] ?? null
         ]);
     }
+
+ public function store(Request $request)
+{
+    $validated = $request->validate([
+        'license_number' => 'nullable|string|max:255',
+        'expiry_date' => 'required|date',
+    ]);
+
+    $license = OperatorLicense::updateOrCreate(
+        ['employee_id' => Auth::id()],
+        [
+            'license_number' => $validated['license_number'],
+            'expiry_date' => $validated['expiry_date'],
+        ]
+    );
+
+    return redirect()->back()->with('success', 'License updated successfully');
+}
 }

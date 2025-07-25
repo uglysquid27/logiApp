@@ -191,6 +191,13 @@ export default function AuthenticatedLayout({ header, children }) {
                             >
                                 <span className="block">Leave Requests</span>
                             </NavLink>
+                            <NavLink
+                                href={route('employee.license')}
+                                active={route().current('employee.permits.index')}
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                            >
+                                <span className="block">SIO Input</span>
+                            </NavLink>
                         </>
                     )}
 

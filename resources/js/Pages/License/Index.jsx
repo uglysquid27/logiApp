@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Tesseract from 'tesseract.js';
-import { usePage } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function LicenseDateExtractor() {
@@ -61,14 +61,11 @@ export default function LicenseDateExtractor() {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
                     
-                    // Set canvas dimensions to image dimensions
                     canvas.width = img.width;
                     canvas.height = img.height;
                     
-                    // Draw image onto canvas
                     ctx.drawImage(img, 0, 0);
                     
-                    // Convert canvas to data URL
                     const correctedUrl = canvas.toDataURL('image/jpeg', 0.9);
                     resolve(correctedUrl);
                 };
@@ -85,32 +82,25 @@ export default function LicenseDateExtractor() {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                // Higher scaling for mobile to improve OCR accuracy
                 const scaleFactor = isMobile ? 2.5 : 2;
                 canvas.width = img.width * scaleFactor;
                 canvas.height = img.height * scaleFactor;
                 
-                // Apply filters to improve text readability
                 ctx.filter = 'contrast(1.5) brightness(1.2) grayscale(100%)';
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // Additional processing for mobile images
                 if (isMobile) {
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                     const data = imageData.data;
                     
-                    // Increase contrast and threshold
                     for (let i = 0; i < data.length; i += 4) {
-                        // Convert to grayscale if not already
                         const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                        
-                        // Apply threshold
                         const threshold = 180;
                         const value = avg > threshold ? 255 : 0;
                         
-                        data[i] = value;     // R
-                        data[i + 1] = value; // G
-                        data[i + 2] = value; // B
+                        data[i] = value;
+                        data[i + 1] = value;
+                        data[i + 2] = value;
                     }
                     ctx.putImageData(imageData, 0, 0);
                 }
@@ -159,16 +149,14 @@ export default function LicenseDateExtractor() {
     };
 
     const extractExpiryDateFromText = (text) => {
-        // Pre-process text for mobile OCR results
         let cleanedText = text;
         
         if (isMobile) {
-            // Remove common noise patterns from mobile OCR
             cleanedText = cleanedText
-                .replace(/[^a-zA-Z0-9\s\/\-:]/g, ' ')  // Remove special chars except those in dates
-                .replace(/\s+/g, ' ')                   // Collapse multiple spaces
-                .replace(/(\d)([A-Za-z])/g, '$1 $2')    // Add space between numbers and letters
-                .replace(/([A-Za-z])(\d)/g, '$1 $2');  // Add space between letters and numbers
+                .replace(/[^a-zA-Z0-9\s\/\-:]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .replace(/(\d)([A-Za-z])/g, '$1 $2')
+                .replace(/([A-Za-z])(\d)/g, '$1 $2');
         }
 
         for (const pattern of datePatterns) {
@@ -192,17 +180,16 @@ export default function LicenseDateExtractor() {
         setDebugInfo(prev => ({ ...prev, status: `Processing attempt ${attemptCount + 1} of 3` }));
 
         try {
-            // Configure Tesseract differently for mobile images
             const { data: { text } } = await Tesseract.recognize(
                 processedImage,
                 'ind',
                 {
                     logger: m => setDebugInfo(prev => ({ ...prev, status: m.status })),
-                    tessedit_pageseg_mode: isMobile ? 11 : 6, // Different segmentation mode for mobile
+                    tessedit_pageseg_mode: isMobile ? 11 : 6,
                     tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/- ',
                     preserve_interword_spaces: 1,
-                    tessedit_ocr_engine_mode: isMobile ? 1 : 3, // Legacy engine for mobile
-                    user_defined_dpi: isMobile ? '300' : '200' // Higher DPI for mobile
+                    tessedit_ocr_engine_mode: isMobile ? 1 : 3,
+                    user_defined_dpi: isMobile ? '300' : '200'
                 }
             );
 
@@ -318,6 +305,56 @@ export default function LicenseDateExtractor() {
             }));
         }
     };
+
+   const saveLicenseData = async () => {
+    if (!expiryDate) return;
+
+    try {
+        setLoading(true);
+        
+        // Convert the Indonesian date format to YYYY-MM-DD
+        const dateParts = expiryDate.split(' ');
+        const months = {
+            'JANUARI': '01', 'JAN': '01', 
+            'FEBRUARI': '02', 'FEB': '02',
+            'MARET': '03', 'MAR': '03',
+            'APRIL': '04', 'APR': '04',
+            'MEI': '05', 'MAY': '05',
+            'JUNI': '06', 'JUN': '06',
+            'JULI': '07', 'JUL': '07',
+            'AGUSTUS': '08', 'AUG': '08',
+            'SEPTEMBER': '09', 'SEP': '09',
+            'OKTOBER': '10', 'OKT': '10',
+            'NOVEMBER': '11', 'NOV': '11',
+            'DESEMBER': '12', 'DEC': '12'
+        };
+        
+        const formattedDate = `${dateParts[2]}-${months[dateParts[1].toUpperCase()]}-${dateParts[0].padStart(2, '0')}`;
+
+        // Send only the needed data (no FormData needed since no file upload)
+        await router.post('/employee/operator-license', {
+            expiry_date: formattedDate,
+            license_number: debugInfo.regNumber || null,
+        }, {
+            preserveScroll: true,
+            onSuccess: () => {
+                setDebugInfo(prev => ({
+                    ...prev,
+                    status: 'License expiry date saved successfully!'
+                }));
+            },
+            onError: (errors) => {
+                setDebugInfo(prev => ({
+                    ...prev,
+                    status: 'Failed to save license data',
+                    error: errors.message || 'Validation error'
+                }));
+            }
+        });
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <AuthenticatedLayout
@@ -496,6 +533,23 @@ export default function LicenseDateExtractor() {
                                             Registration Year: {debugInfo.regYear}
                                         </p>
                                     )}
+                                    <div className="mt-4">
+                                        <button
+                                            onClick={saveLicenseData}
+                                            disabled={loading}
+                                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
+                                        >
+                                            {loading ? (
+                                                <span className="flex items-center">
+                                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                    </svg>
+                                                    Saving...
+                                                </span>
+                                            ) : 'Save License Data'}
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 

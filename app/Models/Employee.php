@@ -75,4 +75,15 @@ public function blindTests()
             ->whereDate('date', Carbon::today())
             ->exists();
     }
+
+    // In your Employee model
+public function operatorLicense()
+{
+    return $this->hasOne(OperatorLicense::class);
+}
+
+public function hasValidLicense()
+{
+    return $this->operatorLicense && $this->operatorLicense->isValid();
+}
 }

@@ -94,7 +94,6 @@ const LunchCouponsCard = ({ initialDate, formatDate }) => {
                                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
                                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Section</th>
                                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sub-Section</th>
-                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -112,17 +111,6 @@ const LunchCouponsCard = ({ initialDate, formatDate }) => {
                                                 </td>
                                                 <td className="px-4 py-2 whitespace-nowrap text-sm">
                                                     {coupon.sub_section?.name || 'N/A'}
-                                                </td>
-                                                <td className="px-4 py-2 whitespace-nowrap text-sm">
-                                                    {coupon.status ? (
-                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                            coupon.status === 'claimed' 
-                                                                ? 'bg-green-100 text-green-800' 
-                                                                : 'bg-yellow-100 text-yellow-800'
-                                                        }`}>
-                                                            {coupon.status === 'claimed' ? 'Claimed' : 'Pending'}
-                                                        </span>
-                                                    ) : 'N/A'}
                                                 </td>
                                             </tr>
                                         ))
