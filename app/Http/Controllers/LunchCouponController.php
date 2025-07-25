@@ -1,11 +1,13 @@
 <?php
-
+// app/Http/Controllers/LunchCouponController.php
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Schedule;
+use App\Models\LunchCoupon;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class LunchCouponController extends Controller
 {
@@ -15,8 +17,9 @@ class LunchCouponController extends Controller
             'employee',
             'subSection.section',
             'manPowerRequest.shift',
-            'manPowerRequest.subSection.section'
-        ])->where('status', 'accepted'); // Only count accepted schedules
+            'manPowerRequest.subSection.section',
+            'lunchCoupon'
+        ])->where('status', 'accepted');
 
         $date = $request->input('date', today()->toDateString());
 
@@ -25,6 +28,11 @@ class LunchCouponController extends Controller
         }
 
         $schedules = $query->orderBy('date')->get();
+
+        // Get existing lunch coupons for the selected date
+        $lunchCoupons = LunchCoupon::whereDate('date', $date)
+            ->get()
+            ->keyBy('schedule_id');
 
         // Group by date and count employees
         $groupedSchedules = $schedules->groupBy(function ($schedule) {
@@ -43,7 +51,39 @@ class LunchCouponController extends Controller
             'filters' => [
                 'date' => $date,
             ],
-            'totalCoupons' => $schedules->count()
+            'totalCoupons' => $schedules->count(),
+            'lunchCoupons' => $lunchCoupons->toArray() // Convert to array
         ]);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'schedule_ids' => 'required|array',
+            'schedule_ids.*' => 'exists:schedules,id'
+        ]);
+
+        $date = $request->date;
+        $scheduleIds = $request->schedule_ids;
+
+        DB::transaction(function () use ($date, $scheduleIds) {
+            // First delete any existing coupons for this date
+            LunchCoupon::whereDate('date', $date)->delete();
+
+            // Create new coupons for selected schedules
+            foreach ($scheduleIds as $scheduleId) {
+                $schedule = Schedule::findOrFail($scheduleId);
+                
+                LunchCoupon::create([
+                    'date' => $date,
+                    'schedule_id' => $scheduleId,
+                    'employee_id' => $schedule->employee_id,
+                    'status' => 'pending'
+                ]);
+            }
+        });
+
+        return redirect()->back()->with('success', 'Lunch coupons saved successfully!');
     }
 }

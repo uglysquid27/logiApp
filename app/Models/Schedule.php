@@ -39,4 +39,8 @@ class Schedule extends Model
     {
         return $this->belongsTo(ManPowerRequest::class);
     }
+    public function lunchCoupon()
+{
+    return $this->hasOne(LunchCoupon::class);
+}
 }

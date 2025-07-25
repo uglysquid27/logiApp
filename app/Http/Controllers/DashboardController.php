@@ -303,14 +303,6 @@ public function getManpowerRequestsByMonth(Request $request, $month, $status)
 /**
  * Get filtered manpower request data for chart
  */
-/**
- * Get filtered manpower request data for chart
- */
-// In your DashboardController.php
-
-/**
- * Get filtered manpower request data for chart
- */
 public function getFilteredManpowerRequests(Request $request)
 {
     // Default to current month if no dates provided

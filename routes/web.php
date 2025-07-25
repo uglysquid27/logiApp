@@ -76,6 +76,8 @@ Route::middleware(['prevent.back'])->group(function () {
         ->name('dashboard.requests.fulfilled');
     Route::get('/dashboard/schedules/upcoming', [DashboardController::class, 'getUpcomingSchedules'])
         ->name('dashboard.schedules.upcoming');
+  Route::get('/dashboard/lunch-coupons/{date}', [DashboardController::class, 'getLunchCouponsByDate'])
+    ->name('dashboard.lunch-coupons.by-date');
 
     Route::get('/permits', [PermitController::class, 'index'])->name('permits.index');
     Route::post('/permits', [PermitController::class, 'store'])->name('permits.store');
@@ -160,8 +162,11 @@ Route::get('/dashboard/schedules/sub-section/{subSectionId}', [DashboardControll
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
 
     // Lunch routes
-    Route::get('/lunch-coupons', [LunchCouponController::class, 'index'])
-        ->name('lunch-coupons.index');
+ 
+        // routes/web.php
+Route::resource('lunch-coupons', LunchCouponController::class)->only(['index', 'store']);
+Route::get('/lunch-coupons/by-date/{date}', [LunchCouponController::class, 'getByDate'])
+    ->name('lunch-coupons.by-date');
 
      // Blind Test Routes
      Route::get('/employee-blind-test', [EmployeeBlindTestController::class, 'index'])

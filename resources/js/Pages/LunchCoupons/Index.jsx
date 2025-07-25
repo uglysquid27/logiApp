@@ -9,13 +9,24 @@ dayjs.extend(localizedFormat);
 dayjs.locale('id');
 
 const LunchCouponsIndex = () => {
-    const { schedules, filters, totalCoupons } = usePage().props;
+    const { schedules, filters, totalCoupons, lunchCoupons = {} } = usePage().props;
     const [date, setDate] = useState(filters.date || dayjs().format('YYYY-MM-DD'));
     const [isLoading, setIsLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [selectedCoupons, setSelectedCoupons] = useState({});
 
     useEffect(() => {
         setDate(filters.date || dayjs().format('YYYY-MM-DD'));
-    }, [filters]);
+
+        // Initialize selected coupons from existing lunch coupons
+        const initialSelected = {};
+        if (lunchCoupons) {
+            Object.keys(lunchCoupons).forEach(scheduleId => {
+                initialSelected[scheduleId] = true;
+            });
+        }
+        setSelectedCoupons(initialSelected);
+    }, [filters, lunchCoupons]);
 
     const applyFilters = async () => {
         setIsLoading(true);
@@ -39,6 +50,35 @@ const LunchCouponsIndex = () => {
             preserveState: true,
             preserveScroll: true,
         });
+    };
+
+    const handleCheckboxChange = (scheduleId) => {
+        setSelectedCoupons(prev => ({
+            ...prev,
+            [scheduleId]: !prev[scheduleId]
+        }));
+    };
+
+    const saveCoupons = async (dateGroup) => {
+        setSaving(true);
+        try {
+            const selectedScheduleIds = Object.keys(selectedCoupons)
+                .filter(id => selectedCoupons[id])
+                .map(id => parseInt(id));
+
+            await router.post(route('lunch-coupons.store'), {
+                date: dateGroup.date,
+                schedule_ids: selectedScheduleIds
+            }, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Show success message
+                    alert('Coupons saved successfully!');
+                }
+            });
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -129,6 +169,9 @@ const LunchCouponsIndex = () => {
                                         <thead className="bg-gray-50 dark:bg-gray-700">
                                             <tr>
                                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6">
+                                                    Select
+                                                </th>
+                                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6">
                                                     Name
                                                 </th>
                                                 <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6">
@@ -140,14 +183,22 @@ const LunchCouponsIndex = () => {
                                                 <th scope="col" className="hidden px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 md:table-cell sm:px-6">
                                                     Sub-Section
                                                 </th>
-                                                {/* <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6">
+                                                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 sm:px-6">
                                                     Coupon Status
-                                                </th> */}
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                             {dateGroup.schedules.map((schedule) => (
                                                 <tr key={schedule.id}>
+                                                    <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 sm:px-6">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={!!selectedCoupons[schedule.id]}
+                                                            onChange={() => handleCheckboxChange(schedule.id)}
+                                                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                        />
+                                                    </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 sm:px-6">
                                                         {schedule.employee?.name || 'N/A'}
                                                     </td>
@@ -160,11 +211,17 @@ const LunchCouponsIndex = () => {
                                                     <td className="hidden whitespace-nowrap px-3 py-4 text-sm text-gray-700 dark:text-gray-300 md:table-cell sm:px-6">
                                                         {schedule.sub_section?.name || 'N/A'}
                                                     </td>
-                                                    {/* <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 dark:text-gray-300 sm:px-6">
-                                                        <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                                            Pending
-                                                        </span>
-                                                    </td> */}
+                                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 dark:text-gray-300 sm:px-6">
+                                                        {lunchCoupons[schedule.id] ? (
+                                                            <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                                {lunchCoupons[schedule.id].status === 'claimed' ? 'Claimed' : 'Saved'}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                                                Pending
+                                                            </span>
+                                                        )}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -180,8 +237,12 @@ const LunchCouponsIndex = () => {
                                             {dateGroup.employee_count}
                                         </span>
                                     </div>
-                                    <button className="rounded-md bg-green-600 px-4 py-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-700 dark:focus:ring-offset-gray-800">
-                                        Save Coupons
+                                    <button
+                                        onClick={() => saveCoupons(dateGroup)}
+                                        disabled={saving}
+                                        className="rounded-md bg-green-600 px-4 py-2 text-white transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 hover:bg-green-700 disabled:opacity-50 dark:focus:ring-offset-gray-800"
+                                    >
+                                        {saving ? 'Saving...' : 'Save Coupons'}
                                     </button>
                                 </div>
                             </div>
