@@ -67,7 +67,7 @@ export default function Index() {
                     ) : (
                       employees.data.map((employee) => {
                         const latestTest = employee.blind_tests[0]; // First item is latest due to backend sorting
-                        
+
                         return (
                           <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                             <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{employee.name}</td>
@@ -77,12 +77,11 @@ export default function Index() {
                             </td>
                             <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                               {latestTest ? (
-                                <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${
-                                  latestTest.result >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100' :
-                                  latestTest.result >= 60 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100' :
-                                  latestTest.result >= 40 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-100' :
-                                  'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100'
-                                }`}>
+                                <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${latestTest.result >= 80 ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100' :
+                                    latestTest.result >= 60 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100' :
+                                      latestTest.result >= 40 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-100' :
+                                        'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100'
+                                  }`}>
                                   {latestTest.result}/100
                                 </span>
                               ) : (
@@ -90,20 +89,29 @@ export default function Index() {
                               )}
                             </td>
                             <td className="px-4 py-4 text-sm whitespace-nowrap">
-                              <div className="flex space-x-2">
-                                <Link
-                                  href={route('employee-blind-test.show', employee.id)}
-                                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                >
-                                  View History
-                                </Link>
-                                <Link
-                                  href={route('employee-blind-test.create', employee.id)}
-                                  className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                                >
-                                  Add Result
-                                </Link>
-                              </div>
+                              <td className="px-4 py-4 text-sm whitespace-nowrap">
+                                <div className="flex space-x-2">
+                                  <Link
+                                    href={route('employee-blind-test.show', employee.id)}
+                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                    title="View History"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                  </Link>
+                                  <Link
+                                    href={route('employee-blind-test.create', employee.id)}
+                                    className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+                                    title="Add Result"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                  </Link>
+                                </div>
+                              </td>
                             </td>
                           </tr>
                         );
@@ -122,7 +130,7 @@ export default function Index() {
                       className={`px-3 py-1 rounded-md text-sm ${link.active
                         ? 'bg-indigo-600 text-white'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      } ${!link.url && 'pointer-events-none opacity-50'}`}
+                        } ${!link.url && 'pointer-events-none opacity-50'}`}
                       dangerouslySetInnerHTML={{ __html: link.label }}
                       preserveScroll
                     />

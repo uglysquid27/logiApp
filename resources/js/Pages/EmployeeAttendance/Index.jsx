@@ -108,21 +108,27 @@ export default function Index() {
                 <div className="flex gap-3">
                   <Link
                     href={route('employee-attendance.create')}
-                    className="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
                   >
-                    Tambah Pegawai Baru
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                   </Link>
                   <Link
                     href={route('employee-attendance.inactive')}
-                    className="bg-gray-600 hover:bg-gray-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
+                    className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
                   >
-                    Lihat Pegawai Nonaktif
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4m10 6l6-6m-6-6l6 6" />
+                    </svg>
                   </Link>
                   <button
                     onClick={handleResetAllStatuses}
-                    className="bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
+                    className="flex items-center gap-2 bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200"
                   >
-                    Reset Semua Status
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -299,7 +305,7 @@ export default function Index() {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-2 text-sm mt-3">
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">Gender</p>
@@ -318,7 +324,7 @@ export default function Index() {
                           <p>{employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}</p>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-2 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">Total</p>
@@ -352,7 +358,6 @@ export default function Index() {
                   ))
                 )}
               </div>
-
               {/* Desktop Table View */}
               <div className="hidden sm:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -411,17 +416,23 @@ export default function Index() {
                           </td>
                           <td className="px-4 py-4 text-sm whitespace-nowrap">
                             <div className="flex space-x-2">
-                              {/* <Link
+                              <Link
                                 href={route('employee-attendance.edit', employee.id)}
                                 className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                title="Edit"
                               >
-                                Edit
-                              </Link> */}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </Link>
                               <Link
                                 href={route('employee-attendance.deactivate', employee.id)}
                                 className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+                                title="Deactivate"
                               >
-                                Deactivate
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
                               </Link>
                             </div>
                           </td>
@@ -448,7 +459,7 @@ export default function Index() {
                       className={`px-3 py-1 rounded-md text-sm ${link.active
                         ? 'bg-indigo-600 text-white'
                         : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      } ${!link.url && 'pointer-events-none opacity-50'}`}
+                        } ${!link.url && 'pointer-events-none opacity-50'}`}
                       dangerouslySetInnerHTML={{ __html: link.label }}
                       preserveScroll
                     />
