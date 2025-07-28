@@ -13,6 +13,7 @@ class OperatorLicense extends Model
         'employee_id',
         'license_number',
         'expiry_date',
+        'image_path',
     ];
 
     protected $dates = [

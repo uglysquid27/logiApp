@@ -13,16 +13,25 @@ use Illuminate\Support\Facades\Auth;
 
 class LicenseVerificationController extends Controller
 {
-    public function showForm()
-    {
-        return Inertia::render('License/Index', [
-            'results' => null,
-            'formData' => [
-                'nama_peserta' => '',
-                'tgl_lahir' => ''
-            ]
-        ]);
-    }
+public function showForm()
+{
+    // Get the current employee's license if it exists
+    $license = OperatorLicense::where('employee_id', auth()->id())->first();
+    
+    return Inertia::render('License/Index', [
+        'results' => null,
+        'formData' => [
+            'nama_peserta' => '',
+            'tgl_lahir' => ''
+        ],
+        // Add the employee license data
+        'employeeLicense' => $license ? [
+            'expiry_date' => $license->expiry_date, // Keep as is if it's already a string
+            'license_number' => $license->license_number,
+            'image_path' => $license->image_path
+        ] : null
+    ]);
+}
 
     public function verify(Request $request)
     {
@@ -136,21 +145,37 @@ class LicenseVerificationController extends Controller
         ]);
     }
 
- public function store(Request $request)
-{
-    $validated = $request->validate([
-        'license_number' => 'nullable|string|max:255',
-        'expiry_date' => 'required|date',
-    ]);
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'license_number' => 'nullable|string|max:255',
+            'expiry_date' => 'required|date',
+            'license_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
 
-    $license = OperatorLicense::updateOrCreate(
-        ['employee_id' => Auth::id()],
-        [
+        $data = [
             'license_number' => $validated['license_number'],
             'expiry_date' => $validated['expiry_date'],
-        ]
-    );
+        ];
 
-    return redirect()->back()->with('success', 'License updated successfully');
-}
+        // Handle file upload
+        if ($request->hasFile('license_image')) {
+            // Delete old image if exists
+            $oldLicense = OperatorLicense::where('employee_id', Auth::id())->first();
+            if ($oldLicense && $oldLicense->image_path) {
+                Storage::delete($oldLicense->image_path);
+            }
+
+            // Store new image
+            $path = $request->file('license_image')->store('license_images', 'public');
+            $data['image_path'] = $path;
+        }
+
+        $license = OperatorLicense::updateOrCreate(
+            ['employee_id' => Auth::id()],
+            $data
+        );
+
+        return redirect()->back()->with('success', 'License updated successfully');
+    }
 }

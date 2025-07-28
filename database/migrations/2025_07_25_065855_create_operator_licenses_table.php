@@ -17,6 +17,7 @@ return new class extends Migration
             
             $table->index('employee_id');
             $table->index('expiry_date');
+            $table->string('image_path')->nullable();
         });
     }
 

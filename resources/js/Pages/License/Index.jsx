@@ -4,10 +4,11 @@ import { usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function LicenseDateExtractor() {
-    const { auth } = usePage().props;
+    const { auth, employeeLicense } = usePage().props;
     const [image, setImage] = useState(null);
     const [processedImage, setProcessedImage] = useState(null);
     const [expiryDate, setExpiryDate] = useState(null);
+    const [licenseNumber, setLicenseNumber] = useState('');
     const [loading, setLoading] = useState(false);
     const [imageLoading, setImageLoading] = useState(false);
     const [debugInfo, setDebugInfo] = useState({});
@@ -16,8 +17,39 @@ export default function LicenseDateExtractor() {
     const [manualDate, setManualDate] = useState('');
     const [isMobile, setIsMobile] = useState(false);
     const [showUploadOptions, setShowUploadOptions] = useState(false);
+    const [imageFile, setImageFile] = useState(null);
     const fileInputRef = useRef(null);
     const galleryInputRef = useRef(null);
+
+    // Format date from YYYY-MM-DD to DD MMMM YYYY
+    const formatDisplayDate = (dateString) => {
+        if (!dateString) return null;
+        
+        const date = new Date(dateString);
+        const months = [
+            'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI',
+            'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'
+        ];
+        
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        
+        return `${day} ${month} ${year}`;
+    };
+
+    // Initialize with existing data if available
+    useEffect(() => {
+        if (employeeLicense) {
+            if (employeeLicense.expiry_date) {
+                setExpiryDate(formatDisplayDate(employeeLicense.expiry_date));
+            }
+            if (employeeLicense.license_number) {
+                setLicenseNumber(employeeLicense.license_number);
+                setDebugInfo(prev => ({ ...prev, regNumber: employeeLicense.license_number }));
+            }
+        }
+    }, [employeeLicense]);
 
     // Check if user is on mobile device
     useEffect(() => {
@@ -25,15 +57,6 @@ export default function LicenseDateExtractor() {
         setIsMobile(mobileCheck);
         setShowUploadOptions(mobileCheck);
     }, []);
-
-    // Patterns for extraction
-    const regNumberPattern = /Reg:\s*([A-Z0-9\/-]+)/i;
-    const datePatterns = [
-        /Berlaku\s*s\/d\s*:\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
-        /Berlaku\s*s\/d\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
-        /Berlaku\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
-        /(\d{1,2}\s*[A-Z]+\s*20[2-9][0-9])\s*$/im
-    ];
 
     const resetState = () => {
         setExpiryDate(null);
@@ -123,6 +146,7 @@ export default function LicenseDateExtractor() {
 
         resetState();
         setImageLoading(true);
+        setImageFile(file);
         
         try {
             const imageUrl = await fixImageOrientation(file);
@@ -141,15 +165,26 @@ export default function LicenseDateExtractor() {
     };
 
     const extractRegistrationYear = (text) => {
+        const regNumberPattern = /Reg:\s*([A-Z0-9\/-]+)/i;
         const match = text.match(regNumberPattern);
         if (!match) return null;
 
-        const yearMatch = match[1].match(/(?:^|\/)(20\d{2})(?:\/|$)/);
+        const regNumber = match[1];
+        setLicenseNumber(regNumber);
+        setDebugInfo(prev => ({ ...prev, regNumber: regNumber }));
+
+        const yearMatch = regNumber.match(/(?:^|\/)(20\d{2})(?:\/|$)/);
         return yearMatch ? parseInt(yearMatch[1]) : null;
     };
 
     const extractExpiryDateFromText = (text) => {
         let cleanedText = text;
+        const datePatterns = [
+            /Berlaku\s*s\/d\s*:\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+            /Berlaku\s*s\/d\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+            /Berlaku\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+            /(\d{1,2}\s*[A-Z]+\s*20[2-9][0-9])\s*$/im
+        ];
         
         if (isMobile) {
             cleanedText = cleanedText
@@ -306,55 +341,59 @@ export default function LicenseDateExtractor() {
         }
     };
 
-   const saveLicenseData = async () => {
-    if (!expiryDate) return;
+    const saveLicenseData = async () => {
+        if (!expiryDate) return;
 
-    try {
-        setLoading(true);
-        
-        // Convert the Indonesian date format to YYYY-MM-DD
-        const dateParts = expiryDate.split(' ');
-        const months = {
-            'JANUARI': '01', 'JAN': '01', 
-            'FEBRUARI': '02', 'FEB': '02',
-            'MARET': '03', 'MAR': '03',
-            'APRIL': '04', 'APR': '04',
-            'MEI': '05', 'MAY': '05',
-            'JUNI': '06', 'JUN': '06',
-            'JULI': '07', 'JUL': '07',
-            'AGUSTUS': '08', 'AUG': '08',
-            'SEPTEMBER': '09', 'SEP': '09',
-            'OKTOBER': '10', 'OKT': '10',
-            'NOVEMBER': '11', 'NOV': '11',
-            'DESEMBER': '12', 'DEC': '12'
-        };
-        
-        const formattedDate = `${dateParts[2]}-${months[dateParts[1].toUpperCase()]}-${dateParts[0].padStart(2, '0')}`;
+        try {
+            setLoading(true);
+            
+            // Convert the Indonesian date format to YYYY-MM-DD
+            const dateParts = expiryDate.split(' ');
+            const months = {
+                'JANUARI': '01', 'JAN': '01', 
+                'FEBRUARI': '02', 'FEB': '02',
+                'MARET': '03', 'MAR': '03',
+                'APRIL': '04', 'APR': '04',
+                'MEI': '05', 'MAY': '05',
+                'JUNI': '06', 'JUN': '06',
+                'JULI': '07', 'JUL': '07',
+                'AGUSTUS': '08', 'AUG': '08',
+                'SEPTEMBER': '09', 'SEP': '09',
+                'OKTOBER': '10', 'OKT': '10',
+                'NOVEMBER': '11', 'NOV': '11',
+                'DESEMBER': '12', 'DEC': '12'
+            };
+            
+            const formattedDate = `${dateParts[2]}-${months[dateParts[1].toUpperCase()]}-${dateParts[0].padStart(2, '0')}`;
 
-        // Send only the needed data (no FormData needed since no file upload)
-        await router.post('/employee/operator-license', {
-            expiry_date: formattedDate,
-            license_number: debugInfo.regNumber || null,
-        }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setDebugInfo(prev => ({
-                    ...prev,
-                    status: 'License expiry date saved successfully!'
-                }));
-            },
-            onError: (errors) => {
-                setDebugInfo(prev => ({
-                    ...prev,
-                    status: 'Failed to save license data',
-                    error: errors.message || 'Validation error'
-                }));
+            // Create FormData to include the file
+            const formData = new FormData();
+            formData.append('expiry_date', formattedDate);
+            formData.append('license_number', licenseNumber || '');
+            if (imageFile) {
+                formData.append('license_image', imageFile);
             }
-        });
-    } finally {
-        setLoading(false);
-    }
-};
+
+            await router.post('/employee/operator-license', formData, {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setDebugInfo(prev => ({
+                        ...prev,
+                        status: 'License data saved successfully!'
+                    }));
+                },
+                onError: (errors) => {
+                    setDebugInfo(prev => ({
+                        ...prev,
+                        status: 'Failed to save license data',
+                        error: errors.message || 'Validation error'
+                    }));
+                }
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <AuthenticatedLayout
@@ -371,6 +410,43 @@ export default function LicenseDateExtractor() {
                                     {isMobile ? 'Take a photo or upload from gallery' : 'Upload a license image to accurately detect the expiry date'}
                                 </p>
                             </div>
+
+                            {/* Show existing license if available */}
+                            {employeeLicense && (
+                                <div className="mb-6 bg-blue-50 dark:bg-blue-900 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                                    <h3 className="text-lg font-medium mb-2 text-blue-800 dark:text-blue-200">
+                                        Current License Information
+                                    </h3>
+                                    {employeeLicense.image_path && (
+                                        <div className="mb-4">
+                                            <h4 className="text-sm font-medium mb-2">License Image:</h4>
+                                            <img 
+                                                src={`/storage/${employeeLicense.image_path}`}
+                                                alt="Current license"
+                                                className="w-full max-w-md h-auto border border-gray-300 rounded-lg"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {employeeLicense.expiry_date && (
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Expiry Date</p>
+                                                <p className="text-lg font-semibold text-blue-600 dark:text-blue-300">
+                                                    {formatDisplayDate(employeeLicense.expiry_date)}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {employeeLicense.license_number && (
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">License Number</p>
+                                                <p className="text-lg font-semibold text-blue-600 dark:text-blue-300">
+                                                    {employeeLicense.license_number}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="mb-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                 <input
@@ -528,9 +604,9 @@ export default function LicenseDateExtractor() {
                                     <p className="text-2xl font-bold text-green-600 dark:text-green-300">
                                         {expiryDate}
                                     </p>
-                                    {debugInfo.regYear && (
+                                    {licenseNumber && (
                                         <p className="mt-2 text-sm text-green-700 dark:text-green-200">
-                                            Registration Year: {debugInfo.regYear}
+                                            License Number: {licenseNumber}
                                         </p>
                                     )}
                                     <div className="mt-4">
@@ -567,10 +643,10 @@ export default function LicenseDateExtractor() {
                                         </p>
                                     </div>
 
-                                    {debugInfo.regYear !== undefined && (
+                                    {debugInfo.regNumber !== undefined && (
                                         <div>
-                                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Registration Year</p>
-                                            <p className="text-sm">{debugInfo.regYear || 'Not detected'}</p>
+                                            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">License Number</p>
+                                            <p className="text-sm">{debugInfo.regNumber || 'Not detected'}</p>
                                         </div>
                                     )}
 
