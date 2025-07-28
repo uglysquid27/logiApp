@@ -214,33 +214,73 @@ class EmployeeSum extends Controller
 
     public function edit(Employee $employee)
     {
-        $sections = Section::all();
-        $subSections = SubSection::all();
+        $sections = Section::with('subSections')->get();
+        
+        // Get all unique section names (excluding 'All')
+        $uniqueSections = $sections->pluck('name')
+            ->unique()
+            ->reject(fn($name) => $name === 'All')
+            ->values()
+            ->toArray();
 
-        $uniqueSections = $sections->pluck('name')->unique()->prepend('All');
-        $uniqueSubSections = $subSections->pluck('name')->unique()->prepend('All');
+        // Group sub-sections by section name
+        $groupedSubSections = $sections->mapWithKeys(function ($section) {
+            return [$section->name => $section->subSections->pluck('name')->toArray()];
+        });
 
-        return Inertia::render('Employees/Edit', [
-            'employee' => $employee->load('subSections'),
-            'uniqueSections' => $uniqueSections,
-            'uniqueSubSections' => $uniqueSubSections,
+        // Get current sections from employee's sub-sections
+        $currentSections = $employee->subSections->pluck('section.name')
+            ->unique()
+            ->toArray();
+
+        return Inertia::render('EmployeeAttendance/Edit', [
+            'employee' => [
+                'id' => $employee->id,
+                'name' => $employee->name,
+                'nik' => $employee->nik,
+                'type' => $employee->type,
+                'status' => $employee->status,
+                'cuti' => $employee->cuti,
+                'gender' => $employee->gender,
+                'sections' => $currentSections,
+                'sub_sections' => $employee->subSections->pluck('name')->toArray(),
+            ],
+            'sections' => $uniqueSections,
+            'groupedSubSections' => $groupedSubSections,
         ]);
     }
 
-    public function update(Request $request, Employee $employee)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'nik' => 'required|string|max:255|unique:employees,nik,' . $employee->id,
-            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'type' => 'required|in:harian,bulanan',
-            'status' => 'required|in:available,assigned,on leave',
-            'cuti' => 'required|in:yes,no',
-            'gender' => 'required|in:male,female',
-            'sub_sections' => 'array',
-            'sub_sections.*' => 'string|exists:sub_sections,name',
-        ]);
+   public function update(Request $request, Employee $employee)
+{
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'nik' => 'required|string|max:255|unique:employees,nik,'.$employee->id,
+        'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+        'type' => 'required|in:harian,bulanan',
+        'status' => 'required|in:available,assigned,on leave',
+        'cuti' => 'required|in:yes,no',
+        'gender' => 'required|in:male,female',
+        'sections' => 'required|array|min:1',
+        'sections.*' => 'string|exists:sections,name',
+        'sub_sections' => 'required|array|min:1',
+        'sub_sections.*' => 'string|exists:sub_sections,name',
+    ]);
 
+    // Verify each subsection belongs to at least one selected section
+    $validSubSections = [];
+    foreach ($validated['sub_sections'] as $subSectionName) {
+        $subSection = SubSection::where('name', $subSectionName)
+            ->whereHas('section', function($query) use ($validated) {
+                $query->whereIn('name', $validated['sections']);
+            })
+            ->first();
+
+        if ($subSection) {
+            $validSubSections[] = $subSection->id;
+        }
+    }
+
+    DB::transaction(function () use ($employee, $validated, $validSubSections) {
         $updateData = [
             'name' => $validated['name'],
             'nik' => $validated['nik'],
@@ -255,20 +295,12 @@ class EmployeeSum extends Controller
         }
 
         $employee->update($updateData);
+        $employee->subSections()->sync($validSubSections);
+    });
 
-        if (isset($validated['sub_sections'])) {
-            $subSectionIds = SubSection::whereIn('name', $validated['sub_sections'])
-                ->pluck('id')
-                ->toArray();
-
-            $employee->subSections()->sync($subSectionIds);
-        } else {
-            $employee->subSections()->detach();
-        }
-
-        return Redirect::route('employee-attendance.index')->with('success', 'Pegawai berhasil diperbarui.');
-    }
-
+    return redirect()->route('employee-attendance.index')
+        ->with('success', 'Employee updated successfully.');
+}
 
     public function inactive(Request $request)
     {
