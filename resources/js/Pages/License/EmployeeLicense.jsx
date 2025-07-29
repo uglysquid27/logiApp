@@ -6,17 +6,17 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
     const formatDate = (dateString) => {
         if (!dateString) return 'Not provided';
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
     };
 
     const getExpiryBadgeClass = () => {
         if (!license?.expiry_status) return 'bg-gray-100 text-gray-800';
-        
-        switch(license.expiry_status) {
+
+        switch (license.expiry_status) {
             case 'expired':
                 return 'bg-red-100 text-red-800';
             case 'expiring_soon':
@@ -30,8 +30,8 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
 
     const getExpiryStatusText = () => {
         if (!license?.expiry_status) return '';
-        
-        switch(license.expiry_status) {
+
+        switch (license.expiry_status) {
             case 'expired':
                 return 'Expired';
             case 'expiring_soon':
@@ -46,7 +46,7 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
     return (
         <AuthenticatedLayout>
             <Head title={`License - ${employee.name}`} />
-            
+
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -55,21 +55,21 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
                                 <h2 className="text-2xl font-bold text-gray-800">
                                     Operator License - {employee.name}
                                 </h2>
-                                <Link 
+                                <Link
                                     href={route('employee-attendance.show', employee.id)}
                                     className="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                 >
                                     Back to Employee
                                 </Link>
                             </div>
-                            
+
                             {license ? (
                                 <>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                                         {/* License Details */}
                                         <div>
                                             <h3 className="text-lg font-medium mb-4">License Information</h3>
-                                            
+
                                             <div className="space-y-4">
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">License Number</label>
@@ -77,7 +77,7 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
                                                         {license.license_number || 'Not provided'}
                                                     </p>
                                                 </div>
-                                                
+
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
                                                     <p className="mt-1 text-sm text-gray-900 flex items-center">
@@ -89,14 +89,14 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         {/* License Image */}
                                         <div>
                                             <h3 className="text-lg font-medium mb-4">License Image</h3>
-                                            
+
                                             {license.image_path ? (
                                                 <div className="border rounded-md p-4 flex justify-center bg-gray-50">
-                                                    <img 
+                                                    <img
                                                         src={`/storage/${license.image_path}`}
                                                         alt="Operator License"
                                                         className="max-h-96 object-contain"
@@ -117,7 +117,7 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
                                             <p className="mb-3 text-sm text-gray-600">
                                                 Verify this license on the Indonesian Ministry of Manpower (Kemnaker) portal:
                                             </p>
-                                            
+
                                             {/* Iframe Embed */}
                                             <div className="mb-4">
                                                 <iframe
@@ -126,9 +126,10 @@ export default function EmployeeLicense({ employee, license, kemnakerVerifyUrl =
                                                     height="500"
                                                     className="border rounded-lg shadow-sm"
                                                     title="Kemnaker License Verification"
+                                                    scrolling="no"
                                                 ></iframe>
                                             </div>
-                                            
+
                                             {/* Fallback Link */}
                                             <div className="text-center">
                                                 <a

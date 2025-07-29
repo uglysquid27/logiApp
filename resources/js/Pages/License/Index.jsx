@@ -170,18 +170,66 @@ export default function LicenseDateExtractor() {
         }
     };
 
-    const extractRegistrationYear = (text) => {
-        const regNumberPattern = /Reg:\s*([A-Z0-9\/-]+)/i;
-        const match = text.match(regNumberPattern);
-        if (!match) return null;
+    const extractRegistrationNumber = (text) => {
+    // Improved pattern to match various license number formats
+    const regNumberPatterns = [
+        /Reg:\s*([A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+\/[0-9]+)/i,  // Matches formats with slashes
+        /Reg:\s*([A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+)/i,  // Matches formats with one slash
+        /Reg:\s*([A-Za-z0-9\.\-]+)/i,  // Matches simple formats
+        /No\.?\s*Reg\.?:\s*([A-Za-z0-9\.\-]+)/i,  // Matches "No Reg:" format
+        /([A-Z]\.[0-9]{2}\.[0-9]{4}\-[A-Z0-9]+\/[A-Z]+\/[A-Z0-9]+\/[0-9]+)/i,  // Specific pattern for your example
+        /([A-Z]\.[0-9]{2}\.[0-9]{4}\-[A-Z0-9]+)/i  // Partial match for your example
+    ];
 
-        const regNumber = match[1];
-        setLicenseNumber(regNumber);
-        setDebugInfo(prev => ({ ...prev, regNumber: regNumber }));
+    for (const pattern of regNumberPatterns) {
+        const match = text.match(pattern);
+        if (match) {
+            // Clean up the matched result
+            let regNumber = match[1]
+                .replace(/\s/g, '')  // Remove any spaces
+                .replace(/[^A-Za-z0-9\.\-\/]/g, '');  // Remove special characters except .-/
 
-        const yearMatch = regNumber.match(/(?:^|\/)(20\d{2})(?:\/|$)/);
-        return yearMatch ? parseInt(yearMatch[1]) : null;
-    };
+            // Additional cleanup for common OCR errors
+            regNumber = regNumber
+                .replace(/O/g, '0')  // Replace O with 0
+                .replace(/I/g, '1')  // Replace I with 1
+                .replace(/S/g, '5')  // Replace S with 5
+                .replace(/Z/g, '2')  // Replace Z with 2
+                .replace(/B/g, '8'); // Replace B with 8
+
+            return regNumber;
+        }
+    }
+
+    return null;
+};
+
+const extractRegistrationYear = (text) => {
+    const regNumber = extractRegistrationNumber(text);
+    if (!regNumber) return null;
+
+    setLicenseNumber(regNumber);
+    setDebugInfo(prev => ({ ...prev, regNumber: regNumber }));
+
+    // Try to extract year from various positions in the registration number
+    const yearPatterns = [
+        /(?:^|\/)(20\d{2})(?:\/|$)/,  // Matches years in format 20XX
+        /(?:^|\-)(\d{4})(?:\-|$)/,    // Matches 4-digit numbers after - or at start
+        /(?:^|\.)(\d{2})(?:\-|$)/      // Matches 2-digit numbers that might be years
+    ];
+
+    for (const pattern of yearPatterns) {
+        const match = regNumber.match(pattern);
+        if (match) {
+            let year = parseInt(match[1]);
+            // If we got a 2-digit year, assume it's 2000+
+            if (year < 100) year += 2000;
+            return year;
+        }
+    }
+
+    return null;
+};
 
     const extractExpiryDateFromText = (text) => {
         let cleanedText = text;
@@ -312,36 +360,38 @@ export default function LicenseDateExtractor() {
     };
 
     const extractLicenseData = async () => {
-        if (!processedImage || attemptCount >= 3) return;
+           if (!processedImage || attemptCount >= 3) return;
 
-        setLoading(true);
-        setAttemptCount(prev => prev + 1);
-        setDebugInfo(prev => ({ ...prev, status: `Processing attempt ${attemptCount + 1} of 3` }));
+    setLoading(true);
+    setAttemptCount(prev => prev + 1);
+    setDebugInfo(prev => ({ ...prev, status: `Processing attempt ${attemptCount + 1} of 3` }));
 
-        try {
-            const { data: { text } } = await Tesseract.recognize(
-                processedImage,
-                'ind',
-                {
-                    logger: m => setDebugInfo(prev => ({ ...prev, status: m.status })),
-                    tessedit_pageseg_mode: isMobile ? 11 : 6,
-                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ/- ',
-                    preserve_interword_spaces: 1,
-                    tessedit_ocr_engine_mode: isMobile ? 1 : 3,
-                    user_defined_dpi: isMobile ? '300' : '200'
-                }
-            );
+    try {
+        const { data: { text } } = await Tesseract.recognize(
+            processedImage,
+            'ind',
+            {
+                logger: m => setDebugInfo(prev => ({ ...prev, status: m.status })),
+                tessedit_pageseg_mode: isMobile ? 11 : 6,
+                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ./- ',
+                preserve_interword_spaces: 1,
+                tessedit_ocr_engine_mode: isMobile ? 1 : 3,
+                user_defined_dpi: isMobile ? '300' : '200'
+            }
+        );
 
-            const regYear = extractRegistrationYear(text);
-            const extractedDate = extractExpiryDateFromText(text);
-            
-            setDebugInfo(prev => ({
-                ...prev,
-                rawText: text,
-                regYear: regYear,
-                extractedDate: extractedDate,
-                status: `Found registration year: ${regYear}, extracted date: ${extractedDate || 'None'}`
-            }));
+        const regNumber = extractRegistrationNumber(text);
+        const regYear = extractRegistrationYear(text);
+        const extractedDate = extractExpiryDateFromText(text);
+        
+        setDebugInfo(prev => ({
+            ...prev,
+            rawText: text,
+            regNumber: regNumber,
+            regYear: regYear,
+            extractedDate: extractedDate,
+            status: `Found registration number: ${regNumber || 'None'}, extracted date: ${extractedDate || 'None'}`
+        }));
 
             if (extractedDate) {
                 const formattedDate = parseIndonesianDate(extractedDate);
