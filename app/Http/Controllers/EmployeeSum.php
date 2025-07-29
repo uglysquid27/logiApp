@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\Section;
 use App\Models\SubSection;
+use App\Models\OperatorLicense;
 use App\Models\BlindTest; // Import the BlindTest model
 use Inertia\Inertia;
 use Inertia\Response;
@@ -233,6 +234,9 @@ class EmployeeSum extends Controller
             ->unique()
             ->toArray();
 
+        // Load employee license information if exists
+        $license = OperatorLicense::where('employee_id', $employee->id)->first();
+
         return Inertia::render('EmployeeAttendance/Edit', [
             'employee' => [
                 'id' => $employee->id,
@@ -244,6 +248,15 @@ class EmployeeSum extends Controller
                 'gender' => $employee->gender,
                 'sections' => $currentSections,
                 'sub_sections' => $employee->subSections->pluck('name')->toArray(),
+                'license' => $license ? [
+                    'expiry_date' => $license->expiry_date,
+                    'license_number' => $license->license_number,
+                    'isExpired' => $license->expiry_date && Carbon::parse($license->expiry_date)->isPast(),
+                    'isExpiringSoon' => $license->expiry_date && Carbon::parse($license->expiry_date)->between(
+                        now(),
+                        now()->addDays(30)
+                    ),
+                ] : null,
             ],
             'sections' => $uniqueSections,
             'groupedSubSections' => $groupedSubSections,
@@ -404,4 +417,24 @@ class EmployeeSum extends Controller
         return redirect()->route('employee-attendance.inactive')
             ->with('success', 'Employee permanently deleted');
     }
+
+    public function showLicense(Employee $employee)
+{
+    $license = OperatorLicense::where('employee_id', $employee->id)->first();
+    
+    return Inertia::render('EmployeeLicense/SimpleView', [
+        'employee' => [
+            'id' => $employee->id,
+            'name' => $employee->name,
+        ],
+        'license' => $license ? [
+            'expiry_date' => $license->expiry_date,
+            'image_path' => $license->image_path,
+            'isExpired' => $license->expiry_date && now()->gt($license->expiry_date),
+            'isExpiringSoon' => $license->expiry_date && 
+                now()->lt($license->expiry_date) && 
+                now()->addDays(30)->gt($license->expiry_date),
+        ] : null
+    ]);
+}
 }

@@ -9,7 +9,7 @@ import DateFilter from '@/Components/Dashboard/DateFilter';
 import ManpowerChart from '@/Components/Dashboard/ManpowerChart';
 import EmployeeChart from '@/Components/Dashboard/EmployeeChart';
 import PendingRequestsTable from '@/Components/Dashboard/PendingRequestsTable';
-import UpcomingSchedulesTable from '@/Components/Dashboard/UpcomingSchedulesTable';
+import UpcomingSchedulesTable from '@/Components/Dashboard/UpcomingSchedulesTables';
 import DetailModal from '@/Components/Dashboard/DetailModal';
 import LunchCouponsCard from '@/Components/Dashboard/LunchCouponsCard';
 import dayjs from 'dayjs';

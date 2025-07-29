@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Log;
 use Symfony\Component\DomCrawler\Crawler;
 use Inertia\Inertia;
 use App\Models\OperatorLicense;
+use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class LicenseVerificationController extends Controller
 {
+    use AuthorizesRequests;
 public function showForm()
 {
     // Get the current employee's license if it exists
@@ -178,4 +181,42 @@ public function showForm()
 
         return redirect()->back()->with('success', 'License updated successfully');
     }
+
+public function showEmployeeLicense(Employee $employee)
+{
+    $license = OperatorLicense::where('employee_id', $employee->id)->first();
+    
+    return Inertia::render('License/EmployeeLicense', [
+        'employee' => [
+            'id' => $employee->id,
+            'nik' => $employee->nik,
+            'name' => $employee->name,
+            'type' => $employee->type,
+            'status' => $employee->status,
+        ],
+        'license' => $license ? [
+            'license_number' => $license->license_number,
+            'expiry_date' => $license->expiry_date,
+            'image_path' => $license->image_path,
+            'expiry_status' => $this->getExpiryStatus($license->expiry_date),
+        ] : null,
+        'kemnakerVerifyUrl' => 'https://temank3.kemnaker.go.id/page/cari_personel',
+    ]);
+}
+
+private function getExpiryStatus($expiryDate)
+{
+    if (!$expiryDate) return 'unknown';
+    
+    $expiry = \Carbon\Carbon::parse($expiryDate);
+    $today = \Carbon\Carbon::now();
+    
+    if ($expiry->isPast()) {
+        return 'expired';
+    } elseif ($expiry->diffInYears($today) <= 1) { // Changed to 1 year
+        return 'expiring_soon';
+    } else {
+        return 'valid';
+    }
+}
 }

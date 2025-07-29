@@ -114,17 +114,24 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
             ->name('employee-attendance.reset-all-statuses');
         
         // Individual employee routes
-        Route::prefix('/{employee}')->group(function () {
-            Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
-            Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
-            Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
-            Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
-            Route::post('/activate', [EmployeeSum::class, 'activate'])
-                ->name('employee-attendance.activate');
-            Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
-                ->name('employee-attendance.process-deactivation');
-        });
+       Route::prefix('/{employee}')->group(function () {
+    Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
+    Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
+    
+    // Add the license route within the same prefix group
+    // Route::get('employee-license/{employee}', [LicenseVerificationController::class, 'showForm'])->name('employee-license.show');
+
+    Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
+    Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
+    Route::post('/activate', [EmployeeSum::class, 'activate'])
+        ->name('employee-attendance.activate');
+    Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
+        ->name('employee-attendance.process-deactivation');
+});
     });
+
+    Route::get('/employees/{employee}/license', [LicenseVerificationController::class, 'showEmployeeLicense'])
+    ->name('employees.license.show');
 
     // Manpower routes
     Route::resource('manpower-requests', ManPowerRequestController::class);
