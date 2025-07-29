@@ -18,6 +18,8 @@ export default function LicenseDateExtractor() {
     const [isMobile, setIsMobile] = useState(false);
     const [showUploadOptions, setShowUploadOptions] = useState(false);
     const [imageFile, setImageFile] = useState(null);
+    const [convertedDate, setConvertedDate] = useState(null);
+    const [showDateConversion, setShowDateConversion] = useState(false);
     const fileInputRef = useRef(null);
     const galleryInputRef = useRef(null);
 
@@ -42,7 +44,9 @@ export default function LicenseDateExtractor() {
     useEffect(() => {
         if (employeeLicense) {
             if (employeeLicense.expiry_date) {
-                setExpiryDate(formatDisplayDate(employeeLicense.expiry_date));
+                const formatted = formatDisplayDate(employeeLicense.expiry_date);
+                setExpiryDate(formatted);
+                setConvertedDate(employeeLicense.expiry_date);
             }
             if (employeeLicense.license_number) {
                 setLicenseNumber(employeeLicense.license_number);
@@ -60,10 +64,12 @@ export default function LicenseDateExtractor() {
 
     const resetState = () => {
         setExpiryDate(null);
+        setConvertedDate(null);
         setDebugInfo({});
         setAttemptCount(0);
         setShowManualInput(false);
         setManualDate('');
+        setShowDateConversion(false);
     };
 
     const triggerFileInput = (type) => {
@@ -207,6 +213,104 @@ export default function LicenseDateExtractor() {
         return null;
     };
 
+    const calculateSimilarity = (s1, s2) => {
+        // Simple similarity calculation - count matching characters
+        const set1 = new Set(s1);
+        const set2 = new Set(s2);
+        const intersection = new Set([...set1].filter(x => set2.has(x)));
+        return intersection.size / Math.max(set1.size, set2.size);
+    };
+
+    const findBestMonthMatch = (inputMonth) => {
+        const monthMappings = {
+            // Full month names
+            'JANUARI': '01', 'FEBRUARI': '02', 'MARET': '03', 'APRIL': '04', 
+            'MEI': '05', 'JUNI': '06', 'JULI': '07', 'AGUSTUS': '08', 
+            'SEPTEMBER': '09', 'OKTOBER': '10', 'NOVEMBER': '11', 'DESEMBER': '12',
+            
+            // Common abbreviations
+            'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04', 
+            'MEI': '05', 'JUN': '06', 'JUL': '07', 'AGS': '08', 'AUG': '08',
+            'SEP': '09', 'OKT': '10', 'NOV': '11', 'DES': '12', 'DEC': '12',
+            
+            // Common OCR mistakes with their corrections
+            'SEPTEMBOR': '09', 'SEPTEBER': '09', 'SEPTEMBERR': '09',
+            'SEPTEMER': '09', 'SEPTEMBE': '09', 'SEPTEMBER': '09',
+            'SEPYEMBER': '09', 'SEPTEMBERR': '09', 'SEPTEMEBR': '09',
+            'SEPTEMBRE': '09', 'SEPTEMBOR': '09', 'SEPTMBER': '09',
+            'SEPTEEMBER': '09', 'SEPTERMBER': '09', 'SEPTEMBER': '09',
+            'OKTOBERR': '10', 'OKTOBER': '10', 'OKTOBR': '10',
+            'OKTOBE': '10', 'OKTOBER': '10', 'OKTOBRE': '10',
+            'NOFEMBER': '11', 'NOVEMEBR': '11', 'NOVEMER': '11',
+            'DESEMBERR': '12', 'DESEMEBR': '12', 'DESEMER': '12',
+            'AGUSTU': '08', 'AGUSTUS': '08', 'AGUSTOS': '08',
+            'JULYY': '07', 'JULI': '07', 'JULY': '07',
+            'MARETT': '03', 'MARET': '03', 'MARERT': '03',
+            'APRILL': '04', 'APRIL': '04', 'APRIL': '04'
+        };
+
+        // First try exact match
+        if (monthMappings[inputMonth]) {
+            return { month: monthMappings[inputMonth], matched: inputMonth, confidence: 1 };
+        }
+
+        // Then try to find the best match
+        const possibleMonths = Object.keys(monthMappings);
+        let bestMatch = null;
+        let highestScore = 0;
+
+        for (const month of possibleMonths) {
+            // Simple similarity score (can be replaced with more sophisticated algorithm)
+            const similarity = calculateSimilarity(inputMonth, month);
+            
+            // Bonus if the input starts with the month (common OCR error is trailing characters)
+            const startsWithBonus = month.startsWith(inputMonth.substring(0, 3)) ? 0.2 : 0;
+            
+            const totalScore = similarity + startsWithBonus;
+            
+            if (totalScore > highestScore) {
+                highestScore = totalScore;
+                bestMatch = month;
+            }
+        }
+
+        // Only accept if we have a reasonably good match
+        if (highestScore > 0.6) {
+            return { 
+                month: monthMappings[bestMatch], 
+                matched: bestMatch, 
+                confidence: highestScore 
+            };
+        }
+
+        return null;
+    };
+
+    const parseIndonesianDate = (dateString) => {
+        const parts = dateString.split(' ');
+        if (parts.length !== 3) return null;
+
+        const day = parts[0].padStart(2, '0');
+        const extractedMonth = parts[1].toUpperCase();
+        const year = parts[2];
+
+        // Find the best month match
+        const monthMatch = findBestMonthMatch(extractedMonth);
+        if (!monthMatch) {
+            return null;
+        }
+
+        // Log the correction for debugging
+        if (monthMatch.matched !== extractedMonth) {
+            setDebugInfo(prev => ({
+                ...prev,
+                monthCorrection: `Corrected '${extractedMonth}' to '${monthMatch.matched}' (confidence: ${Math.round(monthMatch.confidence * 100)}%)`
+            }));
+        }
+
+        return `${year}-${monthMatch.month}-${day}`;
+    };
+
     const extractLicenseData = async () => {
         if (!processedImage || attemptCount >= 3) return;
 
@@ -240,32 +344,20 @@ export default function LicenseDateExtractor() {
             }));
 
             if (extractedDate) {
-                const dateParts = extractedDate.split(' ');
-                if (dateParts.length === 3) {
-                    const months = {
-                        'JANUARI': 0, 'JAN': 0, 'FEBRUARI': 1, 'FEB': 1, 'MARET': 2, 'MAR': 2,
-                        'APRIL': 3, 'APR': 3, 'MEI': 4, 'MAY': 4, 'JUNI': 5, 'JUN': 5,
-                        'JULI': 6, 'JUL': 6, 'AGUSTUS': 7, 'AUG': 7, 'SEPTEMBER': 8, 'SEP': 8,
-                        'OKTOBER': 9, 'OKT': 9, 'NOVEMBER': 10, 'NOV': 10, 'DESEMBER': 11, 'DEC': 11
-                    };
+                const formattedDate = parseIndonesianDate(extractedDate);
+                if (formattedDate) {
+                    const extractedDateObj = new Date(formattedDate);
+                    const today = new Date();
                     
-                    const day = parseInt(dateParts[0]);
-                    const month = months[dateParts[1].toUpperCase()];
-                    const year = parseInt(dateParts[2]);
-                    
-                    if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-                        const extractedDateObj = new Date(year, month, day);
-                        const today = new Date();
-                        
-                        if (extractedDateObj > today) {
-                            setExpiryDate(extractedDate);
-                            setDebugInfo(prev => ({
-                                ...prev,
-                                status: 'Using valid extracted expiry date',
-                                processedDate: extractedDate
-                            }));
-                            return;
-                        }
+                    if (extractedDateObj > today) {
+                        setExpiryDate(extractedDate);
+                        setConvertedDate(formattedDate);
+                        setDebugInfo(prev => ({
+                            ...prev,
+                            status: 'Using valid extracted expiry date',
+                            processedDate: extractedDate
+                        }));
+                        return;
                     }
                 }
             }
@@ -275,6 +367,7 @@ export default function LicenseDateExtractor() {
                     const extractedYear = extractedDate.match(/(20\d{2})/);
                     if (extractedYear && Math.abs(parseInt(extractedYear[1]) - regYear) <= 5) {
                         setExpiryDate(extractedDate);
+                        setConvertedDate(parseIndonesianDate(extractedDate));
                         setDebugInfo(prev => ({
                             ...prev,
                             status: 'Using extracted date (within 5 years of registration)',
@@ -286,6 +379,7 @@ export default function LicenseDateExtractor() {
 
                 const calculatedDate = `31 DESEMBER ${regYear + 5}`;
                 setExpiryDate(calculatedDate);
+                setConvertedDate(`${regYear + 5}-12-31`);
                 setDebugInfo(prev => ({
                     ...prev,
                     status: `Using registration year +5 (${regYear} → ${regYear + 5})`,
@@ -296,6 +390,7 @@ export default function LicenseDateExtractor() {
 
             if (extractedDate) {
                 setExpiryDate(extractedDate);
+                setConvertedDate(parseIndonesianDate(extractedDate));
                 setDebugInfo(prev => ({
                     ...prev,
                     status: 'Using extracted date (no registration year found)',
@@ -333,6 +428,8 @@ export default function LicenseDateExtractor() {
         e.preventDefault();
         if (manualDate) {
             setExpiryDate(manualDate);
+            const formattedDate = parseIndonesianDate(manualDate);
+            setConvertedDate(formattedDate);
             setDebugInfo(prev => ({
                 ...prev,
                 status: 'Using manually entered date',
@@ -341,34 +438,43 @@ export default function LicenseDateExtractor() {
         }
     };
 
-    const saveLicenseData = async () => {
+    const handleConvertDate = () => {
         if (!expiryDate) return;
+        
+        const formattedDate = parseIndonesianDate(expiryDate);
+        if (formattedDate) {
+            setConvertedDate(formattedDate);
+            setShowDateConversion(true);
+            setDebugInfo(prev => ({
+                ...prev,
+                status: 'Date successfully converted',
+                convertedDate: formattedDate
+            }));
+        } else {
+            setDebugInfo(prev => ({
+                ...prev,
+                status: 'Date conversion failed',
+                error: 'Invalid date format. Please use DD MMMM YYYY format'
+            }));
+        }
+    };
+
+    const saveLicenseData = async () => {
+        if (!expiryDate || !convertedDate) {
+            setDebugInfo(prev => ({
+                ...prev,
+                status: 'Cannot save - date not converted',
+                error: 'Please convert the date first'
+            }));
+            return;
+        }
 
         try {
             setLoading(true);
             
-            // Convert the Indonesian date format to YYYY-MM-DD
-            const dateParts = expiryDate.split(' ');
-            const months = {
-                'JANUARI': '01', 'JAN': '01', 
-                'FEBRUARI': '02', 'FEB': '02',
-                'MARET': '03', 'MAR': '03',
-                'APRIL': '04', 'APR': '04',
-                'MEI': '05', 'MAY': '05',
-                'JUNI': '06', 'JUN': '06',
-                'JULI': '07', 'JUL': '07',
-                'AGUSTUS': '08', 'AUG': '08',
-                'SEPTEMBER': '09', 'SEP': '09',
-                'OKTOBER': '10', 'OKT': '10',
-                'NOVEMBER': '11', 'NOV': '11',
-                'DESEMBER': '12', 'DEC': '12'
-            };
-            
-            const formattedDate = `${dateParts[2]}-${months[dateParts[1].toUpperCase()]}-${dateParts[0].padStart(2, '0')}`;
-
             // Create FormData to include the file
             const formData = new FormData();
-            formData.append('expiry_date', formattedDate);
+            formData.append('expiry_date', convertedDate);
             formData.append('license_number', licenseNumber || '');
             if (imageFile) {
                 formData.append('license_image', imageFile);
@@ -609,23 +715,51 @@ export default function LicenseDateExtractor() {
                                             License Number: {licenseNumber}
                                         </p>
                                     )}
-                                    <div className="mt-4">
-                                        <button
-                                            onClick={saveLicenseData}
-                                            disabled={loading}
-                                            className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
-                                        >
-                                            {loading ? (
-                                                <span className="flex items-center">
-                                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                    </svg>
-                                                    Saving...
-                                                </span>
-                                            ) : 'Save License Data'}
-                                        </button>
-                                    </div>
+                                    
+                                    {!convertedDate && (
+                                        <div className="mt-4">
+                                            <button
+                                                onClick={handleConvertDate}
+                                                className="inline-flex items-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 focus:bg-purple-700 active:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                            >
+                                                Convert to Date Format
+                                            </button>
+                                        </div>
+                                    )}
+                                    
+                                    {(convertedDate || showDateConversion) && (
+                                        <div className="mt-4 bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
+                                            <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                                Converted Date (YYYY-MM-DD):
+                                            </h4>
+                                            <p className="text-lg font-semibold text-blue-600 dark:text-blue-300">
+                                                {convertedDate || 'Not converted'}
+                                            </p>
+                                            <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
+                                                This is the format that will be saved to the database
+                                            </p>
+                                        </div>
+                                    )}
+                                    
+                                    {convertedDate && (
+                                        <div className="mt-4">
+                                            <button
+                                                onClick={saveLicenseData}
+                                                disabled={loading}
+                                                className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
+                                            >
+                                                {loading ? (
+                                                    <span className="flex items-center">
+                                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                        Saving...
+                                                    </span>
+                                                ) : 'Save License Data'}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -654,6 +788,13 @@ export default function LicenseDateExtractor() {
                                         <div>
                                             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Extracted Date</p>
                                             <p className="text-sm">{debugInfo.extractedDate || 'Not detected'}</p>
+                                        </div>
+                                    )}
+
+                                    {debugInfo.monthCorrection && (
+                                        <div>
+                                            <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Month Correction</p>
+                                            <p className="text-sm text-yellow-700 dark:text-yellow-300">{debugInfo.monthCorrection}</p>
                                         </div>
                                     )}
 

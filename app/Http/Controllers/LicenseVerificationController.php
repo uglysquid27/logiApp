@@ -12,29 +12,31 @@ use App\Models\OperatorLicense;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Carbon\Carbon;
 
 class LicenseVerificationController extends Controller
 {
     use AuthorizesRequests;
-public function showForm()
-{
-    // Get the current employee's license if it exists
-    $license = OperatorLicense::where('employee_id', auth()->id())->first();
     
-    return Inertia::render('License/Index', [
-        'results' => null,
-        'formData' => [
-            'nama_peserta' => '',
-            'tgl_lahir' => ''
-        ],
-        // Add the employee license data
-        'employeeLicense' => $license ? [
-            'expiry_date' => $license->expiry_date, // Keep as is if it's already a string
-            'license_number' => $license->license_number,
-            'image_path' => $license->image_path
-        ] : null
-    ]);
-}
+    public function showForm()
+    {
+        // Get the current employee's license if it exists
+        $license = OperatorLicense::where('employee_id', auth()->id())->first();
+        
+        return Inertia::render('License/Index', [
+            'results' => null,
+            'formData' => [
+                'nama_peserta' => '',
+                'tgl_lahir' => ''
+            ],
+            // Add the employee license data
+            'employeeLicense' => $license ? [
+                'expiry_date' => $license->expiry_date, // Keep as is if it's already a string
+                'license_number' => $license->license_number,
+                'image_path' => $license->image_path
+            ] : null
+        ]);
+    }
 
     public function verify(Request $request)
     {
@@ -152,13 +154,13 @@ public function showForm()
     {
         $validated = $request->validate([
             'license_number' => 'nullable|string|max:255',
-            'expiry_date' => 'required|date',
+            'expiry_date' => 'required|date_format:Y-m-d',
             'license_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
         ]);
 
         $data = [
             'license_number' => $validated['license_number'],
-            'expiry_date' => $validated['expiry_date'],
+            'expiry_date' => $validated['expiry_date'], // Already in YYYY-MM-DD format
         ];
 
         // Handle file upload
@@ -182,41 +184,41 @@ public function showForm()
         return redirect()->back()->with('success', 'License updated successfully');
     }
 
-public function showEmployeeLicense(Employee $employee)
-{
-    $license = OperatorLicense::where('employee_id', $employee->id)->first();
-    
-    return Inertia::render('License/EmployeeLicense', [
-        'employee' => [
-            'id' => $employee->id,
-            'nik' => $employee->nik,
-            'name' => $employee->name,
-            'type' => $employee->type,
-            'status' => $employee->status,
-        ],
-        'license' => $license ? [
-            'license_number' => $license->license_number,
-            'expiry_date' => $license->expiry_date,
-            'image_path' => $license->image_path,
-            'expiry_status' => $this->getExpiryStatus($license->expiry_date),
-        ] : null,
-        'kemnakerVerifyUrl' => 'https://temank3.kemnaker.go.id/page/cari_personel',
-    ]);
-}
-
-private function getExpiryStatus($expiryDate)
-{
-    if (!$expiryDate) return 'unknown';
-    
-    $expiry = \Carbon\Carbon::parse($expiryDate);
-    $today = \Carbon\Carbon::now();
-    
-    if ($expiry->isPast()) {
-        return 'expired';
-    } elseif ($expiry->diffInYears($today) <= 1) { // Changed to 1 year
-        return 'expiring_soon';
-    } else {
-        return 'valid';
+    public function showEmployeeLicense(Employee $employee)
+    {
+        $license = OperatorLicense::where('employee_id', $employee->id)->first();
+        
+        return Inertia::render('License/EmployeeLicense', [
+            'employee' => [
+                'id' => $employee->id,
+                'nik' => $employee->nik,
+                'name' => $employee->name,
+                'type' => $employee->type,
+                'status' => $employee->status,
+            ],
+            'license' => $license ? [
+                'license_number' => $license->license_number,
+                'expiry_date' => $license->expiry_date,
+                'image_path' => $license->image_path,
+                'expiry_status' => $this->getExpiryStatus($license->expiry_date),
+            ] : null,
+            'kemnakerVerifyUrl' => 'https://temank3.kemnaker.go.id/page/cari_personel',
+        ]);
     }
-}
+
+    private function getExpiryStatus($expiryDate)
+    {
+        if (!$expiryDate) return 'unknown';
+        
+        $expiry = Carbon::parse($expiryDate);
+        $today = Carbon::now();
+        
+        if ($expiry->isPast()) {
+            return 'expired';
+        } elseif ($expiry->diffInYears($today) <= 1) { // Changed to 1 year
+            return 'expiring_soon';
+        } else {
+            return 'valid';
+        }
+    }
 }
