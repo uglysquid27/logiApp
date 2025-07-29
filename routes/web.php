@@ -15,6 +15,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeBlindTestController;
 use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\LunchCouponController;
+use App\Http\Controllers\RatingController;
 use App\Http\Middleware\PreventBackAfterLogout;
 // app/Http/Controllers/LicenseVerificationController.php
 /*
@@ -132,6 +133,9 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
 
     Route::get('/employees/{employee}/license', [LicenseVerificationController::class, 'showEmployeeLicense'])
     ->name('employees.license.show');
+     Route::get('/employees/{employee}/rate', [RatingController::class, 'create'])->name('ratings.create');
+    Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
+    Route::put('/ratings/{rating}', [RatingController::class, 'update'])->name('ratings.update');
 
     // Manpower routes
     Route::resource('manpower-requests', ManPowerRequestController::class);
