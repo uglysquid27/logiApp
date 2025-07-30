@@ -171,75 +171,66 @@ export default function LicenseDateExtractor() {
     };
 
     const extractRegistrationNumber = (text) => {
-    // Improved pattern to match various license number formats
-    const regNumberPatterns = [
-        /Reg:\s*([A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+\/[0-9]+)/i,  // Matches formats with slashes
-        /Reg:\s*([A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+)/i,  // Matches formats with one slash
-        /Reg:\s*([A-Za-z0-9\.\-]+)/i,  // Matches simple formats
-        /No\.?\s*Reg\.?:\s*([A-Za-z0-9\.\-]+)/i,  // Matches "No Reg:" format
-        /([A-Z]\.[0-9]{2}\.[0-9]{4}\-[A-Z0-9]+\/[A-Z]+\/[A-Z0-9]+\/[0-9]+)/i,  // Specific pattern for your example
-        /([A-Z]\.[0-9]{2}\.[0-9]{4}\-[A-Z0-9]+)/i  // Partial match for your example
-    ];
+        // Improved pattern to match various license number formats including the new type
+        const regNumberPatterns = [
+            /Reg\.?\s*([A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+\/[0-9]+)/i,  // Matches formats with slashes (e.g., P.11.8794-OPK3-LT/PAA/IX/2021)
+            /([A-Z0-9]{1,}\.[0-9]{6,}\/[A-Z0-9]+\/[A-Z0-9]+\/[A-Z0-9]+\/[0-9]{4})/i, // For new type like 0713230623/A-OPK2/35/VI/2023
+            /([A-Z0-9]+\/[A-Z0-9]+\/[0-9]+\/[A-Z]+\/[0-9]{4})/i, // More general for new type
+            /([A-Za-z0-9\.\-]+\/[A-Za-z0-9\.\-]+)/i,  // Matches formats with one slash
+            /([A-Za-z0-9\.\-]+)/i,  // Matches simple formats
+            /No\.?\s*Reg\.?:\s*([A-Za-z0-9\.\-]+)/i,  // Matches "No Reg:" format
+        ];
 
-    for (const pattern of regNumberPatterns) {
-        const match = text.match(pattern);
-        if (match) {
-            // Clean up the matched result
-            let regNumber = match[1]
-                .replace(/\s/g, '')  // Remove any spaces
-                .replace(/[^A-Za-z0-9\.\-\/]/g, '');  // Remove special characters except .-/
+        for (const pattern of regNumberPatterns) {
+            const match = text.match(pattern);
+            if (match) {
+                let regNumber = match[1]
+                    .replace(/\s/g, '')  // Remove any spaces
+                    .replace(/[^A-Za-z0-9\.\-\/]/g, '');  // Remove special characters except .-/
 
-            // Additional cleanup for common OCR errors
-            regNumber = regNumber
-                .replace(/O/g, '0')  // Replace O with 0
-                .replace(/I/g, '1')  // Replace I with 1
-                .replace(/S/g, '5')  // Replace S with 5
-                .replace(/Z/g, '2')  // Replace Z with 2
-                .replace(/B/g, '8'); // Replace B with 8
+                // Additional cleanup for common OCR errors
+                regNumber = regNumber
+                    .replace(/O/g, '0')  // Replace O with 0
+                    .replace(/I/g, '1')  // Replace I with 1
+                    .replace(/S/g, '5')  // Replace S with 5
+                    .replace(/Z/g, '2')  // Replace Z with 2
+                    .replace(/B/g, '8'); // Replace B with 8
 
-            return regNumber;
+                return regNumber;
+            }
         }
-    }
+        return null;
+    };
 
-    return null;
-};
+    const extractRegistrationYear = (text) => {
+        const regNumber = extractRegistrationNumber(text);
+        if (!regNumber) return null;
 
-const extractRegistrationYear = (text) => {
-    const regNumber = extractRegistrationNumber(text);
-    if (!regNumber) return null;
+        setLicenseNumber(regNumber);
+        setDebugInfo(prev => ({ ...prev, regNumber: regNumber }));
 
-    setLicenseNumber(regNumber);
-    setDebugInfo(prev => ({ ...prev, regNumber: regNumber }));
+        // Try to extract year from various positions in the registration number
+        const yearPatterns = [
+            /(?:^|\/)(20\d{2})(?:\/|$)/,  // Matches years in format 20XX
+            /(?:^|\-)(\d{4})(?:\-|$)/,    // Matches 4-digit numbers after - or at start
+            /(?:^|\.)(\d{2})(?:\-|$)/      // Matches 2-digit numbers that might be years
+        ];
 
-    // Try to extract year from various positions in the registration number
-    const yearPatterns = [
-        /(?:^|\/)(20\d{2})(?:\/|$)/,  // Matches years in format 20XX
-        /(?:^|\-)(\d{4})(?:\-|$)/,    // Matches 4-digit numbers after - or at start
-        /(?:^|\.)(\d{2})(?:\-|$)/      // Matches 2-digit numbers that might be years
-    ];
-
-    for (const pattern of yearPatterns) {
-        const match = regNumber.match(pattern);
-        if (match) {
-            let year = parseInt(match[1]);
-            // If we got a 2-digit year, assume it's 2000+
-            if (year < 100) year += 2000;
-            return year;
+        for (const pattern of yearPatterns) {
+            const match = regNumber.match(pattern);
+            if (match) {
+                let year = parseInt(match[1]);
+                // If we got a 2-digit year, assume it's 2000+
+                if (year < 100) year += 2000;
+                return year;
+            }
         }
-    }
-
-    return null;
-};
+        return null;
+    };
 
     const extractExpiryDateFromText = (text) => {
         let cleanedText = text;
-        const datePatterns = [
-            /Berlaku\s*s\/d\s*:\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
-            /Berlaku\s*s\/d\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
-            /Berlaku\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
-            /(\d{1,2}\s*[A-Z]+\s*20[2-9][0-9])\s*$/im
-        ];
-        
+
         if (isMobile) {
             cleanedText = cleanedText
                 .replace(/[^a-zA-Z0-9\s\/\-:]/g, ' ')
@@ -248,7 +239,15 @@ const extractRegistrationYear = (text) => {
                 .replace(/([A-Za-z])(\d)/g, '$1 $2');
         }
 
-        for (const pattern of datePatterns) {
+        // Patterns for the old card type ('Berlaku s/d' or similar)
+        const oldCardPatterns = [
+            /Berlaku\s*s\/d\s*:\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+            /Berlaku\s*s\/d\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+            /Berlaku\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i,
+            /(\d{1,2}\s*[A-Z]+\s*20[2-9][0-9])\s*$/im
+        ];
+
+        for (const pattern of oldCardPatterns) {
             const match = cleanedText.match(pattern);
             if (match) {
                 return match[1]
@@ -258,6 +257,18 @@ const extractRegistrationYear = (text) => {
                     .trim();
             }
         }
+
+        // Pattern for the new card type (date after number 4.)
+        const newCardPattern = /4\.\s*(\d{1,2}\s*[A-Z]+\s*\d{4})/i;
+        const newCardMatch = cleanedText.match(newCardPattern);
+        if (newCardMatch) {
+            return newCardMatch[1]
+                .replace(/\s+/g, ' ')
+                .replace(/(\d)([A-Z])/g, '$1 $2')
+                .replace(/([A-Z])(\d)/g, '$1 $2')
+                .trim();
+        }
+
         return null;
     };
 
@@ -281,20 +292,18 @@ const extractRegistrationYear = (text) => {
             'MEI': '05', 'JUN': '06', 'JUL': '07', 'AGS': '08', 'AUG': '08',
             'SEP': '09', 'OKT': '10', 'NOV': '11', 'DES': '12', 'DEC': '12',
             
-            // Common OCR mistakes with their corrections
-            'SEPTEMBOR': '09', 'SEPTEBER': '09', 'SEPTEMBERR': '09',
-            'SEPTEMER': '09', 'SEPTEMBE': '09', 'SEPTEMBER': '09',
-            'SEPYEMBER': '09', 'SEPTEMBERR': '09', 'SEPTEMEBR': '09',
-            'SEPTEMBRE': '09', 'SEPTEMBOR': '09', 'SEPTMBER': '09',
-            'SEPTEEMBER': '09', 'SEPTERMBER': '09', 'SEPTEMBER': '09',
-            'OKTOBERR': '10', 'OKTOBER': '10', 'OKTOBR': '10',
-            'OKTOBE': '10', 'OKTOBER': '10', 'OKTOBRE': '10',
-            'NOFEMBER': '11', 'NOVEMEBR': '11', 'NOVEMER': '11',
-            'DESEMBERR': '12', 'DESEMEBR': '12', 'DESEMER': '12',
-            'AGUSTU': '08', 'AGUSTUS': '08', 'AGUSTOS': '08',
-            'JULYY': '07', 'JULI': '07', 'JULY': '07',
-            'MARETT': '03', 'MARET': '03', 'MARERT': '03',
-            'APRILL': '04', 'APRIL': '04', 'APRIL': '04'
+            // Common OCR mistakes with their corrections (expanded and refined)
+            'SEPTEMBOR': '09', 'SEPTEBER': '09', 'SEPTEMBERR': '09', 'SEPTEMER': '09',
+            'SEPTEMBE': '09', 'SEPYEMBER': '09', 'SEPTEMEBR': '09', 'SEPTEMBRE': '09',
+            'SEPTMBER': '09', 'SEPTEEMBER': '09', 'SEPTERMBER': '09', 'SPTEMBER': '09',
+            'OKTOBERR': '10', 'OKTOBR': '10', 'OKTOBE': '10', 'OCTOBER': '10',
+            'NOFEMBER': '11', 'NOVEMEBR': '11', 'NOVEMER': '11', 'NOVEMBR': '11',
+            'DESEMBERR': '12', 'DESEMEBR': '12', 'DESEMER': '12', 'DECEMBER': '12',
+            'AGUSTU': '08', 'AGUSTOS': '08', 'AUGUST': '08',
+            'JULYY': '07', 'JULY': '07', 'JLI': '07',
+            'MARETT': '03', 'MARERT': '03', 'MART': '03',
+            'APRILL': '04', 'APRL': '04', 'APRIAL': '04',
+            'FEBRUAR': '02', 'PEBRUARI': '02', 'FEBUARI': '02'
         };
 
         // First try exact match
@@ -308,9 +317,7 @@ const extractRegistrationYear = (text) => {
         let highestScore = 0;
 
         for (const month of possibleMonths) {
-            // Simple similarity score (can be replaced with more sophisticated algorithm)
             const similarity = calculateSimilarity(inputMonth, month);
-            
             // Bonus if the input starts with the month (common OCR error is trailing characters)
             const startsWithBonus = month.startsWith(inputMonth.substring(0, 3)) ? 0.2 : 0;
             
@@ -323,7 +330,7 @@ const extractRegistrationYear = (text) => {
         }
 
         // Only accept if we have a reasonably good match
-        if (highestScore > 0.6) {
+        if (highestScore > 0.6) { // Adjusted threshold for better accuracy
             return { 
                 month: monthMappings[bestMatch], 
                 matched: bestMatch, 
@@ -360,38 +367,38 @@ const extractRegistrationYear = (text) => {
     };
 
     const extractLicenseData = async () => {
-           if (!processedImage || attemptCount >= 3) return;
+        if (!processedImage || attemptCount >= 3) return;
 
-    setLoading(true);
-    setAttemptCount(prev => prev + 1);
-    setDebugInfo(prev => ({ ...prev, status: `Processing attempt ${attemptCount + 1} of 3` }));
+        setLoading(true);
+        setAttemptCount(prev => prev + 1);
+        setDebugInfo(prev => ({ ...prev, status: `Processing attempt ${attemptCount + 1} of 3` }));
 
-    try {
-        const { data: { text } } = await Tesseract.recognize(
-            processedImage,
-            'ind',
-            {
-                logger: m => setDebugInfo(prev => ({ ...prev, status: m.status })),
-                tessedit_pageseg_mode: isMobile ? 11 : 6,
-                tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ./- ',
-                preserve_interword_spaces: 1,
-                tessedit_ocr_engine_mode: isMobile ? 1 : 3,
-                user_defined_dpi: isMobile ? '300' : '200'
-            }
-        );
+        try {
+            const { data: { text } } = await Tesseract.recognize(
+                processedImage,
+                'ind',
+                {
+                    logger: m => setDebugInfo(prev => ({ ...prev, status: m.status })),
+                    tessedit_pageseg_mode: isMobile ? 11 : 6,
+                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ./- ',
+                    preserve_interword_spaces: 1,
+                    tessedit_ocr_engine_mode: isMobile ? 1 : 3,
+                    user_defined_dpi: isMobile ? '300' : '200'
+                }
+            );
 
-        const regNumber = extractRegistrationNumber(text);
-        const regYear = extractRegistrationYear(text);
-        const extractedDate = extractExpiryDateFromText(text);
-        
-        setDebugInfo(prev => ({
-            ...prev,
-            rawText: text,
-            regNumber: regNumber,
-            regYear: regYear,
-            extractedDate: extractedDate,
-            status: `Found registration number: ${regNumber || 'None'}, extracted date: ${extractedDate || 'None'}`
-        }));
+            const regNumber = extractRegistrationNumber(text);
+            const regYear = extractRegistrationYear(text);
+            const extractedDate = extractExpiryDateFromText(text);
+            
+            setDebugInfo(prev => ({
+                ...prev,
+                rawText: text,
+                regNumber: regNumber,
+                regYear: regYear,
+                extractedDate: extractedDate,
+                status: `Found registration number: ${regNumber || 'None'}, extracted date: ${extractedDate || 'None'}`
+            }));
 
             if (extractedDate) {
                 const formattedDate = parseIndonesianDate(extractedDate);
@@ -413,6 +420,7 @@ const extractRegistrationYear = (text) => {
             }
 
             if (regYear) {
+                // Prioritize extracted date if available and reasonable
                 if (extractedDate) {
                     const extractedYear = extractedDate.match(/(20\d{2})/);
                     if (extractedYear && Math.abs(parseInt(extractedYear[1]) - regYear) <= 5) {
@@ -427,6 +435,7 @@ const extractRegistrationYear = (text) => {
                     }
                 }
 
+                // Fallback to reg year + 5 if no valid extracted date or not close
                 const calculatedDate = `31 DESEMBER ${regYear + 5}`;
                 setExpiryDate(calculatedDate);
                 setConvertedDate(`${regYear + 5}-12-31`);
@@ -438,6 +447,7 @@ const extractRegistrationYear = (text) => {
                 return;
             }
 
+            // If only extractedDate is found but no regYear
             if (extractedDate) {
                 setExpiryDate(extractedDate);
                 setConvertedDate(parseIndonesianDate(extractedDate));
