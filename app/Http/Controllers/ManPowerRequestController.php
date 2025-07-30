@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use App\Rules\ShiftTimeOrder;
+use App\Models\Employee; // Pastikan ini sudah ada
 
 class ManPowerRequestController extends Controller
 {
@@ -328,13 +329,32 @@ public function destroy($id)
     try {
         DB::beginTransaction();
 
-        $manPowerRequest = ManPowerRequest::findOrFail($id);
+        $manPowerRequest = ManPowerRequest::with('schedules.employee')->findOrFail($id); // Eager load schedules and employees
 
         Log::info('Attempting to delete manpower request', [
             'request_id' => $manPowerRequest->id,
             'user_id' => auth()->id(),
             'status' => $manPowerRequest->status
         ]);
+
+        // Logic to update employee status from 'assigned' to 'available'
+        if ($manPowerRequest->schedules->isNotEmpty()) {
+            Log::info('Updating employee statuses to available for schedules related to deleted request', [
+                'request_id' => $manPowerRequest->id,
+                'schedule_count' => $manPowerRequest->schedules->count()
+            ]);
+            foreach ($manPowerRequest->schedules as $schedule) {
+                if ($schedule->employee) {
+                    $employee = $schedule->employee;
+                    // Only change status if it's currently 'assigned'
+                    if ($employee->status === 'assigned') {
+                        $employee->status = 'available';
+                        $employee->save();
+                        Log::debug("Employee ID {$employee->id} status changed to 'available'.");
+                    }
+                }
+            }
+        }
 
         // Allow deletion for fulfilled requests with confirmation
         if ($manPowerRequest->status === 'fulfilled') {
@@ -345,6 +365,7 @@ public function destroy($id)
                     'status' => $manPowerRequest->status,
                     'user_id' => auth()->id()
                 ]);
+                DB::rollBack(); // Rollback any changes if deletion is disallowed
                 return back()->with('error', 'Cannot delete fulfilled requests older than 7 days');
             }
         }
@@ -355,9 +376,11 @@ public function destroy($id)
                 'status' => $manPowerRequest->status,
                 'user_id' => auth()->id()
             ]);
+            DB::rollBack(); // Rollback any changes if deletion is disallowed
             return back()->with('error', 'Cannot delete request in current status');
         }
 
+        // Delete the manpower request, which will also cascade delete its schedules
         $manPowerRequest->delete();
 
         DB::commit();
@@ -410,7 +433,22 @@ public function destroy($id)
                 foreach ($relatedRequests as $req) {
                     // Only process if it's currently fulfilled, or any other status you allow to initiate revision
                     if ($req->status === 'fulfilled') {
-                        // Delete related schedules (if they exist)
+                        // Iterate through schedules and update employee status before deleting schedules
+                        if ($req->schedules->isNotEmpty()) {
+                            foreach ($req->schedules as $schedule) {
+                                if ($schedule->employee) {
+                                    $employee = $schedule->employee;
+                                    // Change status only if it was 'assigned' due to this request
+                                    // (assuming 'assigned' means assigned to a request)
+                                    if ($employee->status === 'assigned') { 
+                                        $employee->status = 'available';
+                                        $employee->save();
+                                        Log::debug("Employee ID {$employee->id} status changed to 'available' during revision.");
+                                    }
+                                }
+                            }
+                        }
+                        // Delete related schedules
                         $req->schedules()->delete();
                         Log::info("Schedules for ManPowerRequest ID: {$req->id} deleted due to revision request.");
 
@@ -433,6 +471,4 @@ public function destroy($id)
             return response()->json(['message' => 'Failed to initiate revision.', 'error' => $e->getMessage()], 500);
         }
     }
-
-  
 }

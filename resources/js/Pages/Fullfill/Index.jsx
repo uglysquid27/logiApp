@@ -526,6 +526,9 @@ export default function Fulfill({
                                                         </span>
                                                         <span> | Tipe: {employee.type}</span>
                                                         <span> | Sub: {employeeSubSection?.name || 'Lain'}</span>
+                                                        {employee.type === 'harian' && ( // Tampilkan bobot kerja hanya untuk harian
+                                                            <span> | Bobot Kerja: {employee.working_day_weight}</span>
+                                                        )}
                                                     </div>
                                                 )}
                                             </span>
@@ -579,12 +582,26 @@ export default function Fulfill({
 
                             <div className="p-6">
                                 <h3 className="mb-4 font-bold text-xl">Pilih Karyawan Baru</h3>
-                                <div className="gap-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-                                    {allSortedEligibleEmployees.map(emp => {
+
+                                {/* Group for Same Sub-Section Employees */}
+                                <h4 className="mb-3 font-semibold text-lg text-gray-700">Karyawan dari Sub-Bagian Sama ({request.sub_section?.name})</h4>
+                                <div className="gap-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 mb-6">
+                                    {allSortedEligibleEmployees
+                                        .filter(emp => emp.subSections.some(ss => ss.id === request.sub_section_id))
+                                        .map(emp => {
                                         const isSelected = selectedIds.includes(emp.id);
                                         const isCurrentlyScheduled = emp.isCurrentlyScheduled;
-                                        const empSubSection = emp.subSections?.find(ss => ss.id === request.sub_section_id);
-                                        const isSameSubSection = empSubSection?.id === request.sub_section_id;
+                                        
+                                        let displaySubSectionName = 'Tidak Ada Bagian';
+                                        if (emp.subSections && emp.subSections.length > 0) {
+                                            const sameSub = emp.subSections.find(ss => ss.id === request.sub_section_id);
+                                            if (sameSub) {
+                                                displaySubSectionName = sameSub.name;
+                                            } else {
+                                                displaySubSectionName = emp.subSections[0].name;
+                                            }
+                                        }
+
                                         const isFemale = emp.gender === 'female';
 
                                         return (
@@ -608,7 +625,10 @@ export default function Fulfill({
                                                         <div className="mt-1 text-gray-500 text-xs">
                                                             <p>NIK: {emp.nik}</p>
                                                             <p>Tipe: {emp.type}</p>
-                                                            <p>Sub: {empSubSection?.name || 'Lain'}</p>
+                                                            <p>Sub: {displaySubSectionName}</p> 
+                                                            {emp.type === 'harian' && (
+                                                                <p>Bobot Kerja: {emp.working_day_weight}</p>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-col items-end">
@@ -630,6 +650,71 @@ export default function Fulfill({
                                         );
                                     })}
                                 </div>
+
+                                {/* Group for Other Sub-Section Employees */}
+                                <h4 className="mb-3 font-semibold text-lg text-gray-700">Karyawan dari Sub-Bagian Lain</h4>
+                                <div className="gap-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                                    {allSortedEligibleEmployees
+                                        .filter(emp => !emp.subSections.some(ss => ss.id === request.sub_section_id))
+                                        .map(emp => {
+                                        const isSelected = selectedIds.includes(emp.id);
+                                        const isCurrentlyScheduled = emp.isCurrentlyScheduled;
+                                        
+                                        let displaySubSectionName = 'Tidak Ada Bagian';
+                                        if (emp.subSections && emp.subSections.length > 0) {
+                                            displaySubSectionName = emp.subSections[0].name; // Ambil sub-bagian pertama
+                                        }
+
+                                        const isFemale = emp.gender === 'female';
+
+                                        return (
+                                            <button
+                                                key={emp.id}
+                                                onClick={() => !isSelected && selectNewEmployee(emp.id)}
+                                                disabled={isSelected}
+                                                className={`text-left p-3 rounded-md border transition ${
+                                                    isSelected
+                                                        ? 'bg-blue-50 border-blue-200 cursor-not-allowed'
+                                                        : isCurrentlyScheduled
+                                                            ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                                                            : isFemale
+                                                                ? 'hover:bg-pink-50 border-pink-200'
+                                                                : 'hover:bg-blue-50 border-blue-200'
+                                                }`}
+                                            >
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <strong>{emp.name}</strong>
+                                                        <div className="mt-1 text-gray-500 text-xs">
+                                                            <p>NIK: {emp.nik}</p>
+                                                            <p>Tipe: {emp.type}</p>
+                                                            <p>Sub: {displaySubSectionName}</p> 
+                                                            {emp.type === 'harian' && (
+                                                                <p>Bobot Kerja: {emp.working_day_weight}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className={`text-xs px-1 rounded mb-1 ${
+                                                            isFemale
+                                                                ? 'bg-pink-100 text-pink-800'
+                                                                : 'bg-blue-100 text-blue-800'
+                                                        }`}>
+                                                            {isFemale ? 'P' : 'L'}
+                                                        </span>
+                                                        {isCurrentlyScheduled && (
+                                                            <span className="text-xs px-1 rounded bg-green-100 text-green-800">
+                                                                Sudah dijadwalkan
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+
                                 <div className="flex justify-end mt-6">
                                     <button
                                         type="button"
