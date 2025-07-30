@@ -22,6 +22,7 @@ class RatingController extends Controller
                 'nik' => $employee->nik
             ],
             'ratingData' => $rating,
+            'hasRated' => $rating !== null
         ]);
     }
 
@@ -63,6 +64,6 @@ class RatingController extends Controller
             'tags' => $validated['tags'] ?? null,
         ]);
 
-        return redirect()->route('employees.index')->with('success', 'Rating updated successfully!');
+        return redirect()->route('employee-attendance.index')->with('success', 'Rating updated successfully!');
     }
 }

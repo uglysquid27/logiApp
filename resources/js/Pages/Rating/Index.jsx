@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Rating } from '@smastrom/react-rating';
 import '@smastrom/react-rating/style.css';
 import { Inertia } from '@inertiajs/inertia';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { FaStar } from 'react-icons/fa';
 import { BiCommentDetail } from 'react-icons/bi';
@@ -45,7 +45,13 @@ export default function RateEmployee({ employee, requestId, ratingData, commentT
             ...(customComment.trim() ? [customComment.trim()] : [])
         ].join(', ');
 
-        Inertia.post(route('ratings.store'), {
+        const url = hasRated 
+            ? `/ratings/${ratingData.id}`
+            : '/ratings';
+
+        const method = hasRated ? 'put' : 'post';
+
+        router[method](url, {
             rating,
             comment: combinedComment,
             employee_id: employee.id,

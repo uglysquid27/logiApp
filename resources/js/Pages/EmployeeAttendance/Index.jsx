@@ -52,6 +52,7 @@ export default function Index() {
   const handleSectionChange = (e) => {
     const newSection = e.target.value;
     setFilterSection(newSection);
+    // When section changes, reset sub_section to 'All'
     setFilterSubSection('All');
     applyFilters({ status: filterStatus, section: newSection, sub_section: 'All', search: searchTerm });
   };
@@ -113,6 +114,7 @@ export default function Index() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
+                    <span>Add Employee</span>
                   </Link>
                   <Link
                     href={route('employee-attendance.inactive')}
@@ -121,6 +123,7 @@ export default function Index() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4m10 6l6-6m-6-6l6 6" />
                     </svg>
+                    <span>Inactive Employees</span>
                   </Link>
                   <button
                     onClick={handleResetAllStatuses}
@@ -129,6 +132,7 @@ export default function Index() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
+                    <span>Reset All Statuses</span>
                   </button>
                 </div>
               </div>
@@ -289,79 +293,93 @@ export default function Index() {
                     </div>
                   </div>
                 ) : (
-                  employees.map((employee) => (
-                    <div key={employee.id} className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-medium text-gray-700 dark:text-gray-300">{employee.name}</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">{employee.nik}</p>
+                  employees.map((employee) => {
+                    return (
+                      <div key={employee.id} className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h3 className="font-medium text-gray-700 dark:text-gray-300">{employee.name}</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{employee.nik}</p>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(employee.status)}`}>
+                              {employee.status}
+                            </span>
+                            <span className={`mt-1 px-2 py-1 text-xs font-semibold rounded-full ${employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-100' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100'}`}>
+                              Cuti: {employee.cuti}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col items-end">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(employee.status)}`}>
-                            {employee.status}
-                          </span>
-                          <span className={`mt-1 px-2 py-1 text-xs font-semibold rounded-full ${employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-100' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100'}`}>
-                            Cuti: {employee.cuti}
-                          </span>
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-sm mt-3">
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Gender</p>
-                          <p>{employee.gender}</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm mt-3">
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Gender</p>
+                            <p>{employee.gender}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Tipe</p>
+                            <p>{employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Sub Section</p>
+                            <p>{employee.sub_sections && employee.sub_sections.length > 0 ? employee.sub_sections.map(ss => ss.name).join(', ') : 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Section</p>
+                            <p>{employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Tipe</p>
-                          <p>{employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Sub Section</p>
-                          <p>{employee.sub_sections && employee.sub_sections.length > 0 ? employee.sub_sections.map(ss => ss.name).join(', ') : 'N/A'}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Section</p>
-                          <p>{employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}</p>
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-3 gap-2 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Total</p>
-                          <p>{employee.schedules_count}</p>
+                        <div className="grid grid-cols-3 gap-2 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Total</p>
+                            <p>{employee.schedules_count}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Minggu Ini</p>
+                            <p>{employee.schedules_count_weekly}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Workload</p>
+                            <p>{employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">Rating</p>
+                            <p>{employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Minggu Ini</p>
-                          <p>{employee.schedules_count_weekly}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-500 dark:text-gray-400">Workload</p>
-                          <p>{employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}</p>
-                        </div>
-                      </div>
 
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-2">
-                        <Link
-                          href={route('employees.license.show', employee.id)}
-                          className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm"
-                        >
-                          View License
-                        </Link>
-                        <Link
-                          href={route('employee-attendance.edit', employee.id)}
-                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
-                        >
-                          Edit
-                        </Link>
-                        <Link
-                          href={route('employee-attendance.deactivate', employee.id)}
-                          className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
-                        >
-                          Deactivate
-                        </Link>
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-2">
+                          {employee.sub_sections && employee.sub_sections.some(ss => ss.section?.name === 'Operator Forklift') && (
+                            <Link
+                              href={route('employees.license.show', employee.id)}
+                              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm"
+                            >
+                              View License
+                            </Link>
+                          )}
+                          <Link
+                            href={route('employee-attendance.edit', employee.id)}
+                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                          >
+                            Edit
+                          </Link>
+                          <Link
+                            href={route('employee-attendance.deactivate', employee.id)}
+                            className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
+                          >
+                            Deactivate
+                          </Link>
+                          <Link
+                             href={route('ratings.create', employee.id)}
+                             className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
+                           >
+                             Rate ({employee.ratings_count || 0}) 
+                           </Link>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
               {/* Desktop Table View */}
@@ -380,7 +398,6 @@ export default function Index() {
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Workload</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cuti</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">License</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
                     </tr>
@@ -388,93 +405,99 @@ export default function Index() {
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {employees.length === 0 ? (
                       <tr>
-                        <td colSpan="12" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
+                        <td colSpan="13" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
                           Tidak ada data pegawai dengan kriteria filter atau pencarian ini.
                         </td>
                       </tr>
                     ) : (
-                      employees.map((employee) => (
-                        <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{employee.name}</td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{employee.gender}</td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{employee.nik}</td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                            {employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                            {employee.sub_sections && employee.sub_sections.length > 0 ? employee.sub_sections.map(ss => ss.name).join(', ') : 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                            {employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.schedules_count}</td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.schedules_count_weekly}</td>
-                          <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">
-                            {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}
-                          </td>
-                          <td className="px-4 py-4 text-sm whitespace-nowrap">
-                            <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusClasses(employee.status)}`}>
-                              {employee.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 text-sm whitespace-nowrap">
-                            <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-100' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100'}`}>
-                              {employee.cuti}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4 text-sm whitespace-nowrap">
-                            <Link
-                              href={route('employees.license.show', employee.id)}
-                              className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                              title="View License"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </Link>
-                          </td>
-                          <td className="px-4 py-4 text-sm whitespace-nowrap">
-                            <div className="flex space-x-2">
-                              <Link
-                                href={route('employee-attendance.edit', employee.id)}
-                                className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                title="Edit"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                              </Link>
-                              <Link
-                                href={route('employee-attendance.deactivate', employee.id)}
-                                className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
-                                title="Deactivate"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                              </Link>
-                            </div>
-                          </td>
-                          <td className="px-4 py-4 text-sm whitespace-nowrap">
-                            <Link
-                              href={route('ratings.create', employee.id)}
-                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                              title="Rate Employee"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                              </svg>
-                            </Link>
-                          </td>
-                        </tr>
-                      ))
+                      employees.map((employee) => {
+                        return (
+                          <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{employee.name}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{employee.gender}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{employee.nik}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                              {employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                              {employee.sub_sections && employee.sub_sections.length > 0 ? employee.sub_sections.map(ss => ss.name).join(', ') : 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                              {employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.schedules_count}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.schedules_count_weekly}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">
+                              {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}
+                            </td>
+                            <td className="px-4 py-4 text-sm whitespace-nowrap">
+                              <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusClasses(employee.status)}`}>
+                                {employee.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-sm whitespace-nowrap">
+                              <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-100' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100'}`}>
+                                {employee.cuti}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-sm whitespace-nowrap">
+                              <div className="flex space-x-2">
+                                <Link
+                                  href={route('employee-attendance.edit', employee.id)}
+                                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                  title="Edit"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </Link>
+                                <Link
+                                  href={route('employee-attendance.deactivate', employee.id)}
+                                  className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+                                  title="Deactivate"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                  </svg>
+                                </Link>
+                                {/* Conditional rendering for License link, now merged into Actions */}
+                                {employee.sub_sections && employee.sub_sections.some(ss => ss.section?.name === 'Operator Forklift') && (
+                                  <Link
+                                    href={route('employees.license.show', employee.id)}
+                                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    title="View License"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                  </Link>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                              <div className="flex items-center gap-1">
+                                {employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}
+                                <Link
+                                  href={route('ratings.create', employee.id)}
+                                  className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 flex items-center gap-1"
+                                  title="Rate Employee"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                  </svg>
+                                </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                     <tr className="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300">
                       <td colSpan="6" className="px-4 py-3 text-right">Total Penugasan:</td>
                       <td className="px-4 py-3 text-center">{totalSchedulesCount}</td>
                       <td className="px-4 py-3 text-center">{totalWeeklySchedulesCount}</td>
-                      <td colSpan="4" className="px-4 py-3 text-center"></td>
+                      <td colSpan="5" className="px-4 py-3 text-center"></td>
                     </tr>
                   </tbody>
                 </table>

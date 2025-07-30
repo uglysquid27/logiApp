@@ -23,6 +23,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class EmployeeSum extends Controller
 {
     use AuthorizesRequests;
+
     public function index(Request $request): Response
     {
         $startDate = Carbon::now()->subDays(6)->startOfDay();
@@ -32,12 +33,18 @@ class EmployeeSum extends Controller
             ->withCount(['schedules as schedules_count_weekly' => function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
             }])
+            ->withCount('ratings') // Keep this for the count on the button
+            // Removed withAvg('ratings', 'rating') as per request
             ->with(['schedules' => function ($query) {
                 $query->whereDate('date', Carbon::today())
                     ->with('manPowerRequest.shift');
             }, 'subSections.section'])
             ->with(['blindTests' => function ($query) { // Eager load the latest blind test result
                 $query->orderBy('test_date', 'desc')->limit(1);
+            }])
+            // Eager load the latest single rating for the employee
+            ->with(['ratings' => function ($query) {
+                $query->latest()->limit(1);
             }]);
 
         // Apply Filters
@@ -80,26 +87,14 @@ class EmployeeSum extends Controller
                         return $schedule->manPowerRequest->shift->hours ?? 0;
                     });
 
-                // Rating logic (existing calculation)
-                $weeklyScheduleCount = $employee->schedules_count_weekly;
-                $rating = match (true) {
-                    $weeklyScheduleCount >= 5 => 5,
-                    $weeklyScheduleCount == 4 => 4,
-                    $weeklyScheduleCount == 3 => 3,
-                    $weeklyScheduleCount == 2 => 1,
-                    $weeklyScheduleCount == 1 => 1,
-                    default => 0,
-                };
+                // --- Start Rating Logic (Updated to use latest individual rating from DB) ---
+                // Get the 'rating' value from the latest individual rating, defaulting to 0 if no ratings.
+                $latestIndividualRating = $employee->ratings->first();
+                $actualRating = $latestIndividualRating ? $latestIndividualRating->rating : 0;
 
-                // Base working day weight from existing rating logic
-                $workingDayWeight = match ($rating) {
-                    5 => 15,
-                    4 => 45,
-                    3 => 75,
-                    2 => 105,
-                    1 => 135,
-                    default => 165,
-                };
+                // Set 'calculated_rating' to the actual latest individual rating from the database.
+                $employee->setAttribute('calculated_rating', $actualRating);
+                // --- End Rating Logic ---
 
                 // --- Start Blind Test KPI Contribution Calculation ---
                 $blindTestKpiContribution = 0;
@@ -112,16 +107,18 @@ class EmployeeSum extends Controller
                 }
                 // --- End Blind Test KPI Contribution Calculation ---
 
-                // Add the calculated blind test contribution to the existing workingDayWeight
+                // Initialize workingDayWeight to a base value, independent of average rating.
+                // Then add the blind test contribution.
+                $workingDayWeight = 165; // Default base value, as per previous logic's 'default' case
                 $workingDayWeight += $blindTestKpiContribution;
 
-                $employee->setAttribute('calculated_rating', $rating);
                 $employee->setAttribute('working_day_weight', $workingDayWeight);
                 $employee->setAttribute('total_assigned_hours', $totalWorkingHours);
 
-                // Remove schedules and blindTests from response to reduce payload
+                // Remove schedules, blindTests, and ratings from response to reduce payload
                 unset($employee->schedules);
                 unset($employee->blindTests);
+                unset($employee->ratings); // Remove the eager loaded ratings collection
 
                 return $employee;
             });
@@ -419,22 +416,22 @@ class EmployeeSum extends Controller
     }
 
     public function showLicense(Employee $employee)
-{
-    $license = OperatorLicense::where('employee_id', $employee->id)->first();
-    
-    return Inertia::render('EmployeeLicense/SimpleView', [
-        'employee' => [
-            'id' => $employee->id,
-            'name' => $employee->name,
-        ],
-        'license' => $license ? [
-            'expiry_date' => $license->expiry_date,
-            'image_path' => $license->image_path,
-            'isExpired' => $license->expiry_date && now()->gt($license->expiry_date),
-            'isExpiringSoon' => $license->expiry_date && 
-                now()->lt($license->expiry_date) && 
-                now()->addDays(30)->gt($license->expiry_date),
-        ] : null
-    ]);
-}
+    {
+        $license = OperatorLicense::where('employee_id', $employee->id)->first();
+        
+        return Inertia::render('EmployeeLicense/SimpleView', [
+            'employee' => [
+                'id' => $employee->id,
+                'name' => $employee->name,
+            ],
+            'license' => $license ? [
+                'expiry_date' => $license->expiry_date,
+                'image_path' => $license->image_path,
+                'isExpired' => $license->expiry_date && now()->gt($license->expiry_date),
+                'isExpiringSoon' => $license->expiry_date && 
+                    now()->lt($license->expiry_date) && 
+                    now()->addDays(30)->gt($license->expiry_date),
+            ] : null
+        ]);
+    }
 }

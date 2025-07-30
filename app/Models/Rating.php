@@ -17,7 +17,7 @@ class Rating extends Model
         'comment',
     ];
 
-    public function driver()
+    public function Employee()
     {
         return $this->belongsTo(Employee::class, 'employee_id');
     }
