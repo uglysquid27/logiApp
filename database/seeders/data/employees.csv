@@ -1,354 +1,342 @@
-nik,name,type,gender
-10807,Abdul. Rochman,bulanan,male
-10464,Ahmad  Khusaeri,bulanan,male
-10802,Taufiq Hidayat,bulanan,male
-10636,M. Abd Ghofur,bulanan,male
-10466,Yetti  Krisna W.,bulanan,female
-10937,Eko Supriyanto,bulanan,male
-10935,M. Suhaimi,bulanan,male
-11527,A.Baidowi,harian,male
-11635,Abdur Rohman,harian,male
-11443,Aida F,harian,female
-11663,Dia Eka Sukmawati,harian,female
-11533,Durorur Rohman,harian,male
-11603,Dwi Aprilia Damayanti,harian,female
-11609,Lailatul Afrida,harian,female
-10459,M. Idris,harian,male
-11381,Nihayatul Mutimmah,harian,female
-11617,Novia Indriyani,harian,female
-11431,Rizqi Amalia,harian,female
-11430,Runi Nurul Chikmah,harian,female
-11377,Takhmidatul Lailiyah,harian,female
-11426,Varda Diana Shofa,harian,female
-10791,Ahmadi,harian,male
-11178,Deni Rahmawan,harian,male
-10468,A. Faizin,bulanan,male
-10789,Muhammad Ghufron,bulanan,male
-10921,Dian Krisbiantoro,bulanan,male
-11561,Rohmad Syaifudin,bulanan,male
-10800,Abdul Rokhman,bulanan,male
-10498,Atim Nurrohman,bulanan,male
-10747,Imam Safiudin,bulanan,male
-11363,Muhammad Sobbi,bulanan,male
-10782,Irsyadullah,bulanan,male
-10465,Ratih  Dewi T,bulanan,female
-10689,Rofiatullisa M. A.,bulanan,female
-11159,Bahrul Ulum,harian,male
-11461,Fatkhur Rochman,harian,male
-10619,Faujan,harian,male
-10734,M. Marzuki,harian,male
-11345,M. Sodikin,harian,male
-11161,M. Sofi Aminulloh,harian,male
-10910,M. Sururi,harian,male
-10952,Mohammad Faizin,harian,male
-10784,Mukhammad Idris,harian,male
-11008,Roni,harian,male
-11745,Abdul Bais,harian,male
-11746,Abdul Hadi,harian,male
-11347,Abdul Majid,harian,male
-11729,Abdur Rouf,harian,male
-11747,Ahmad Junaedi,harian,male
-11702,Ahmad Sulaiman,harian,male
-10991,Ainun Najib,harian,male
-11748,Akhmad Khamim,harian,male
-11749,Arfan Arasid,harian,male
-11750,Dodik Wibowo,harian,male
-11751,Fadholi,harian,male
-11731,Faruqi Chafifi,harian,male
-11399,Hasan Bisri,harian,male
-11752,Hendik Fisma,harian,male
-11732,Hendrik Saputro,harian,male
-11733,Ilham Mulana Yafi,harian,male
-11753,Jimi,harian,male
-11504,M Imam Wahyudi,harian,male
-11350,M Ni'amullah,harian,male
-11484,M Riswan H,harian,male
-11754,M. Agus Mubaroq,harian,male
-11576,M. Choirul Anam,harian,male
-11755,M. Fiki Maulili Dafa,harian,male
-11756,M. Hidayat,harian,male
-11757,M. Ilham,harian,male
-11708,M. Mahrus Hadi,harian,male
-11546,M. Nashiruddin,harian,male
-11758,M. Nurul Efendi,harian,male
-11736,M. Rizky Irfani,harian,male
-11759,M. Sahrul Mubarok,harian,male
-11709,M. Ubaidillah,harian,male
-10884,Misbahul Munir,harian,male
-11760,Moch. Arifin,harian,male
-11348,Muchammad Nabawi,harian,male
-11740,Muhammad Sunoto,harian,male
-11742,Muhammd Yoga,harian,male
-11726,Muji Utomo,harian,male
-10783,Muslimin,harian,male
-10728,Mustofa,harian,male
-11761,Nasrulloh,harian,male
-11762,Nur Hakiki,harian,male
-10524,Nurul Sulaeman,harian,male
-11728,Rudi Hariyanto D. N.,harian,male
-11713,Rudi Prawiro,harian,male
-11763,Sodikin,harian,male
-11716,Sugianto,harian,male
-11473,Wahyu Nurkholis,harian,male
-11764,Yusuf,harian,male
-10898,Diah Oktaviani,bulanan,female
-10565,Ainur  Rofiq,bulanan,male
-10785,Hadi Firman Susilo,bulanan,male
-10499,Khoirul Anam,bulanan,male
-10834,M. Hasanudin,bulanan,male
-10683,M. Hasim Mujadi,bulanan,male
-10861,Mokhamad Alwi,bulanan,male
-10844,Widi Siswantoro,bulanan,male
-11342,Abdul Rohman,harian,male
-10928,Hendri Anas,harian,male
-10879,Husni Mubarok,harian,male
-11073,Lutfi Hartono,harian,male
-11074,M.Adi Solehudin,harian,male
-10672,Mas Huda,harian,male
-10671,Taufik,harian,male
-10612,A. Herman Efendi,bulanan,male
-10803,Abd. Karim,bulanan,male
-10804,Ahmad Jauhari,bulanan,male
-10798,Arif Ulum Udin,bulanan,male
-11299,Badrus Soleh,bulanan,male
-10485,Bahru Ulum,bulanan,male
-10640,Bahrul  Ulum,bulanan,male
-10630,D. Nasihin,bulanan,male
-11301,Fendik Prasetyo,bulanan,male
-11302,Heri Sujatmoko,bulanan,male
-10726,Lukman Khakim,bulanan,male
-10859,M. Ali Ridho,bulanan,male
-10616,M. Badrus Sholeh,bulanan,male
-10858,M. Jainuri,bulanan,male
-10625,M. Khumaidi,bulanan,male
-10494,M. Masyhurin,bulanan,male
-10484,M. Mukhlis,bulanan,male
-10866,M. Saiful,bulanan,male
-10797,M. Saikhon,bulanan,male
-10818,M. Sodik,bulanan,male
-11108,M. Taufik,bulanan,male
-10576,Muhammad Maskur,bulanan,male
-10824,Mujianto,bulanan,male
-11324,Pandu Putra Efendi,bulanan,male
-10781,Rudi Suhartono,bulanan,male
-10786,Sholihin,bulanan,male
-10933,Sofyan Sauri,bulanan,male
-10838,Sumitro,bulanan,male
-10821,Tajul Muslimin,bulanan,male
-10954,Usman Wibowo,bulanan,male
-11319,Edi Santoso,bulanan,male
-10843,Eko Doni Zulfikar,bulanan,male
-11321,Hadiyanto Nugroho A.,bulanan,male
-10845,Linggar Dwi W.,bulanan,male
-10828,Lukman Hamid,bulanan,male
-10833,M. Khamim Zakariyah,bulanan,male
-10871,M. Sokhikhan,bulanan,male
-10850,Masduki,bulanan,male
-10855,Nur Azqi,bulanan,male
-10873,Suwarno,bulanan,male
-10864,Yoedhastyar,bulanan,male
-10471,Jamilah,bulanan,female
-10453,Kiki Yulianingrum,bulanan,female
-10463,Khisolil Kamal,bulanan,male
-10649,Wahyu Hidayat,bulanan,male
-10454,Nur  Afifa,bulanan,female
-10457,Siti  Khotijah,bulanan,female
-10473,Arini,bulanan,female
-10470,Diana Wulandari,bulanan,female
-10456,Endang  Hariyanti,bulanan,female
-10452,Maulidah,bulanan,female
-11098,Tsainil Anwar,bulanan,male
-11064,Muhammad Sobirin,bulanan,male
-10483,Sri  Mulyati,bulanan,female
-11202,Ageng Safitriyah,harian,female
-10477,Aizzatul Laili,harian,female
-11395,Amaliana,harian,female
-10977,Ana Aidatul Risky,harian,female
-10599,Anastasia P,harian,female
-10768,Anik Kusnia,harian,female
-11601,Anna Faradhita,harian,female
-10902,Arini A,harian,female
-11193,Chandra Dwi Iswanti,harian,female
-11405,Cholifah,harian,female
-11396,Cindra Febrianti,harian,female
-11602,Devi Syviana Putri,harian,female
-11376,Dewi Nailil Ilmiah,harian,female
-11045,Efin Nur H,harian,female
-10993,Emilia Mu'mila,harian,female
-11665,Erfiana Nur Alfini,harian,female
-10967,Fajarwati,harian,female
-10750,Fatimatuz Zahro,harian,female
-10997,Fatlukha,harian,female
-10553,Fatmawati,harian,female
-11668,Huda Lila,harian,female
-11027,Humaida,harian,female
-10505,Idfi Dwi Mulyani,harian,female
-11669,Iis Nurwati,harian,female
-11047,Inayatul Ilmiah,harian,female
-11671,Indah Nurhijjah,harian,female
-11673,Khoiriyah,harian,female
-10574,Kholis Khasiani,harian,female
-11608,Krida Putri,harian,female
-10678,Krisniah,harian,female
-11329,Lailatul Fitriah,harian,female
-11048,Lailatul Mu'asaroh,harian,female
-11674,Lailatul Qoniah,harian,female
-11676,Linda Wati,harian,female
-11677,Maftuhah,harian,female
-11611,Maghfirotul uyun,harian,female
-10979,Makiyatul W.,harian,female
-10763,Maria Ulfa,harian,female
-11612,Maria Ulfa,harian,female
-10999,Mas Rosida,harian,female
-10506,Masruroh,harian,female
-10719,Maulidia,harian,female
-10488,Mega I,harian,female
-11001,Melviani Mulyanti,harian,female
-10607,Minarni,harian,female
-10704,Munifa,harian,female
-10518,Musrifah,harian,female
-11682,Nailul Maghfiroh,harian,female
-11683,Nanik Wardati,harian,female
-10516,Nikmatul Huda,harian,female
-11684,Nikmatul Jannah,harian,female
-11192,Noer Fitriyah,harian,female
-11388,Noviyatul Zahro,harian,female
-11198,Nur Aini Rizqi,harian,female
-11386,Nur Aisyah,harian,female
-10718,Nur Anita,harian,female
-10451,Nur Diani,harian,female
-11224,Nur Dwi Astuti,harian,female
-11053,Nur Hayati,harian,female
-11687,Nur Hayati,harian,female
-10924,Nur Hidayati,harian,female
-10896,Nurainiyah,harian,female
-10752,Nuriyati,harian,female
-11403,Nurul Aini,harian,female
-11689,Nurul Fitriyah,harian,female
-10660,Rida Farida,harian,female
-11036,Rifatus Sa'adah,harian,female
-11191,Ririn R,harian,female
-11186,Rohimatul Yusro,harian,female
-11384,Rohmatul Khusna,harian,female
-11621,Safi'Atun,harian,female
-11622,Saidah,harian,female
-11434,Saila Farizkia,harian,female
-11024,Selanda S W,harian,female
-11389,Sintiya Fitaloka,harian,female
-10765,Siti  Juhro,harian,female
-11435,Siti Aisyah,harian,female
-11625,Siti Fatima Wulandari,harian,female
-11693,Siti Juariyah,harian,female
-11136,Siti khoiriyah,harian,female
-10603,Siti Marlina,harian,female
-11694,Siti Mudrika,harian,female
-11695,Siti Nur Aini,harian,female
-10741,Siti Nurhayati,harian,female
-11628,Sohiha,harian,female
-11245,Sri Rahayu,harian,female
-11629,Sri Wibawati,harian,female
-10746,Sulamin,harian,female
-11378,Sundari,harian,female
-11382,Sutriyah,harian,female
-11042,Takrimatul Khuluq,harian,female
-11364,Tina Alfiyah,harian,female
-10901,Titik Wijayanti,harian,female
-10504,Tri Afriliah H.,harian,female
-11041,Trias Indah Sari,harian,female
-10744,Umrotul Hasanah,harian,female
-11432,Uswatun Chasanah,harian,female
-10769,Wiwin Kurniandari,harian,female
-11341,Yanti Agustiani,harian,female
-10903,Yanti P,harian,female
-10522,Yayuk Farida,harian,female
-10976,Yuni Setyaningsih,harian,female
-11526,A. Jakfar Shodiq,harian,male
-10627,Abd Khamid,harian,male
-10739,Abd Rohman,harian,male
-10757,Abd. Rochim,harian,male
-11078,Abd. Wahid,harian,male
-11567,Abdul Kodir,harian,male
-10949,Afifuddin,harian,male
-11418,Ainur Rofik,harian,male
-10880,Andi Risadi,harian,male
-11518,Asroful Anam,harian,male
-11006,Bawon Shofiyulloh,harian,male
-10938,Danial Arif,harian,male
-11334,Dimas Mulyono,harian,male
-11355,Fathur Rochman,harian,male
-11642,Fendik Harianto,harian,male
-11089,Hendrik Irawan,harian,male
-11572,Irfan Efendi,harian,male
-11090,Lukman Hakim,harian,male
-11413,M Eric Rozaki,harian,male
-11487,M Fuad,harian,male
-11552,M Gali Alfitra,harian,male
-11514,M Ibnu Mukhdi,harian,male
-11477,M Lukman Hakim,harian,male
-11501,M Rifqi M A,harian,male
-11067,M rokhim,harian,male
-10669,M. Arifin,harian,male
-11474,M. Bahrudin,harian,male
-11343,M. Fatah,harian,male
-11249,M. Hoiron,harian,male
-11372,M. Khilmi,harian,male
-11647,M. Khoiruddin,harian,male
-10755,M. Nasih,harian,male
-10986,M. Rizky R,harian,male
-10753,M. Rozikin,harian,male
-11354,Mokh. Nauval,harian,male
-11656,Muhamad Muksin,harian,male
-11479,Mustain,harian,male
-11132,Nurhuda,harian,male
-11659,Piyanto,harian,male
-11516,Rizky Riyan Rakhman,harian,male
-11375,Ryan Hidayatullah,harian,male
-11536,Sahal Mahfud,harian,male
-10629,Saichudin Agung,harian,male
-11469,Syifaús Sudur,harian,male
-11146,Zainul A.B,harian,male
-10633,Zainuri,harian,male
-10581,Abdul Somad,harian,male
-11468,Abdur Rohman,harian,male
-11637,Agus Mujianto,harian,male
-10777,Aminatuz Zahra,harian,female
-11179,Dewi Nur Afida,harian,female
-11404,Fitria Agustin,harian,female
-11643,Hasanudin,harian,male
-11393,Istianatul Fitria,harian,female
-10756,Khasbil Khakiki,harian,male
-11385,Laiyina Maimuna,harian,female
-11414,Luqmanul Hakim,harian,male
-11118,M Hendra W,harian,male
-11470,M Hilmi,harian,male
-11556,M Irfandi,harian,male
-11649,M Mansyhur Zakarai,harian,male
-10666,M. Fahmu Rijal,harian,male
-11091,M. Hasan Bisyri,harian,male
-10992,M. Jafar Sodiq A,harian,male
-11553,M. Mahrus,harian,male
-11373,M. Yusuf Mudakir,harian,male
-11094,M.Agus Mulyo S,harian,male
-11110,M.Fauji,harian,male
-10729,M.Yasin,harian,male
-10517,Mawar Suprapti,harian,female
-11614,Melinda Dwi H,harian,female
-11158,Misbahus Surur,harian,male
-11560,Muhammad Maulana I.,harian,male
-11424,Nastain,harian,male
-11688,Nurida,harian,female
-10909,Nurul Ma'rifah,harian,female
-11449,Rafiq Khoirul U.,harian,male
-11412,Saiful Islam,harian,male
-11691,Sheila rizqiyah,harian,female
-10609,Solichati,harian,female
-11630,Sulis Setiarini,harian,female
-10589,Titta Nadisi,harian,female
-11769,Lauhil Mahfuzh,harian,male
-11766,Lukman Hidayah,harian,male
-11768,M Mustofa H,harian,male
-11771,M. Dani Al Arif,harian,male
-11765,M. Kelvin Maulana,harian,male
+nik,name,type,gender,group
+10451,Nur Diani,harian,female,Group A
+10452,Maulidah,bulanan,female,Group A
+10453,Kiki Yulianingrum,bulanan,female,Group B
+10454,Nur Afifa,bulanan,female,Group B
+10456,Endang Hariyanti,bulanan,female,Group B
+10457,Siti Khotijah,bulanan,female,Group A
+10459,M. Idris,harian,male,
+10463,Khisolil Kamal,bulanan,male,Group C
+10464,Ahmad Khusaeri,bulanan,male,Group A
+10465,Ratih Dewi T,bulanan,female,Group A
+10466,Yetti Krisna W.,bulanan,female,Group A
+10468,A. Faizin,bulanan,male,Group A
+10470,Diana Wulandari,bulanan,female,Group C
+10471,Jamilah,bulanan,female,Group A
+10473,Arini,bulanan,female,Group C
+10477,Aizzatul Laili,harian,female,Group A
+10483,Sri Mulyati,bulanan,female,Group C
+10484,M. Mukhlis,bulanan,male,Normal
+10485,Bahru Ulum,bulanan,male,Group A
+10488,Mega I,harian,female,Group A
+10494,M. Masyhurin,bulanan,male,Group B
+10498,Atim Nurrohman,bulanan,male,Group A
+10499,Khoirul Anam,bulanan,male,
+10504,Tri Afriliah H.,harian,female,Group A
+10505,Idfi Dwi Mulyani,harian,female,Group A
+10506,Masruroh,harian,female,Group A
+10516,Nikmatul Huda,harian,female,Group A
+10517,Mawar Suprapti,harian,female,Group A
+10518,Musrifah,harian,female,Group A
+10522,Yayuk Farida,harian,female,Group A
+10524,Nurul Sulaeman,harian,male,
+10553,Fatmawati,harian,female,Group A
+10565,Ainur Rofiq,bulanan,male,
+10574,Kholis Khasiani,harian,female,Group A
+10576,Muhammad Maskur,bulanan,male,Group A
+10581,Abdul Somad,harian,male,Group A
+10589,Titta Nadisi,harian,female,Group A
+10599,Anastasia P,harian,female,Group A
+10603,Siti Marlina,harian,female,Group A
+10607,Minarni,harian,female,Group A
+10609,Solichati,harian,female,Group A
+10612,A. Herman Efendi,bulanan,male,Group C
+10616,M. Badrus Sholeh,bulanan,male,Group C
+10619,Faujan,harian,male,
+10625,M. Khumaidi,bulanan,male,Group A
+10627,Abd Khamid,harian,male,Group A
+10629,Saichudin Agung,harian,male,Group A
+10630,D. Nasihin,bulanan,male,Group C
+10633,Zainuri,harian,male,Group A
+10636,M. Abd Ghofur,bulanan,male,Group B
+10640,Bahrul Ulum,bulanan,male,Group A
+10649,Wahyu Hidayat,bulanan,male,Group A
+10660,Rida Farida,harian,female,Group A
+10666,M. Fahmu Rijal,harian,male,Group A
+10669,M. Arifin,harian,male,Group A
+10671,Taufik,harian,male,
+10672,Mas Huda,harian,male,
+10678,Krisniah,harian,female,Group A
+10683,M. Hasim Mujadi,bulanan,male,
+10689,Rofiatullisa M. A.,bulanan,female,Group B
+10704,Munifa,harian,female,Group A
+10718,Nur Anita,harian,female,Group A
+10719,Maulidia,harian,female,Group A
+10726,Lukman Khakim,bulanan,male,Group D
+10728,Mustofa,harian,male,
+10729,M.Yasin,harian,male,Group A
+10734,M. Marzuki,harian,male,
+10739,Abd Rohman,harian,male,Group A
+10741,Siti Nurhayati,harian,female,Group A
+10744,Umrotul Hasanah,harian,female,Group A
+10746,Sulamin,harian,female,Group A
+10747,Imam Safiudin,bulanan,male,Group A
+10750,Fatimatuz Zahro,harian,female,Group A
+10752,Nuriyati,harian,female,Group A
+10753,M. Rozikin,harian,male,Group A
+10755,M. Nasih,harian,male,Group A
+10756,Khasbil Khakiki,harian,male,Group A
+10757,Abd. Rochim,harian,male,Group A
+10763,Maria Ulfa,harian,female,Group A
+10765,Siti Juhro,harian,female,Group A
+10768,Anik Kusnia,harian,female,Group A
+10769,Wiwin Kurniandari,harian,female,Group A
+10777,Aminatuz Zahra,harian,female,
+10781,Rudi Suhartono,bulanan,male,Group A
+10782,Irsyadullah,bulanan,male,Group C
+10783,Muslimin,harian,male,
+10784,Mukhammad Idris,harian,male,
+10785,Hadi Firman Susilo,bulanan,male,
+10786,Sholihin,bulanan,male,Group B
+10789,Muhammad Ghufron,bulanan,male,Group B
+10791,Ahmadi,harian,male,
+10797,M. Saikhon,bulanan,male,Group A
+10798,Arif Ulum Udin,bulanan,male,Group B
+10800,Abdul Rokhman,bulanan,male,Group B
+10802,Taufiq Hidayat,bulanan,male,Group C
+10803,Abd. Karim,bulanan,male,Group B
+10804,Ahmad Jauhari,bulanan,male,Group C
+10807,Abdul. Rochman,bulanan,male,Group D
+10818,M. Sodik,bulanan,male,Group D
+10821,Tajul Muslimin,bulanan,male,Group B
+10824,Mujianto,bulanan,male,Group B
+10828,Lukman Hamid,bulanan,male,Group A
+10833,M. Khamim Zakariyah,bulanan,male,Group A
+10834,M. Hasanudin,bulanan,male,
+10838,Sumitro,bulanan,male,Group B
+10843,Eko Doni Zulfikar,bulanan,male,Group A
+10844,Widi Siswantoro,bulanan,male,
+10845,Linggar Dwi W.,bulanan,male,Group B
+10850,Masduki,bulanan,male,Group A
+10855,Nur Azqi,bulanan,male,Group C
+10858,M. Jainuri,bulanan,male,Group B
+10859,M. Ali Ridho,bulanan,male,Group C
+10861,Mokhamad Alwi,bulanan,male,
+10864,Yoedhastyar,bulanan,male,Group B
+10866,M. Saiful,bulanan,male,Group B
+10871,M. Sokhikhan,bulanan,male,Group D
+10873,Suwarno,bulanan,male,Group C
+10879,Husni Mubarok,harian,male,
+10880,Andi Risadi,harian,male,Group A
+10884,Misbahul Munir,harian,male,
+10896,Nurainiyah,harian,female,Group A
+10898,Diah Oktaviani,bulanan,female,
+10901,Titik Wijayanti,harian,female,Group A
+10902,Arini A,harian,female,Group A
+10903,Yanti P,harian,female,Group A
+10909,Nurul Ma'rifah,harian,female,
+10910,M. Sururi,harian,male,
+10921,Dian Krisbiantoro,bulanan,male,Group B
+10924,Nur Hidayati,harian,female,Group A
+10928,Hendri Anas,harian,male,
+10933,Sofyan Sauri,bulanan,male,Group A
+10935,M. Suhaimi,bulanan,male,Group C
+10937,Eko Supriyanto,bulanan,male,Group B
+10938,Danial Arif,harian,male,Group A
+10949,Afifuddin,harian,male,Group A
+10952,Mohammad Faizin,harian,male,
+10954,Usman Wibowo,bulanan,male,Group B
+10967,Fajarwati,harian,female,Group A
+10976,Yuni Setyaningsih,harian,female,Group B
+10977,Ana Aidatul Risky,harian,female,Group B
+10979,Makiyatul W.,harian,female,Group B
+10986,M. Rizky R,harian,male,Group A
+10991,Ainun Najib,harian,male,
+10992,M. Jafar Sodiq A,harian,male,Group A
+10993,Emilia Mu'mila,harian,female,Group B
+10997,Fatlukha,harian,female,Group B
+10999,Mas Rosida,harian,female,Group B
+11001,Melviani Mulyanti,harian,female,Group B
+11006,Bawon Shofiyulloh,harian,male,Group A
+11008,Roni,harian,male,
+11024,Selanda S W,harian,female,Group B
+11027,Humaida,harian,female,Group B
+11041,Trias Indah Sari,harian,female,Group B
+11042,Takrimatul Khuluq,harian,female,Group B
+11045,Efin Nur H,harian,female,Group B
+11047,Inayatul Ilmiah,harian,female,Group B
+11048,Lailatul Mu'asaroh,harian,female,Group B
+11053,Nur Hayati,harian,female,Group B
+11064,Muhammad Sobirin,bulanan,male,Group B
+11067,M rokhim,harian,male,Group A
+11073,Lutfi Hartono,harian,male,
+11074,M.Adi Solehudin,harian,male,
+11078,Abd. Wahid,harian,male,Group A
+11089,Hendrik Irawan,harian,male,Group B
+11090,Lukman Hakim,harian,male,Group B
+11091,M. Hasan Bisyri,harian,male,Group B
+11094,M.Agus Mulyo S,harian,male,
+11098,Tsainil Anwar,bulanan,male,Group A
+11108,M. Taufik,bulanan,male,Group B
+11118,M Hendra W,harian,male,Group B
+11132,Nurhuda,harian,male,Group B
+11136,Siti khoiriyah,harian,female,Group B
+11146,Zainul A.B,harian,male,Group B
+11159,Bahrul Ulum,harian,male,
+11161,M. Sofi Aminulloh,harian,male,
+11178,Deni Rahmawan,harian,male,
+11179,Dewi Nur Afida,harian,female,Group B
+11186,Rohimatul Yusro,harian,female,Group B
+11191,Ririn R,harian,female,Group B
+11192,Noer Fitriyah,harian,female,Group B
+11193,Chandra Dwi Iswanti,harian,female,Group B
+11198,Nur Aini Rizqi,harian,female,Group B
+11202,Ageng Safitriyah,harian,female,Group B
+11224,Nur Dwi Astuti,harian,female,Group B
+11245,Sri Rahayu,harian,female,Group B
+11249,M. Hoiron,harian,male,Group B
+11299,Badrus Soleh,bulanan,male,Group A
+11301,Fendik Prasetyo,bulanan,male,Group A
+11302,Heri Sujatmoko,bulanan,male,Group B
+11319,Edi Santoso,bulanan,male,Group D
+11321,Hadiyanto Nugroho A.,bulanan,male,Group A
+11324,Pandu Putra Efendi,bulanan,male,Group A
+11329,Lailatul Fitriah,harian,female,Group B
+11334,Dimas Mulyono,harian,male,Group B
+11341,Yanti Agustiani,harian,female,Group B
+11342,Abdul Rohman,harian,male,
+11343,M. Fatah,harian,male,Group B
+11345,M. Sodikin,harian,male,
+11347,Abdul Majid,harian,male,
+11348,Muchammad Nabawi,harian,male,
+11350,M Ni'amullah,harian,male,
+11363,Muhammad Sobbi,bulanan,male,Group B
+11364,Tina Alfiyah,harian,female,Group B
+11372,M. Khilmi,harian,male,Group B
+11375,Ryan Hidayatullah,harian,male,Group B
+11376,Dewi Nailil Ilmiah,harian,female,Group B
+11377,Takhmidatul Lailiyah,harian,female,
+11378,Sundari,harian,female,Group B
+11381,Nihayatul Mutimmah,harian,female,
+11384,Rohmatul Khusna,harian,female,Group B
+11385,Laiyina Maimuna,harian,female,Group B
+11386,Nur Aisyah,harian,female,Group B
+11388,Noviyatul Zahro,harian,female,Group B
+11389,Sintiya Fitaloka,harian,female,Group B
+11393,Istianatul Fitria,harian,female,Group B
+11395,Amaliana,harian,female,Group C
+11396,Cindra Febrianti,harian,female,Group C
+11399,Hasan Bisri,harian,male,
+11403,Nurul Aini,harian,female,Group C
+11404,Fitria Agustin,harian,female,Group C
+11405,Cholifah,harian,female,Group C
+11412,Saiful Islam,harian,male,Group B
+11413,M Eric Rozaki,harian,male,Group B
+11414,Luqmanul Hakim,harian,male,Group B
+11418,Ainur Rofik,harian,male,Group B
+11424,Nastain,harian,male,Group B
+11426,Varda Diana Shofa,harian,female,
+11430,Runi Nurul Chikmah,harian,female,
+11431,Rizqi Amalia,harian,female,
+11432,Uswatun Chasanah,harian,female,Group C
+11434,Saila Farizkia,harian,female,Group C
+11435,Siti Aisyah,harian,female,Group C
+11443,Aida F,harian,female,
+11449,Rafiq Khoirul U.,harian,male,Group B
+11461,Fatkhur Rochman,harian,male,
+11468,Abdur Rohman,harian,male,Group B
+11469,Syifaús Sudur,harian,male,Group B
+11470,M Hilmi,harian,male,
+11473,Wahyu Nurkholis,harian,male,
+11477,M Lukman Hakim,harian,male,Group C
+11479,Mustain,harian,male,Group C
+11484,M Riswan H,harian,male,
+11487,M Fuad,harian,male,Group C
+11501,M Rifqi M A,harian,male,Group C
+11504,M Imam Wahyudi,harian,male,
+11514,M Ibnu Mukhdi,harian,male,Group C
+11516,Rizky Riyan Rakhman,harian,male,Group C
+11518,Asroful Anam,harian,male,Group C
+11526,A. Jakfar Shodiq,harian,male,Group C
+11527,A.Baidowi,harian,male,
+11533,Durorur Rohman,harian,male,
+11536,Sahal Mahfud,harian,male,Group C
+11546,M. Nashiruddin,harian,male,
+11552,M Gali Alfitra,harian,male,
+11553,M. Mahrus,harian,male,Group C
+11556,M Irfandi,harian,male,Group C
+11560,Muhammad Maulana I.,harian,male,Group C
+11561,Rohmad Syaifudin,bulanan,male,Group A
+11572,Irfan Efendi,harian,male,Group C
+11576,M. Choirul Anam,harian,male,
+11601,Anna Faradhita,harian,female,Group C
+11602,Devi Syviana Putri,harian,female,Group C
+11603,Dwi Aprilia Damayanti,harian,female,
+11608,Krida Putri,harian,female,Group C
+11609,Lailatul Afrida,harian,female,
+11611,Maghfirotul uyun,harian,female,Group C
+11612,Maria Ulfa,harian,female,Group C
+11614,Melinda Dwi H,harian,female,Group C
+11617,Novia Indriyani,harian,female,
+11621,Safi'Atun,harian,female,Group C
+11622,Saidah,harian,female,Group C
+11625,Siti Fatima Wulandari,harian,female,Group C
+11628,Sohiha,harian,female,Group C
+11629,Sri Wibawati,harian,female,Group C
+11630,Sulis Setiarini,harian,female,Group C
+11637,Agus Mujianto,harian,male,Group C
+11643,Hasanudin,harian,male,Group C
+11647,M. Khoiruddin,harian,male,Group C
+11649,M Mansyhur Zakarai,harian,male,Group C
+11656,Muhamad Muksin,harian,male,Group C
+11659,Piyanto,harian,male,Group C
+11663,Dia Eka Sukmawati,harian,female,
+11665,Erfiana Nur Alfini,harian,female,Group C
+11668,Huda Lila,harian,female,Group C
+11671,Indah Nurhijjah,harian,female,Group C
+11673,Khoiriyah,harian,female,Group C
+11674,Lailatul Qoniah,harian,female,Group C
+11676,Linda Wati,harian,female,Group C
+11677,Maftuhah,harian,female,Group C
+11682,Nailul Maghfiroh,harian,female,Group C
+11683,Nanik Wardati,harian,female,Group C
+11684,Nikmatul Jannah,harian,female,Group C
+11687,Nur Hayati,harian,female,Group C
+11688,Nurida,harian,female,Group C
+11689,Nurul Fitriyah,harian,female,Group C
+11691,Sheila rizqiyah,harian,female,Group C
+11693,Siti Juariyah,harian,female,
+11694,Siti Mudrika,harian,female,Group C
+11695,Siti Nur Aini,harian,female,Group C
+11702,Ahmad Sulaiman,harian,male,
+11708,M. Mahrus Hadi,harian,male,
+11709,M. Ubaidillah,harian,male,
+11713,Rudi Prawiro,harian,male,
+11716,Sugianto,harian,male,
+11726,Muji Utomo,harian,male,
+11728,Rudi Hariyanto D. N.,harian,male,
+11729,Abdur Rouf,harian,male,
+11731,Faruqi Chafifi,harian,male,
+11732,Hendrik Saputro,harian,male,
+11733,Ilham Mulana Yafi,harian,male,
+11736,M. Rizky Irfani,harian,male,
+11740,Muhammad Sunoto,harian,male,
+11742,Muhammd Yoga,harian,male,
+11745,Abdul Bais,harian,male,
+11746,Abdul Hadi,harian,male,
+11747,Ahmad Junaedi,harian,male,
+11748,Akhmad Khamim,harian,male,
+11749,Arfan Arasid,harian,male,
+11750,Dodik Wibowo,harian,male,
+11751,Fadholi,harian,male,
+11752,Hendik Fisma,harian,male,
+11753,Jimi,harian,male,
+11754,M. Agus Mubaroq,harian,male,
+11755,M. Fiki Maulili Dafa,harian,male,
+11756,M. Hidayat,harian,male,
+11757,M. Ilham,harian,male,
+11758,M. Nurul Efendi,harian,male,
+11759,M. Sahrul Mubarok,harian,male,
+11760,Moch. Arifin,harian,male,
+11761,Nasrulloh,harian,male,
+11762,Nur Hakiki,harian,male,
+11763,Sodikin,harian,male,
+11764,Yusuf,harian,male,
+11765,M. Kelvin Maulana,harian,male,
+11766,Lukman Hidayah,harian,male,
+11767,Muhammad Roby Irhamnah,harian,male,
+11768,M Mustofa H,harian,male,
+11769,Lauhil Mahfuzh,harian,male,
+11770,Rangga Yan Bagusta,harian,male,
+11771,M. Dani Al Arif,harian,male,
 11772,Muhammad Aqibul Ishaq,harian,male
-11767,Muhammad Roby Irhamnah,harian,male
-11770,Rangga Yan Bagusta,harian,male

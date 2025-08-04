@@ -289,7 +289,7 @@ export default function LicenseDateExtractor() {
             
             // Common abbreviations
             'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04', 
-            'MEI': '05', 'JUN': '06', 'JUL': '07', 'AGS': '08', 'AUG': '08',
+            'JUN': '06', 'JUL': '07', 'AGS': '08', 'AUG': '08',
             'SEP': '09', 'OKT': '10', 'NOV': '11', 'DES': '12', 'DEC': '12',
             
             // Common OCR mistakes with their corrections (expanded and refined)

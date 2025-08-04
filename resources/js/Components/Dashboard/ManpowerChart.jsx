@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const ManpowerChart = ({ data, height, handleResize, setChartModalState, formatDate }) => {
+const ManpowerChart = ({ data, height, handleResize, setChartModalState, formatDate, fetchModalData }) => { // Added fetchModalData
     const getChartOptions = (onClick) => ({
         responsive: true,
         maintainAspectRatio: false,
@@ -71,16 +71,21 @@ const ManpowerChart = ({ data, height, handleResize, setChartModalState, formatD
         responsiveAnimationDuration: 0
     });
 
-    const handleManpowerRequestBarClick = (datasetIndex, labelIndex) => {
+    const handleManpowerRequestBarClick = async (datasetIndex, labelIndex) => { // Made async
         const monthLabel = data.labels[labelIndex];
         const status = datasetIndex === 0 ? 'pending' : 'fulfilled';
         const month = dayjs(monthLabel, 'MMM YYYY').format('YYYY-MM');
+        const url = route('dashboard.requests.byMonth', { month, status });
+
+        // Fetch data before opening modal
+        const fetchedData = await fetchModalData(url); // Use the passed-down fetchModalData
 
         setChartModalState(prev => ({
             ...prev,
             open: true,
             title: `Request Manpower - ${monthLabel} (${status === 'pending' ? 'Pending' : 'Fulfilled'})`,
-            url: route('dashboard.requests.byMonth', { month, status }),
+            url: url,
+            data: fetchedData, // Set the fetched data here
             columns: [
                 {
                     header: 'Date',
@@ -114,7 +119,7 @@ const ManpowerChart = ({ data, height, handleResize, setChartModalState, formatD
                 className="relative" 
                 style={{ height: `${height}px` }}
             >
-                {data.labels.length > 0 ? (
+                {data.labels.length > 0 && data.datasets.some(dataset => dataset.data.length > 0) ? (
                     <Bar
                         data={data}
                         options={getChartOptions((e, elements) => {

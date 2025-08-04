@@ -151,7 +151,7 @@ export default function Create({ subSections, shifts }) {
 
   const submit = async (e) => {
     e.preventDefault();
-    console.log('Submission started', { data });
+    // console.log('Submission started', { data });
 
     // Validate required fields
     if (!data.sub_section_id || !data.date || !hasAtLeastOneShiftFilled()) {
@@ -167,12 +167,12 @@ export default function Create({ subSections, shifts }) {
 
     // Check for duplicates
     try {
-      console.log('Checking for duplicates...');
+      // console.log('Checking for duplicates...');
       const { duplicates, has_duplicates } = await checkForDuplicates();
-      console.log('Duplicate check result:', { duplicates, has_duplicates });
+      // console.log('Duplicate check result:', { duplicates, has_duplicates });
 
       if (has_duplicates) {
-        console.log('Found duplicates, showing warning');
+        // console.log('Found duplicates, showing warning');
         setDuplicateRequests(duplicates);
         setShowDuplicateWarning(true);
 
@@ -188,14 +188,14 @@ export default function Create({ subSections, shifts }) {
               };
             }
           });
-          console.log('Updated time slots with duplicates:', newTimeSlots);
+          // console.log('Updated time slots with duplicates:', newTimeSlots);
           return { ...prevData, time_slots: newTimeSlots };
         });
         return;
       }
 
       // If no duplicates, proceed with submission
-      console.log('No duplicates found, proceeding with submission');
+      // console.log('No duplicates found, proceeding with submission');
       await processSubmission();
     } catch (error) {
       console.error('Error during submission:', error);
@@ -204,17 +204,17 @@ export default function Create({ subSections, shifts }) {
   };
 
   const processSubmission = async () => {
-    console.log('Preparing submission payload...');
+    // console.log('Preparing submission payload...');
     const payloadTimeSlots = [];
 
     Object.keys(data.time_slots).forEach(shiftId => {
       const slot = data.time_slots[shiftId];
       // Ensure proper number conversion
       const requestedAmount = slot.requested_amount ? parseInt(slot.requested_amount, 10) : 0;
-      console.log(`Processing shift ${shiftId}:`, {
-        rawValue: slot.requested_amount,
-        convertedValue: requestedAmount
-      });
+      // console.log(`Processing shift ${shiftId}:`, {
+      //   rawValue: slot.requested_amount,
+      //   convertedValue: requestedAmount
+      // });
 
       if (requestedAmount > 0) {
         const payloadSlot = {
@@ -236,29 +236,29 @@ export default function Create({ subSections, shifts }) {
       }
     });
 
-    console.log('Final payload being sent:', {
-      sub_section_id: data.sub_section_id,
-      date: data.date,
-      time_slots: payloadTimeSlots
-    });
+    // console.log('Final payload being sent:', {
+    //   sub_section_id: data.sub_section_id,
+    //   date: data.date,
+    //   time_slots: payloadTimeSlots
+    // });
 
     try {
-      console.log('Sending POST request...');
+      // console.log('Sending POST request...');
       await post('/manpower-requests', {
         sub_section_id: data.sub_section_id,
         date: data.date,
         time_slots: payloadTimeSlots,
       }, {
         onSuccess: () => {
-          console.log('Submission successful');
+          // console.log('Submission successful');
           reset();
         },
         onError: (errors) => {
-          console.error('Submission errors:', errors);
+          // console.error('Submission errors:', errors);
         },
       });
     } catch (error) {
-      console.error('Submission failed:', error);
+      // console.error('Submission failed:', error);
     }
   };
 

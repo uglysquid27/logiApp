@@ -20,7 +20,7 @@ export default function Login({ status, canResetPassword }) {
         const isNik = /^EMP\d+$/.test(data.credential) || /^\d+$/.test(data.credential);
         const routeName = isNik ? 'employee.login' : 'login';
     
-        console.log('Attempting login to:', routeName, 'with:', data);
+        // console.log('Attempting login to:', routeName, 'with:', data);
     
         post(route(routeName), {
             onFinish: () => reset('password'),

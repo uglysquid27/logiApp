@@ -89,6 +89,10 @@ export default function Dashboard() {
     const fetchModalData = async (url, query = '') => {
         try {
             const response = await fetch(query ? `${url}?${query}` : url);
+            // Ensure response is OK before parsing
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             return await response.json();
         } catch (error) {
             console.error('Fetch error:', error);
@@ -113,11 +117,10 @@ export default function Dashboard() {
                     labels: data.labels,
                     datasets: data.datasets
                 });
-            } else {
+            } else { // chartType === 'employeeAssignments'
                 url = route('dashboard.employee.assignments.filtered');
-                if (filters.section) {
-                    params.append('section_id', filters.section);
-                }
+                // Always append section_id, use empty string if filters.section is null
+                params.append('section_id', filters.section || '');
                 const response = await fetch(`${url}?${params.toString()}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
@@ -176,6 +179,7 @@ export default function Dashboard() {
                             handleResize={handleResize('chart1')}
                             setChartModalState={setChartModalState}
                             formatDate={formatDate}
+                            fetchModalData={fetchModalData} 
                         />
 
                         <EmployeeChart
@@ -187,6 +191,8 @@ export default function Dashboard() {
                             filters={filters}
                             setFilters={setFilters}
                             formatDate={formatDate}
+                            fetchModalData={fetchModalData} 
+                            applyFilters={applyFilters} 
                         />
                     </div>
 

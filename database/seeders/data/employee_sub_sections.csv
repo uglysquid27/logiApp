@@ -1,375 +1,1311 @@
-NIK,SECTION,BAGIAN
-10807,Finished goods,Leader
-10464,Finished goods,Leader
-10802,Finished goods,Leader
-10636,Finished goods,Leader
-10466,Finished goods,Admin
-10937,Finished goods,Admin
-10935,Finished goods,Admin
-11527,Finished goods,Penandaan
-11527,Finished goods,Putway
-11635,Finished goods,Penandaan
-11635,Finished goods,Putway
-11443,Finished goods,Penandaan
-11443,Finished goods,Putway
-11663,Finished goods,Penandaan
-11663,Finished goods,Putway
-11533,Finished goods,Penandaan
-11533,Finished goods,Putway
-11603,Finished goods,Penandaan
-11603,Finished goods,Putway
-11609,Finished goods,Penandaan
-11609,Finished goods,Putway
-10459,Finished goods,Penandaan
-10459,Finished goods,Putway
-11381,Finished goods,Penandaan
-11381,Finished goods,Putway
-11617,Finished goods,Penandaan
-11617,Finished goods,Putway
-11431,Finished goods,Penandaan
-11431,Finished goods,Putway
-11430,Finished goods,Penandaan
-11430,Finished goods,Putway
-11377,Finished goods,Penandaan
-11377,Finished goods,Putway
-11426,Finished goods,Penandaan
-11426,Finished goods,Putway
-10791,Finished goods,SAP
-11178,Finished goods,SAP
-10468,Delivery,Leader
-10789,Delivery,Leader
-10921,Delivery,Dispatcer
-11561,Delivery,Dispatcer
-10800,Delivery,Picker
-10498,Delivery,Picker
-10747,Delivery,Picker
-11363,Delivery,Picker
-10782,Delivery,Admin
-10465,Delivery,Admin
-10689,Delivery,Admin
-11159,Delivery,Dispatcer
-11461,Delivery,Dispatcer
-10619,Delivery,Dispatcer
-10734,Delivery,Dispatcer
-11345,Delivery,Dispatcer
-11161,Delivery,Dispatcer
-10910,Delivery,Dispatcer
-10952,Delivery,Dispatcer
-10784,Delivery,Dispatcer
-11008,Delivery,Dispatcer
-11745,Loader,Loader
-11746,Loader,Loader
-11347,Loader,Loader
-11729,Loader,Loader
-11747,Loader,Loader
-11702,Loader,Loader
-10991,Loader,Loader
-11748,Loader,Loader
-11749,Loader,Loader
-11750,Loader,Loader
-11751,Loader,Loader
-11731,Loader,Loader
-11399,Loader,Loader
-11752,Loader,Loader
-11732,Loader,Loader
-11733,Loader,Loader
-11753,Loader,Loader
-11504,Loader,Loader
-11350,Loader,Loader
-11484,Loader,Loader
-11754,Loader,Loader
-11576,Loader,Loader
-11755,Loader,Loader
-11756,Loader,Loader
-11757,Loader,Loader
-11708,Loader,Loader
-11546,Loader,Loader
-11758,Loader,Loader
-11736,Loader,Loader
-11759,Loader,Loader
-11709,Loader,Loader
-10884,Loader,Loader
-11760,Loader,Loader
-11348,Loader,Loader
-11740,Loader,Loader
-11742,Loader,Loader
-11726,Loader,Loader
-10783,Loader,Loader
-10728,Loader,Loader
-11761,Loader,Loader
-11762,Loader,Loader
-10524,Loader,Loader
-11728,Loader,Loader
-11713,Loader,Loader
-11763,Loader,Loader
-11716,Loader,Loader
-11473,Loader,Loader
-11764,Loader,Loader
-10898,RM/PM,Admin
-10565,RM/PM,Checker
-10785,RM/PM,Checker
-10499,RM/PM,Checker
-10834,RM/PM,Checker
-10683,RM/PM,Checker
-10861,RM/PM,Checker
-10844,RM/PM,Checker
-11342,RM/PM,Buffer Room
-11342,RM/PM,Penimbangan
-10928,RM/PM,Buffer Room
-10928,RM/PM,Penimbangan
-10879,RM/PM,Buffer Room
-10879,RM/PM,Penimbangan
-11073,RM/PM,Buffer Room
-11073,RM/PM,Penimbangan
-11074,RM/PM,Buffer Room
-11074,RM/PM,Penimbangan
-10672,RM/PM,Buffer Room
-10672,RM/PM,Penimbangan
-10671,RM/PM,Buffer Room
-10671,RM/PM,Penimbangan
-10612,Operator Forklift,Operator Forklift
-10803,Operator Forklift,Operator Forklift
-10804,Operator Forklift,Operator Forklift
-10798,Operator Forklift,Operator Forklift
-11299,Operator Forklift,Operator Forklift
-10485,Operator Forklift,Operator Forklift
-10640,Operator Forklift,Operator Forklift
-10630,Operator Forklift,Operator Forklift
-11301,Operator Forklift,Operator Forklift
-11302,Operator Forklift,Operator Forklift
-10726,Operator Forklift,Operator Forklift
-10859,Operator Forklift,Operator Forklift
-10616,Operator Forklift,Operator Forklift
-10858,Operator Forklift,Operator Forklift
-10625,Operator Forklift,Operator Forklift
-10494,Operator Forklift,Operator Forklift
-10484,Operator Forklift,Operator Forklift
-10866,Operator Forklift,Operator Forklift
-10797,Operator Forklift,Operator Forklift
-10818,Operator Forklift,Operator Forklift
-11108,Operator Forklift,Operator Forklift
-10576,Operator Forklift,Operator Forklift
-10824,Operator Forklift,Operator Forklift
-11324,Operator Forklift,Operator Forklift
-10781,Operator Forklift,Operator Forklift
-10786,Operator Forklift,Operator Forklift
-10933,Operator Forklift,Operator Forklift
-10838,Operator Forklift,Operator Forklift
-10821,Operator Forklift,Operator Forklift
-10954,Operator Forklift,Operator Forklift
-11319,Operator Forklift,Operator Forklift
-10843,Operator Forklift,Operator Forklift
-11321,Operator Forklift,Operator Forklift
-10845,Operator Forklift,Operator Forklift
-10828,Operator Forklift,Operator Forklift
-10833,Operator Forklift,Operator Forklift
-10871,Operator Forklift,Operator Forklift
-10850,Operator Forklift,Operator Forklift
-10855,Operator Forklift,Operator Forklift
-10873,Operator Forklift,Operator Forklift
-10864,Operator Forklift,Operator Forklift
-10471,Inspeksi,Leader
-10453,Inspeksi,Leader
-10463,Inspeksi,Leader
-10649,Inspeksi,Checker
-10454,Inspeksi,Admin
-10457,Inspeksi,Admin
-10473,Inspeksi,Inspektor
-10470,Inspeksi,Inspektor
-10456,Inspeksi,Inspektor
-10452,Inspeksi,Inspektor
-11098,Inspeksi,Inspektor
-11064,Inspeksi,Inspektor
-10483,Inspeksi,Inspektor
-11202,Inspeksi,Inspektor
-10477,Inspeksi,Inspektor
-11395,Inspeksi,Inspektor
-10977,Inspeksi,Inspektor
-10599,Inspeksi,Inspektor
-10768,Inspeksi,Inspektor
-11601,Inspeksi,Inspektor
-10902,Inspeksi,Inspektor
-11193,Inspeksi,Inspektor
-11405,Inspeksi,Inspektor
-11396,Inspeksi,Inspektor
-11602,Inspeksi,Inspektor
-11376,Inspeksi,Inspektor
-11045,Inspeksi,Inspektor
-10993,Inspeksi,Inspektor
-11665,Inspeksi,Inspektor
-10967,Inspeksi,Inspektor
-10750,Inspeksi,Inspektor
-10997,Inspeksi,Inspektor
-10553,Inspeksi,Inspektor
-11668,Inspeksi,Inspektor
-11027,Inspeksi,Inspektor
-10505,Inspeksi,Inspektor
-11669,Inspeksi,Inspektor
-11047,Inspeksi,Inspektor
-11671,Inspeksi,Inspektor
-11673,Inspeksi,Inspektor
-10574,Inspeksi,Inspektor
-11608,Inspeksi,Inspektor
-10678,Inspeksi,Inspektor
-11329,Inspeksi,Inspektor
-11048,Inspeksi,Inspektor
-11674,Inspeksi,Inspektor
-11676,Inspeksi,Inspektor
-11677,Inspeksi,Inspektor
-11611,Inspeksi,Inspektor
-10979,Inspeksi,Inspektor
-10763,Inspeksi,Inspektor
-11612,Inspeksi,Inspektor
-10999,Inspeksi,Inspektor
-10506,Inspeksi,Inspektor
-10719,Inspeksi,Inspektor
-10488,Inspeksi,Inspektor
-11001,Inspeksi,Inspektor
-10607,Inspeksi,Inspektor
-10704,Inspeksi,Inspektor
-10518,Inspeksi,Inspektor
-11682,Inspeksi,Inspektor
-11683,Inspeksi,Inspektor
-10516,Inspeksi,Inspektor
-11684,Inspeksi,Inspektor
-11192,Inspeksi,Inspektor
-11388,Inspeksi,Inspektor
-11198,Inspeksi,Inspektor
-11386,Inspeksi,Inspektor
-10718,Inspeksi,Inspektor
-10451,Inspeksi,Inspektor
-11224,Inspeksi,Inspektor
-11053,Inspeksi,Inspektor
-11687,Inspeksi,Inspektor
-10924,Inspeksi,Inspektor
-10896,Inspeksi,Inspektor
-10752,Inspeksi,Inspektor
-11403,Inspeksi,Inspektor
-11689,Inspeksi,Inspektor
-10660,Inspeksi,Inspektor
-11036,Inspeksi,Inspektor
-11191,Inspeksi,Inspektor
-11186,Inspeksi,Inspektor
-11384,Inspeksi,Inspektor
-11621,Inspeksi,Inspektor
-11622,Inspeksi,Inspektor
-11434,Inspeksi,Inspektor
-11024,Inspeksi,Inspektor
-11389,Inspeksi,Inspektor
-10765,Inspeksi,Inspektor
-11435,Inspeksi,Inspektor
-11625,Inspeksi,Inspektor
-11693,Inspeksi,Inspektor
-11136,Inspeksi,Inspektor
-10603,Inspeksi,Inspektor
-11694,Inspeksi,Inspektor
-11695,Inspeksi,Inspektor
-10741,Inspeksi,Inspektor
-11628,Inspeksi,Inspektor
-11245,Inspeksi,Inspektor
-11629,Inspeksi,Inspektor
-10746,Inspeksi,Inspektor
-11378,Inspeksi,Inspektor
-11382,Inspeksi,Inspektor
-11042,Inspeksi,Inspektor
-11364,Inspeksi,Inspektor
-10901,Inspeksi,Inspektor
-10504,Inspeksi,Inspektor
-11041,Inspeksi,Inspektor
-10744,Inspeksi,Inspektor
-11432,Inspeksi,Inspektor
-10769,Inspeksi,Inspektor
-11341,Inspeksi,Inspektor
-10903,Inspeksi,Inspektor
-10522,Inspeksi,Inspektor
-10976,Inspeksi,Inspektor
-11526,Inspeksi,Resealer
-10627,Inspeksi,Resealer
-10739,Inspeksi,Resealer
-10757,Inspeksi,Resealer
-11078,Inspeksi,Resealer
-11567,Inspeksi,Resealer
-10949,Inspeksi,Resealer
-11418,Inspeksi,Resealer
-10880,Inspeksi,Resealer
-11518,Inspeksi,Resealer
-11006,Inspeksi,Resealer
-10938,Inspeksi,Resealer
-11334,Inspeksi,Resealer
-11355,Inspeksi,Resealer
-11642,Inspeksi,Resealer
-11089,Inspeksi,Resealer
-11572,Inspeksi,Resealer
-11090,Inspeksi,Resealer
-11413,Inspeksi,Resealer
-11487,Inspeksi,Resealer
-11552,Inspeksi,Resealer
-11514,Inspeksi,Resealer
-11477,Inspeksi,Resealer
-11501,Inspeksi,Resealer
-11067,Inspeksi,Resealer
-10669,Inspeksi,Resealer
-11474,Inspeksi,Resealer
-11343,Inspeksi,Resealer
-11249,Inspeksi,Resealer
-11372,Inspeksi,Resealer
-11647,Inspeksi,Resealer
-10755,Inspeksi,Resealer
-10986,Inspeksi,Resealer
-10753,Inspeksi,Resealer
-11354,Inspeksi,Resealer
-11656,Inspeksi,Resealer
-11479,Inspeksi,Resealer
-11132,Inspeksi,Resealer
-11659,Inspeksi,Resealer
-11516,Inspeksi,Resealer
-11375,Inspeksi,Resealer
-11536,Inspeksi,Resealer
-10629,Inspeksi,Resealer
-11469,Inspeksi,Resealer
-11146,Inspeksi,Resealer
-10633,Inspeksi,Resealer
-10581,Inspeksi,Resealer
-11468,Inspeksi,Resealer
-11637,Inspeksi,Resealer
-10777,Inspeksi,Inspektor
-11179,Inspeksi,Inspektor
-11404,Inspeksi,Inspektor
-11643,Inspeksi,Resealer
-11393,Inspeksi,Inspektor
-10756,Inspeksi,Resealer
-11385,Inspeksi,Inspektor
-11414,Inspeksi,Resealer
-11118,Inspeksi,Resealer
-11470,Inspeksi,Resealer
-11556,Inspeksi,Resealer
-11649,Inspeksi,Resealer
-10666,Inspeksi,Resealer
-11091,Inspeksi,Resealer
-10992,Inspeksi,Resealer
-11553,Inspeksi,Resealer
-11373,Inspeksi,Resealer
-11094,Inspeksi,Resealer
-11110,Inspeksi,Resealer
-10729,Inspeksi,Resealer
-10517,Inspeksi,Inspektor
-11614,Inspeksi,Inspektor
-11158,Inspeksi,Resealer
-11560,Inspeksi,Resealer
-11424,Inspeksi,Resealer
-11688,Inspeksi,Inspektor
-10909,Inspeksi,Inspektor
-11449,Inspeksi,Resealer
-11412,Inspeksi,Resealer
-11691,Inspeksi,Inspektor
-10609,Inspeksi,Inspektor
-11630,Inspeksi,Inspektor
-10589,Inspeksi,Inspektor
-11769,Inspeksi,Reject
-11766,Inspeksi,Reject
-11768,Inspeksi,Reject
-11771,Inspeksi,Reject
-11765,Inspeksi,Reject
-11772,Inspeksi,Reject
-11767,Inspeksi,Reject
-11770,Inspeksi,Reject
+nik,section,sub_section,dedicated
+10451,Inspeksi,Camera Offline,1
+10451,Inspeksi,Meja,0
+10451,Inspeksi,Shrink,0
+10451,Inspeksi,Cluster,0
+10451,Inspeksi,Stickering,0
+10451,Inspeksi,Rework,0
+10451,Inspeksi,Leader Meja,0
+10452,Inspeksi,Camera Offline,1
+10452,Inspeksi,Meja,0
+10452,Inspeksi,Shrink,0
+10452,Inspeksi,Cluster,0
+10452,Inspeksi,Stickering,0
+10453,Inspeksi,Leader Inspeksi,1
+10453,Inspeksi,Meja,0
+10453,Inspeksi,Camera Offline,0
+10453,Inspeksi,Shrink,0
+10453,Inspeksi,Cluster,0
+10453,Inspeksi,Stickering,0
+10454,Inspeksi,Admin Inspeksi,1
+10454,Inspeksi,Meja,0
+10454,Inspeksi,Camera Offline,0
+10454,Inspeksi,Shrink,0
+10454,Inspeksi,Cluster,0
+10454,Inspeksi,Stickering,0
+10456,Inspeksi,Camera Offline,1
+10456,Inspeksi,Leader Inspeksi,0
+10456,Inspeksi,Meja,0
+10456,Inspeksi,Shrink,0
+10456,Inspeksi,Cluster,0
+10456,Inspeksi,Stickering,0
+10457,Inspeksi,Admin Inspeksi,1
+10457,Inspeksi,Meja,0
+10457,Inspeksi,Camera Offline,0
+10457,Inspeksi,Shrink,0
+10457,Inspeksi,Cluster,0
+10457,Inspeksi,Stickering,0
+10459,Finished goods,Penandaan,1
+10459,Finished goods,Putway,0
+10463,Inspeksi,Leader Inspeksi,1
+10463,Inspeksi,Meja,0
+10463,Inspeksi,Camera Offline,0
+10463,Inspeksi,Shrink,0
+10463,Inspeksi,Cluster,0
+10463,Inspeksi,Stickering,0
+10464,Finished goods,Leader Finished goods,1
+10465,Delivery,Admin Delivery,1
+10465,Delivery,Admin FG,0
+10466,Finished goods,Admin Finished goods,1
+10466,Finished goods,Admin Inspeksi,0
+10468,Delivery,Leader Delivery,1
+10470,Inspeksi,Camera Offline,1
+10470,Inspeksi,Meja,0
+10470,Inspeksi,Shrink,0
+10470,Inspeksi,Cluster,0
+10470,Inspeksi,Stickering,0
+10471,Inspeksi,Leader Inspeksi,1
+10471,Inspeksi,Meja,0
+10471,Inspeksi,Camera Offline,0
+10471,Inspeksi,Shrink,0
+10471,Inspeksi,Cluster,0
+10471,Inspeksi,Stickering,0
+10473,Inspeksi,Admin Inspeksi,1
+10473,Inspeksi,Meja,0
+10473,Inspeksi,Camera Offline,0
+10473,Inspeksi,Shrink,0
+10473,Inspeksi,Cluster,0
+10473,Inspeksi,Stickering,0
+10477,Inspeksi,Camera Offline,1
+10477,Inspeksi,Meja,0
+10477,Inspeksi,Shrink,0
+10477,Inspeksi,Cluster,0
+10477,Inspeksi,Stickering,0
+10477,Inspeksi,Rework,0
+10483,Inspeksi,Camera Offline,1
+10483,Inspeksi,Leader Inspeksi,0
+10483,Inspeksi,Meja,0
+10483,Inspeksi,Shrink,0
+10483,Inspeksi,Cluster,0
+10483,Inspeksi,Stickering,0
+10484,Operator Forklift,Operator Forklift,1
+10485,Operator Forklift,Operator Forklift,1
+10485,Operator Forklift,Dispatcer,0
+10488,Inspeksi,Camera Offline,1
+10488,Inspeksi,Meja,0
+10488,Inspeksi,Shrink,0
+10488,Inspeksi,Cluster,0
+10488,Inspeksi,Stickering,0
+10488,Inspeksi,Rework,0
+10488,Inspeksi,Leader Meja,0
+10494,Operator Forklift,Operator Forklift,1
+10498,Delivery,Checker SAP,1
+10499,RM/PM,Checker,1
+10499,RM/PM,Buffer Room,0
+10504,Inspeksi,Camera Offline,1
+10504,Inspeksi,Meja,0
+10504,Inspeksi,Shrink,0
+10504,Inspeksi,Cluster,0
+10504,Inspeksi,Stickering,0
+10504,Inspeksi,Rework,0
+10505,Inspeksi,Camera Offline,1
+10505,Inspeksi,Meja,0
+10505,Inspeksi,Cluster,0
+10505,Inspeksi,Stickering,0
+10505,Inspeksi,Rework,0
+10506,Inspeksi,Camera Offline,1
+10506,Inspeksi,Meja,0
+10506,Inspeksi,Cluster,0
+10506,Inspeksi,Stickering,0
+10506,Inspeksi,Rework,0
+10516,Inspeksi,Camera Offline,1
+10516,Inspeksi,Meja,0
+10516,Inspeksi,Shrink,0
+10516,Inspeksi,Cluster,0
+10516,Inspeksi,Stickering,0
+10516,Inspeksi,Rework,0
+10517,Inspeksi,Camera Offline,1
+10517,Inspeksi,Meja,0
+10517,Inspeksi,Shrink,0
+10517,Inspeksi,Cluster,0
+10517,Inspeksi,Stickering,0
+10517,Inspeksi,Rework,0
+10518,Inspeksi,Camera Offline,1
+10518,Inspeksi,Meja,0
+10518,Inspeksi,Shrink,0
+10518,Inspeksi,Cluster,0
+10518,Inspeksi,Stickering,0
+10518,Inspeksi,Rework,0
+10522,Inspeksi,Camera Offline,1
+10522,Inspeksi,Meja,0
+10522,Inspeksi,Cluster,0
+10522,Inspeksi,Stickering,0
+10522,Inspeksi,Rework,0
+10524,Loader,Loader,1
+10553,Inspeksi,Camera Offline,1
+10553,Inspeksi,Meja,0
+10553,Inspeksi,Shrink,0
+10553,Inspeksi,Cluster,0
+10553,Inspeksi,Stickering,0
+10553,Inspeksi,Rework,0
+10565,RM/PM,Checker,1
+10565,RM/PM,Buffer Room,0
+10574,Inspeksi,Camera Offline,1
+10574,Inspeksi,Meja,0
+10574,Inspeksi,Cluster,0
+10574,Inspeksi,Stickering,0
+10574,Inspeksi,Rework,0
+10576,Operator Forklift,Operator Forklift,1
+10576,Operator Forklift,Dispatcer,0
+10576,Operator Forklift,Picker,0
+10581,Inspeksi,Camera Offline,1
+10581,Inspeksi,Meja,0
+10581,Inspeksi,Shrink,0
+10581,Inspeksi,Repallet,0
+10581,Inspeksi,Pembuatan Partisi,0
+10581,Inspeksi,Cleaning Pallet,0
+10589,Inspeksi,Camera Offline,1
+10589,Inspeksi,Meja,0
+10589,Inspeksi,Shrink,0
+10589,Inspeksi,Cluster,0
+10589,Inspeksi,Stickering,0
+10589,Inspeksi,Rework,0
+10599,Inspeksi,Camera Offline,1
+10599,Inspeksi,Meja,0
+10599,Inspeksi,Cluster,0
+10599,Inspeksi,Stickering,0
+10599,Inspeksi,Rework,0
+10603,Inspeksi,Camera Offline,1
+10603,Inspeksi,Meja,0
+10603,Inspeksi,Cluster,0
+10603,Inspeksi,Stickering,0
+10603,Inspeksi,Rework,0
+10607,Inspeksi,Camera Offline,1
+10607,Inspeksi,Meja,0
+10607,Inspeksi,Shrink,0
+10607,Inspeksi,Cluster,0
+10607,Inspeksi,Stickering,0
+10607,Inspeksi,Rework,0
+10609,Inspeksi,Camera Offline,1
+10609,Inspeksi,Meja,0
+10609,Inspeksi,Shrink,0
+10609,Inspeksi,Cluster,0
+10609,Inspeksi,Stickering,0
+10609,Inspeksi,Rework,0
+10612,Operator Forklift,Operator Forklift,1
+10616,Operator Forklift,Operator Forklift,1
+10616,Operator Forklift,Checker SAP,0
+10619,Delivery,Dispatcer,1
+10619,Delivery,Loader,0
+10625,Operator Forklift,Operator Forklift,1
+10627,Inspeksi,Camera Offline,1
+10627,Inspeksi,Meja,0
+10627,Inspeksi,Repallet,0
+10627,Inspeksi,Pembuatan Partisi,0
+10627,Inspeksi,Cleaning Pallet,0
+10629,Inspeksi,Camera Offline,1
+10629,Inspeksi,Meja,0
+10629,Inspeksi,Shrink,0
+10629,Inspeksi,Repallet,0
+10629,Inspeksi,Pembuatan Partisi,0
+10629,Inspeksi,Cleaning Pallet,0
+10630,Operator Forklift,Operator Forklift,1
+10633,Inspeksi,Camera Offline,1
+10633,Inspeksi,Meja,0
+10633,Inspeksi,Shrink,0
+10633,Inspeksi,Repallet,0
+10633,Inspeksi,Pembuatan Partisi,0
+10633,Inspeksi,Cleaning Pallet,0
+10636,Finished goods,Leader Finished goods,1
+10640,Operator Forklift,Operator Forklift,1
+10640,Operator Forklift,Dispatcer,0
+10649,Inspeksi,Checker Inspeksi,1
+10660,Inspeksi,Camera Offline,1
+10660,Inspeksi,Meja,0
+10660,Inspeksi,Cluster,0
+10660,Inspeksi,Stickering,0
+10660,Inspeksi,Rework,0
+10666,Inspeksi,Camera Offline,1
+10666,Inspeksi,Meja,0
+10666,Inspeksi,Shrink,0
+10666,Inspeksi,Repallet,0
+10666,Inspeksi,Pembuatan Partisi,0
+10666,Inspeksi,Cleaning Pallet,0
+10669,Inspeksi,Camera Offline,1
+10669,Inspeksi,Shrink,0
+10669,Inspeksi,Repallet,0
+10669,Inspeksi,Pembuatan Partisi,0
+10669,Inspeksi,Cleaning Pallet,0
+10671,RM/PM,Buffer Room,1
+10671,RM/PM,Penimbangan,0
+10672,RM/PM,Buffer Room,1
+10672,RM/PM,Penimbangan,0
+10678,Inspeksi,Camera Offline,1
+10678,Inspeksi,Meja,0
+10678,Inspeksi,Cluster,0
+10678,Inspeksi,Stickering,0
+10678,Inspeksi,Rework,0
+10683,RM/PM,Checker,1
+10683,RM/PM,Buffer Room,0
+10689,Delivery,Admin Delivery,1
+10704,Inspeksi,Camera Offline,1
+10704,Inspeksi,Meja,0
+10704,Inspeksi,Shrink,0
+10704,Inspeksi,Cluster,0
+10704,Inspeksi,Stickering,0
+10704,Inspeksi,Rework,0
+10718,Inspeksi,Camera Offline,1
+10718,Inspeksi,Meja,0
+10718,Inspeksi,Cluster,0
+10718,Inspeksi,Stickering,0
+10718,Inspeksi,Rework,0
+10719,Inspeksi,Camera Offline,1
+10719,Inspeksi,Meja,0
+10719,Inspeksi,Cluster,0
+10719,Inspeksi,Stickering,0
+10719,Inspeksi,Rework,0
+10726,Operator Forklift,Operator Forklift,1
+10728,Loader,Loader,1
+10729,Inspeksi,Camera Offline,1
+10729,Inspeksi,Meja,0
+10729,Inspeksi,Shrink,0
+10729,Inspeksi,Repallet,0
+10729,Inspeksi,Pembuatan Partisi,0
+10729,Inspeksi,Cleaning Pallet,0
+10734,Delivery,Dispatcer,1
+10734,Delivery,Loader,0
+10739,Inspeksi,Camera Offline,1
+10739,Inspeksi,Meja,0
+10739,Inspeksi,Shrink,0
+10739,Inspeksi,Repallet,0
+10739,Inspeksi,Pembuatan Partisi,0
+10739,Inspeksi,Cleaning Pallet,0
+10741,Inspeksi,Camera Offline,1
+10741,Inspeksi,Meja,0
+10741,Inspeksi,Cluster,0
+10741,Inspeksi,Stickering,0
+10741,Inspeksi,Rework,0
+10744,Inspeksi,Camera Offline,1
+10744,Inspeksi,Meja,0
+10744,Inspeksi,Shrink,0
+10744,Inspeksi,Cluster,0
+10744,Inspeksi,Stickering,0
+10744,Inspeksi,Rework,0
+10746,Inspeksi,Camera Offline,1
+10746,Inspeksi,Meja,0
+10746,Inspeksi,Cluster,0
+10746,Inspeksi,Stickering,0
+10746,Inspeksi,Rework,0
+10747,Delivery,Picker,1
+10747,Delivery,Loader,0
+10750,Inspeksi,Camera Offline,1
+10750,Inspeksi,Meja,0
+10750,Inspeksi,Shrink,0
+10750,Inspeksi,Cluster,0
+10750,Inspeksi,Stickering,0
+10750,Inspeksi,Rework,0
+10752,Inspeksi,Camera Offline,1
+10752,Inspeksi,Meja,0
+10752,Inspeksi,Shrink,0
+10752,Inspeksi,Cluster,0
+10752,Inspeksi,Stickering,0
+10752,Inspeksi,Rework,0
+10753,Inspeksi,Camera Offline,1
+10753,Inspeksi,Meja,0
+10753,Inspeksi,Shrink,0
+10753,Inspeksi,Repallet,0
+10753,Inspeksi,Pembuatan Partisi,0
+10753,Inspeksi,Cleaning Pallet,0
+10755,Inspeksi,Camera Offline,1
+10755,Inspeksi,Pembuatan Partisi,0
+10755,Inspeksi,Cleaning Pallet,0
+10756,Inspeksi,Camera Offline,1
+10756,Inspeksi,Meja,0
+10756,Inspeksi,Shrink,0
+10756,Inspeksi,Repallet,0
+10756,Inspeksi,Pembuatan Partisi,0
+10756,Inspeksi,Cleaning Pallet,0
+10757,Inspeksi,Camera Offline,1
+10757,Inspeksi,Meja,0
+10757,Inspeksi,Shrink,0
+10757,Inspeksi,Repallet,0
+10757,Inspeksi,Pembuatan Partisi,0
+10757,Inspeksi,Cleaning Pallet,0
+10763,Inspeksi,Camera Offline,1
+10763,Inspeksi,Meja,0
+10763,Inspeksi,Cluster,0
+10763,Inspeksi,Stickering,0
+10763,Inspeksi,Rework,0
+10765,Inspeksi,Camera Offline,1
+10765,Inspeksi,Meja,0
+10765,Inspeksi,Shrink,0
+10765,Inspeksi,Cluster,0
+10765,Inspeksi,Stickering,0
+10765,Inspeksi,Rework,0
+10768,Inspeksi,Camera Offline,1
+10768,Inspeksi,Meja,0
+10768,Inspeksi,Shrink,0
+10768,Inspeksi,Cluster,0
+10768,Inspeksi,Stickering,0
+10768,Inspeksi,Rework,0
+10769,Inspeksi,Camera Offline,1
+10769,Inspeksi,Meja,0
+10769,Inspeksi,Cluster,0
+10769,Inspeksi,Stickering,0
+10769,Inspeksi,Rework,0
+10777,Finished goods,Penandaan,1
+10777,Finished goods,Meja,0
+10777,Finished goods,Camera Offline,0
+10777,Finished goods,rework,0
+10777,Finished goods,shrink,0
+10777,Finished goods,cluster,0
+10777,Finished goods,stickering,0
+10781,Operator Forklift,Operator Forklift,1
+10782,Delivery,Admin Delivery,1
+10782,Delivery,Admin FG,0
+10783,Loader,Loader,1
+10783,Loader,Penimbangan,0
+10784,Delivery,Dispatcer,1
+10784,Delivery,Loader,0
+10785,RM/PM,Buffer Room,1
+10786,Operator Forklift,Operator Forklift,1
+10786,Operator Forklift,Picker,0
+10789,Delivery,Leader Delivery,1
+10791,Finished goods,Checker SAP,1
+10791,Finished goods,Penandaan,0
+10791,Finished goods,Putway,0
+10791,Finished goods,Picker,0
+10797,Operator Forklift,Operator Forklift,1
+10798,Operator Forklift,Operator Forklift,1
+10800,Delivery,Picker,1
+10800,Delivery,Dispatcer,0
+10800,Delivery,Loader,0
+10802,Finished goods,Leader Finished goods,1
+10803,Operator Forklift,Operator Forklift,1
+10803,Operator Forklift,Dispatcer,0
+10804,Operator Forklift,Operator Forklift,1
+10804,Operator Forklift,Penandaan,0
+10804,Operator Forklift,Putway,0
+10807,Finished goods,Leader Finished goods,1
+10818,Operator Forklift,Operator Forklift,1
+10821,Operator Forklift,Operator Forklift,1
+10821,Operator Forklift,Dispatcer,0
+10824,Operator Forklift,Operator Forklift,1
+10828,Operator Forklift,Operator Forklift,1
+10833,Operator Forklift,Operator Forklift,1
+10834,RM/PM,Checker,1
+10834,RM/PM,Buffer Room,0
+10838,Operator Forklift,Operator Forklift,1
+10843,Operator Forklift,Operator Forklift,1
+10844,RM/PM,Checker,1
+10844,RM/PM,Buffer Room,0
+10845,Operator Forklift,Operator Forklift,1
+10850,Operator Forklift,Operator Forklift,1
+10855,Operator Forklift,Operator Forklift,1
+10858,Operator Forklift,Operator Forklift,1
+10859,Operator Forklift,Operator Forklift,1
+10861,RM/PM,Checker,1
+10861,RM/PM,Buffer Room,0
+10864,Operator Forklift,Operator Forklift,1
+10866,Operator Forklift,Operator Forklift,1
+10871,Operator Forklift,Operator Forklift,1
+10873,Operator Forklift,Operator Forklift,1
+10879,RM/PM,Buffer Room,1
+10879,RM/PM,Penimbangan,0
+10880,Inspeksi,Camera Offline,1
+10880,Inspeksi,Meja,0
+10880,Inspeksi,Shrink,0
+10880,Inspeksi,Repallet,0
+10880,Inspeksi,Pembuatan Partisi,0
+10880,Inspeksi,Cleaning Pallet,0
+10884,Loader,Loader,1
+10884,Loader,Bongkar Material/Cap/Juice,0
+10896,Inspeksi,Camera Offline,1
+10896,Inspeksi,Meja,0
+10896,Inspeksi,Cluster,0
+10896,Inspeksi,Stickering,0
+10896,Inspeksi,Rework,0
+10898,RM/PM,Admin RM/PM,1
+10901,Inspeksi,Camera Offline,1
+10901,Inspeksi,Meja,0
+10901,Inspeksi,Shrink,0
+10901,Inspeksi,Cluster,0
+10901,Inspeksi,Stickering,0
+10901,Inspeksi,Rework,0
+10902,Inspeksi,Camera Offline,1
+10902,Inspeksi,Meja,0
+10902,Inspeksi,Shrink,0
+10902,Inspeksi,Cluster,0
+10902,Inspeksi,Stickering,0
+10902,Inspeksi,Rework,0
+10903,Inspeksi,Camera Offline,1
+10903,Inspeksi,Meja,0
+10903,Inspeksi,Shrink,0
+10903,Inspeksi,Cluster,0
+10903,Inspeksi,Stickering,0
+10903,Inspeksi,Rework,0
+10909,Finished goods,Penandaan,1
+10909,Finished goods,Meja,0
+10909,Finished goods,Camera Offline,0
+10909,Finished goods,rework,0
+10909,Finished goods,shrink,0
+10909,Finished goods,cluster,0
+10909,Finished goods,stickering,0
+10910,Delivery,Dispatcer,1
+10910,Delivery,Loader,0
+10921,Delivery,Dispatcer,1
+10921,Delivery,Loader,0
+10924,Inspeksi,Camera Offline,1
+10924,Inspeksi,Meja,0
+10924,Inspeksi,Cluster,0
+10924,Inspeksi,Stickering,0
+10924,Inspeksi,Rework,0
+10928,RM/PM,Buffer Room,1
+10928,RM/PM,Penimbangan,0
+10933,Operator Forklift,Operator Forklift,1
+10933,Operator Forklift,Dispatcer,0
+10935,Finished goods,Admin Finished goods,1
+10935,Finished goods,Checker SAP,0
+10935,Finished goods,Picker,0
+10937,Finished goods,Admin Finished goods,1
+10937,Finished goods,Checker SAP,0
+10937,Finished goods,Picker,0
+10938,Inspeksi,Camera Offline,1
+10938,Inspeksi,Meja,0
+10938,Inspeksi,Shrink,0
+10938,Inspeksi,Repallet,0
+10938,Inspeksi,Pembuatan Partisi,0
+10938,Inspeksi,Cleaning Pallet,0
+10949,Inspeksi,Camera Offline,1
+10949,Inspeksi,Penimbangan,0
+10952,Delivery,Dispatcer,1
+10952,Delivery,Loader,0
+10954,Operator Forklift,Operator Forklift,1
+10967,Inspeksi,Camera Offline,1
+10967,Inspeksi,Meja,0
+10967,Inspeksi,Shrink,0
+10967,Inspeksi,Cluster,0
+10967,Inspeksi,Stickering,0
+10967,Inspeksi,Rework,0
+10976,Inspeksi,Camera Offline,1
+10976,Inspeksi,Meja,0
+10976,Inspeksi,Shrink,0
+10976,Inspeksi,Cluster,0
+10976,Inspeksi,Stickering,0
+10976,Inspeksi,Rework,0
+10977,Inspeksi,Camera Offline,1
+10977,Inspeksi,Meja,0
+10977,Inspeksi,Shrink,0
+10977,Inspeksi,Cluster,0
+10977,Inspeksi,Stickering,0
+10977,Inspeksi,Rework,0
+10979,Inspeksi,Camera Offline,1
+10979,Inspeksi,Meja,0
+10979,Inspeksi,Shrink,0
+10979,Inspeksi,Cluster,0
+10979,Inspeksi,Stickering,0
+10979,Inspeksi,Rework,0
+10986,Inspeksi,Camera Offline,1
+10986,Inspeksi,Meja,0
+10986,Inspeksi,Shrink,0
+10986,Inspeksi,Repallet,0
+10986,Inspeksi,Pembuatan Partisi,0
+10986,Inspeksi,Cleaning Pallet,0
+10991,Loader,Loader,1
+10992,Inspeksi,Camera Offline,1
+10992,Inspeksi,Meja,0
+10992,Inspeksi,Shrink,0
+10992,Inspeksi,Repallet,0
+10992,Inspeksi,Pembuatan Partisi,0
+10992,Inspeksi,Cleaning Pallet,0
+10993,Inspeksi,Camera Offline,1
+10993,Inspeksi,Meja,0
+10993,Inspeksi,Shrink,0
+10993,Inspeksi,Cluster,0
+10993,Inspeksi,Stickering,0
+10993,Inspeksi,Rework,0
+10997,Inspeksi,Camera Offline,1
+10997,Inspeksi,Meja,0
+10997,Inspeksi,Shrink,0
+10997,Inspeksi,Cluster,0
+10997,Inspeksi,Stickering,0
+10997,Inspeksi,Rework,0
+10999,Inspeksi,Camera Offline,1
+10999,Inspeksi,Meja,0
+10999,Inspeksi,Shrink,0
+10999,Inspeksi,Cluster,0
+10999,Inspeksi,Stickering,0
+10999,Inspeksi,Rework,0
+11001,Inspeksi,Camera Offline,1
+11001,Inspeksi,Meja,0
+11001,Inspeksi,Cluster,0
+11001,Inspeksi,Stickering,0
+11001,Inspeksi,Rework,0
+11006,Inspeksi,Camera Offline,1
+11006,Inspeksi,Meja,0
+11006,Inspeksi,Shrink,0
+11006,Inspeksi,Repallet,0
+11006,Inspeksi,Pembuatan Partisi,0
+11006,Inspeksi,Cleaning Pallet,0
+11008,Delivery,Dispatcer,1
+11008,Delivery,Loader,0
+11024,Inspeksi,Camera Offline,1
+11024,Inspeksi,Meja,0
+11024,Inspeksi,Shrink,0
+11024,Inspeksi,Cluster,0
+11024,Inspeksi,Stickering,0
+11024,Inspeksi,Rework,0
+11027,Inspeksi,Camera Offline,1
+11027,Inspeksi,Meja,0
+11027,Inspeksi,Shrink,0
+11027,Inspeksi,Cluster,0
+11027,Inspeksi,Stickering,0
+11027,Inspeksi,Rework,0
+11041,Inspeksi,Camera Offline,1
+11041,Inspeksi,Meja,0
+11041,Inspeksi,Cluster,0
+11041,Inspeksi,Stickering,0
+11041,Inspeksi,Rework,0
+11042,Inspeksi,Camera Offline,1
+11042,Inspeksi,Meja,0
+11042,Inspeksi,Cluster,0
+11042,Inspeksi,Stickering,0
+11042,Inspeksi,Rework,0
+11045,Inspeksi,Camera Offline,1
+11045,Inspeksi,Meja,0
+11045,Inspeksi,Shrink,0
+11045,Inspeksi,Cluster,0
+11045,Inspeksi,Stickering,0
+11045,Inspeksi,Rework,0
+11047,Inspeksi,Camera Offline,1
+11047,Inspeksi,Meja,0
+11047,Inspeksi,Shrink,0
+11047,Inspeksi,Cluster,0
+11047,Inspeksi,Stickering,0
+11047,Inspeksi,Rework,0
+11048,Inspeksi,Camera Offline,1
+11048,Inspeksi,Meja,0
+11048,Inspeksi,Shrink,0
+11048,Inspeksi,Cluster,0
+11048,Inspeksi,Stickering,0
+11048,Inspeksi,Rework,0
+11053,Inspeksi,Camera Offline,1
+11053,Inspeksi,Meja,0
+11053,Inspeksi,Shrink,0
+11053,Inspeksi,Cluster,0
+11053,Inspeksi,Stickering,0
+11053,Inspeksi,Rework,0
+11064,Inspeksi,Camera Offline,1
+11064,Inspeksi,Meja,0
+11064,Inspeksi,Shrink,0
+11064,Inspeksi,Cluster,0
+11064,Inspeksi,Stickering,0
+11067,Inspeksi,Camera Offline,1
+11067,Inspeksi,Meja,0
+11067,Inspeksi,Shrink,0
+11067,Inspeksi,Repallet,0
+11067,Inspeksi,Pembuatan Partisi,0
+11067,Inspeksi,Cleaning Pallet,0
+11073,RM/PM,Buffer Room,1
+11073,RM/PM,Penimbangan,0
+11074,RM/PM,Penimbangan,1
+11078,Inspeksi,Camera Offline,1
+11078,Inspeksi,Meja,0
+11078,Inspeksi,Shrink,0
+11078,Inspeksi,Repallet,0
+11078,Inspeksi,Pembuatan Partisi,0
+11078,Inspeksi,Cleaning Pallet,0
+11089,Inspeksi,Camera Offline,1
+11089,Inspeksi,Meja,0
+11089,Inspeksi,Shrink,0
+11089,Inspeksi,Repallet,0
+11089,Inspeksi,Pembuatan Partisi,0
+11089,Inspeksi,Cleaning Pallet,0
+11090,Inspeksi,Camera Offline,1
+11090,Inspeksi,Meja,0
+11090,Inspeksi,Shrink,0
+11090,Inspeksi,Repallet,0
+11090,Inspeksi,Pembuatan Partisi,0
+11090,Inspeksi,Cleaning Pallet,0
+11091,Inspeksi,Camera Offline,1
+11091,Inspeksi,Pembuatan Partisi,0
+11091,Inspeksi,Cleaning Pallet,0
+11094,Finished goods,Penandaan,1
+11098,Inspeksi,Camera Offline,1
+11098,Inspeksi,Meja,0
+11098,Inspeksi,Shrink,0
+11098,Inspeksi,Cluster,0
+11098,Inspeksi,Stickering,0
+11108,Operator Forklift,Operator Forklift,1
+11118,Inspeksi,Camera Offline,1
+11118,Inspeksi,Meja,0
+11118,Inspeksi,Shrink,0
+11118,Inspeksi,Repallet,0
+11118,Inspeksi,Pembuatan Partisi,0
+11118,Inspeksi,Cleaning Pallet,0
+11132,Inspeksi,Camera Offline,1
+11132,Inspeksi,Meja,0
+11132,Inspeksi,Shrink,0
+11132,Inspeksi,Repallet,0
+11132,Inspeksi,Pembuatan Partisi,0
+11132,Inspeksi,Cleaning Pallet,0
+11136,Inspeksi,Camera Offline,1
+11136,Inspeksi,Meja,0
+11136,Inspeksi,Shrink,0
+11136,Inspeksi,Cluster,0
+11136,Inspeksi,Stickering,0
+11136,Inspeksi,Rework,0
+11146,Inspeksi,Camera Offline,1
+11146,Inspeksi,Meja,0
+11146,Inspeksi,Shrink,0
+11146,Inspeksi,Repallet,0
+11146,Inspeksi,Pembuatan Partisi,0
+11146,Inspeksi,Cleaning Pallet,0
+11159,Delivery,Dispatcer,1
+11159,Delivery,Loader,0
+11161,Delivery,Dispatcer,1
+11161,Delivery,Loader,0
+11178,Finished goods,Checker SAP,1
+11178,Finished goods,Penandaan,0
+11178,Finished goods,Putway,0
+11178,Finished goods,Picker,0
+11179,Inspeksi,Camera Offline,1
+11179,Inspeksi,Meja,0
+11179,Inspeksi,Cluster,0
+11179,Inspeksi,Stickering,0
+11179,Inspeksi,Rework,0
+11186,Inspeksi,Camera Offline,1
+11186,Inspeksi,Meja,0
+11186,Inspeksi,Shrink,0
+11186,Inspeksi,Cluster,0
+11186,Inspeksi,Stickering,0
+11186,Inspeksi,Rework,0
+11191,Inspeksi,Camera Offline,1
+11191,Inspeksi,Meja,0
+11191,Inspeksi,Shrink,0
+11191,Inspeksi,Cluster,0
+11191,Inspeksi,Stickering,0
+11191,Inspeksi,Rework,0
+11192,Inspeksi,Camera Offline,1
+11192,Inspeksi,Meja,0
+11192,Inspeksi,Shrink,0
+11192,Inspeksi,Cluster,0
+11192,Inspeksi,Stickering,0
+11192,Inspeksi,Rework,0
+11193,Inspeksi,Camera Offline,1
+11193,Inspeksi,Meja,0
+11193,Inspeksi,Shrink,0
+11193,Inspeksi,Cluster,0
+11193,Inspeksi,Stickering,0
+11193,Inspeksi,Rework,0
+11198,Inspeksi,Camera Offline,1
+11198,Inspeksi,Meja,0
+11198,Inspeksi,Shrink,0
+11198,Inspeksi,Cluster,0
+11198,Inspeksi,Stickering,0
+11198,Inspeksi,Rework,0
+11198,Inspeksi,Leader Meja,0
+11202,Inspeksi,Camera Offline,1
+11202,Inspeksi,Meja,0
+11202,Inspeksi,Shrink,0
+11202,Inspeksi,Cluster,0
+11202,Inspeksi,Stickering,0
+11202,Inspeksi,Rework,0
+11224,Inspeksi,Camera Offline,1
+11224,Inspeksi,Meja,0
+11224,Inspeksi,Cluster,0
+11224,Inspeksi,Stickering,0
+11224,Inspeksi,Rework,0
+11245,Inspeksi,Camera Offline,1
+11245,Inspeksi,Meja,0
+11245,Inspeksi,Shrink,0
+11245,Inspeksi,Cluster,0
+11245,Inspeksi,Stickering,0
+11245,Inspeksi,Rework,0
+11249,Inspeksi,Camera Offline,1
+11249,Inspeksi,Meja,0
+11249,Inspeksi,Repallet,0
+11249,Inspeksi,Pembuatan Partisi,0
+11249,Inspeksi,Cleaning Pallet,0
+11299,Operator Forklift,Operator Forklift,1
+11301,Operator Forklift,Operator Forklift,1
+11302,Operator Forklift,Operator Forklift,1
+11319,Operator Forklift,Operator Forklift,1
+11321,Operator Forklift,Operator Forklift,1
+11324,Operator Forklift,Operator Forklift,1
+11329,Inspeksi,Camera Offline,1
+11329,Inspeksi,Meja,0
+11329,Inspeksi,Shrink,0
+11329,Inspeksi,Cluster,0
+11329,Inspeksi,Stickering,0
+11329,Inspeksi,Rework,0
+11334,Inspeksi,Camera Offline,1
+11334,Inspeksi,Meja,0
+11334,Inspeksi,Shrink,0
+11334,Inspeksi,Repallet,0
+11334,Inspeksi,Pembuatan Partisi,0
+11334,Inspeksi,Cleaning Pallet,0
+11341,Inspeksi,Camera Offline,1
+11341,Inspeksi,Meja,0
+11341,Inspeksi,Shrink,0
+11341,Inspeksi,Cluster,0
+11341,Inspeksi,Stickering,0
+11341,Inspeksi,Rework,0
+11342,RM/PM,Buffer Room,1
+11342,RM/PM,Penimbangan,0
+11343,Inspeksi,Camera Offline,1
+11343,Inspeksi,Repallet,0
+11343,Inspeksi,Pembuatan Partisi,0
+11343,Inspeksi,Cleaning Pallet,0
+11345,Delivery,Dispatcer,1
+11345,Delivery,Loader,0
+11347,Loader,Loader,1
+11348,Loader,Loader,1
+11348,Loader,Bongkar Material/Cap/Juice,0
+11350,Loader,Loader,1
+11363,Delivery,Checker SAP,1
+11363,Delivery,Picker,0
+11364,Inspeksi,Camera Offline,1
+11364,Inspeksi,Meja,0
+11364,Inspeksi,Shrink,0
+11364,Inspeksi,Cluster,0
+11364,Inspeksi,Stickering,0
+11364,Inspeksi,Rework,0
+11372,Inspeksi,Camera Offline,1
+11372,Inspeksi,Repallet,0
+11372,Inspeksi,Pembuatan Partisi,0
+11372,Inspeksi,Cleaning Pallet,0
+11375,Inspeksi,Camera Offline,1
+11375,Inspeksi,Meja,0
+11375,Inspeksi,Shrink,0
+11375,Inspeksi,Repallet,0
+11375,Inspeksi,Pembuatan Partisi,0
+11375,Inspeksi,Cleaning Pallet,0
+11376,Inspeksi,Camera Offline,1
+11376,Inspeksi,Meja,0
+11376,Inspeksi,Shrink,0
+11376,Inspeksi,Cluster,0
+11376,Inspeksi,Stickering,0
+11376,Inspeksi,Rework,0
+11377,Finished goods,Penandaan,1
+11377,Finished goods,Putway,0
+11377,Finished goods,Meja,0
+11377,Finished goods,Camera Offline,0
+11377,Finished goods,shrink,0
+11377,Finished goods,cluster,0
+11377,Finished goods,stickering,0
+11378,Inspeksi,Camera Offline,1
+11378,Inspeksi,Meja,0
+11378,Inspeksi,Shrink,0
+11378,Inspeksi,Cluster,0
+11378,Inspeksi,Stickering,0
+11378,Inspeksi,Rework,0
+11381,Finished goods,Penandaan,1
+11381,Finished goods,Putway,0
+11381,Finished goods,Meja,0
+11381,Finished goods,Camera Offline,0
+11381,Finished goods,shrink,0
+11381,Finished goods,cluster,0
+11381,Finished goods,stickering,0
+11384,Inspeksi,Camera Offline,1
+11384,Inspeksi,Meja,0
+11384,Inspeksi,Shrink,0
+11384,Inspeksi,Cluster,0
+11384,Inspeksi,Stickering,0
+11384,Inspeksi,Rework,0
+11385,Inspeksi,Camera Offline,1
+11385,Inspeksi,Meja,0
+11385,Inspeksi,Cluster,0
+11385,Inspeksi,Stickering,0
+11385,Inspeksi,Rework,0
+11386,Inspeksi,Camera Offline,1
+11386,Inspeksi,Meja,0
+11386,Inspeksi,Cluster,0
+11386,Inspeksi,Stickering,0
+11386,Inspeksi,Rework,0
+11388,Inspeksi,Camera Offline,1
+11388,Inspeksi,Meja,0
+11388,Inspeksi,Cluster,0
+11388,Inspeksi,Stickering,0
+11388,Inspeksi,Rework,0
+11389,Inspeksi,Camera Offline,1
+11389,Inspeksi,Meja,0
+11389,Inspeksi,Shrink,0
+11389,Inspeksi,Cluster,0
+11389,Inspeksi,Stickering,0
+11389,Inspeksi,Rework,0
+11393,Inspeksi,Camera Offline,1
+11393,Inspeksi,Meja,0
+11393,Inspeksi,Cluster,0
+11393,Inspeksi,Stickering,0
+11393,Inspeksi,Rework,0
+11395,Inspeksi,Camera Offline,1
+11395,Inspeksi,Meja,0
+11395,Inspeksi,Shrink,0
+11395,Inspeksi,Cluster,0
+11395,Inspeksi,Stickering,0
+11395,Inspeksi,Rework,0
+11396,Inspeksi,Camera Offline,1
+11396,Inspeksi,Meja,0
+11396,Inspeksi,Cluster,0
+11396,Inspeksi,Stickering,0
+11396,Inspeksi,Rework,0
+11399,Loader,Loader,1
+11403,Inspeksi,Camera Offline,1
+11403,Inspeksi,Meja,0
+11403,Inspeksi,Cluster,0
+11403,Inspeksi,Stickering,0
+11403,Inspeksi,Rework,0
+11404,Inspeksi,Camera Offline,1
+11404,Inspeksi,Meja,0
+11404,Inspeksi,Shrink,0
+11404,Inspeksi,Cluster,0
+11404,Inspeksi,Stickering,0
+11404,Inspeksi,Rework,0
+11405,Inspeksi,Camera Offline,1
+11405,Inspeksi,Meja,0
+11405,Inspeksi,Shrink,0
+11405,Inspeksi,Cluster,0
+11405,Inspeksi,Stickering,0
+11405,Inspeksi,Rework,0
+11412,Inspeksi,Camera Offline,1
+11412,Inspeksi,Meja,0
+11412,Inspeksi,Shrink,0
+11412,Inspeksi,Repallet,0
+11412,Inspeksi,Pembuatan Partisi,0
+11412,Inspeksi,Cleaning Pallet,0
+11413,Inspeksi,Camera Offline,1
+11413,Inspeksi,Meja,0
+11413,Inspeksi,Shrink,0
+11413,Inspeksi,Repallet,0
+11413,Inspeksi,Pembuatan Partisi,0
+11413,Inspeksi,Cleaning Pallet,0
+11414,Inspeksi,Camera Offline,1
+11414,Inspeksi,Meja,0
+11414,Inspeksi,Shrink,0
+11414,Inspeksi,Repallet,0
+11414,Inspeksi,Pembuatan Partisi,0
+11414,Inspeksi,Cleaning Pallet,0
+11418,Inspeksi,Camera Offline,1
+11418,Inspeksi,Meja,0
+11418,Inspeksi,Shrink,0
+11418,Inspeksi,Repallet,0
+11418,Inspeksi,Pembuatan Partisi,0
+11418,Inspeksi,Cleaning Pallet,0
+11424,Inspeksi,Camera Offline,1
+11424,Inspeksi,Meja,0
+11424,Inspeksi,Shrink,0
+11424,Inspeksi,Repallet,0
+11424,Inspeksi,Pembuatan Partisi,0
+11424,Inspeksi,Cleaning Pallet,0
+11426,Finished goods,Penandaan,1
+11426,Finished goods,Putway,0
+11426,Finished goods,Meja,0
+11426,Finished goods,Camera Offline,0
+11426,Finished goods,shrink,0
+11426,Finished goods,cluster,0
+11426,Finished goods,stickering,0
+11430,Finished goods,Penandaan,1
+11430,Finished goods,Putway,0
+11430,Finished goods,Meja,0
+11430,Finished goods,Camera Offline,0
+11430,Finished goods,shrink,0
+11430,Finished goods,cluster,0
+11430,Finished goods,stickering,0
+11431,Finished goods,Penandaan,1
+11431,Finished goods,Putway,0
+11431,Finished goods,Meja,0
+11431,Finished goods,Camera Offline,0
+11431,Finished goods,shrink,0
+11431,Finished goods,cluster,0
+11431,Finished goods,stickering,0
+11432,Inspeksi,Camera Offline,1
+11432,Inspeksi,Meja,0
+11432,Inspeksi,Cluster,0
+11432,Inspeksi,Stickering,0
+11432,Inspeksi,Rework,0
+11434,Inspeksi,Camera Offline,1
+11434,Inspeksi,Meja,0
+11434,Inspeksi,Shrink,0
+11434,Inspeksi,Cluster,0
+11434,Inspeksi,Stickering,0
+11434,Inspeksi,Rework,0
+11435,Inspeksi,Camera Offline,1
+11435,Inspeksi,Meja,0
+11435,Inspeksi,Shrink,0
+11435,Inspeksi,Cluster,0
+11435,Inspeksi,Stickering,0
+11435,Inspeksi,Rework,0
+11443,Finished goods,Penandaan,1
+11443,Finished goods,Putway,0
+11443,Finished goods,Meja,0
+11443,Finished goods,Camera Offline,0
+11443,Finished goods,shrink,0
+11443,Finished goods,cluster,0
+11443,Finished goods,stickering,0
+11449,Inspeksi,Camera Offline,1
+11449,Inspeksi,Meja,0
+11449,Inspeksi,Shrink,0
+11449,Inspeksi,Repallet,0
+11449,Inspeksi,Pembuatan Partisi,0
+11449,Inspeksi,Cleaning Pallet,0
+11461,Delivery,Dispatcer,1
+11461,Delivery,Loader,0
+11468,Inspeksi,Camera Offline,1
+11468,Inspeksi,Meja,0
+11468,Inspeksi,Shrink,0
+11468,Inspeksi,Repallet,0
+11468,Inspeksi,Pembuatan Partisi,0
+11468,Inspeksi,Cleaning Pallet,0
+11469,Inspeksi,Camera Offline,1
+11469,Inspeksi,Meja,0
+11469,Inspeksi,Shrink,0
+11469,Inspeksi,Repallet,0
+11469,Inspeksi,Pembuatan Partisi,0
+11469,Inspeksi,Cleaning Pallet,0
+11470,Finished goods,Penandaan,1
+11473,Loader,Loader,1
+11477,Inspeksi,Camera Offline,1
+11477,Inspeksi,Meja,0
+11477,Inspeksi,Shrink,0
+11477,Inspeksi,Repallet,0
+11477,Inspeksi,Pembuatan Partisi,0
+11477,Inspeksi,Cleaning Pallet,0
+11479,Inspeksi,Camera Offline,1
+11479,Inspeksi,Meja,0
+11479,Inspeksi,Shrink,0
+11479,Inspeksi,Repallet,0
+11479,Inspeksi,Pembuatan Partisi,0
+11479,Inspeksi,Cleaning Pallet,0
+11484,Loader,Loader,1
+11487,Inspeksi,Camera Offline,1
+11487,Inspeksi,Meja,0
+11487,Inspeksi,Shrink,0
+11487,Inspeksi,Repallet,0
+11487,Inspeksi,Pembuatan Partisi,0
+11487,Inspeksi,Cleaning Pallet,0
+11501,Inspeksi,Camera Offline,1
+11501,Inspeksi,Meja,0
+11501,Inspeksi,Repallet,0
+11501,Inspeksi,Pembuatan Partisi,0
+11501,Inspeksi,Cleaning Pallet,0
+11504,Loader,Loader,1
+11514,Inspeksi,Camera Offline,1
+11514,Inspeksi,Meja,0
+11514,Inspeksi,Repallet,0
+11514,Inspeksi,Pembuatan Partisi,0
+11514,Inspeksi,Cleaning Pallet,0
+11516,Inspeksi,Camera Offline,1
+11516,Inspeksi,Meja,0
+11516,Inspeksi,Shrink,0
+11516,Inspeksi,Repallet,0
+11516,Inspeksi,Pembuatan Partisi,0
+11516,Inspeksi,Cleaning Pallet,0
+11518,Inspeksi,Camera Offline,1
+11518,Inspeksi,Meja,0
+11518,Inspeksi,Repallet,0
+11518,Inspeksi,Pembuatan Partisi,0
+11518,Inspeksi,Cleaning Pallet,0
+11526,Inspeksi,Camera Offline,1
+11526,Inspeksi,Repallet,0
+11526,Inspeksi,Pembuatan Partisi,0
+11526,Inspeksi,Cleaning Pallet,0
+11527,Finished goods,Penandaan,1
+11527,Finished goods,Putway,0
+11533,Finished goods,Penandaan,1
+11533,Finished goods,Putway,0
+11536,Inspeksi,Camera Offline,1
+11536,Inspeksi,Repallet,0
+11536,Inspeksi,Pembuatan Partisi,0
+11536,Inspeksi,Cleaning Pallet,0
+11546,Loader,Loader,1
+11546,Loader,Penimbangan,0
+11552,Finished goods,Penandaan,1
+11553,Inspeksi,Camera Offline,1
+11553,Inspeksi,Meja,0
+11553,Inspeksi,Shrink,0
+11553,Inspeksi,Repallet,0
+11553,Inspeksi,Pembuatan Partisi,0
+11553,Inspeksi,Cleaning Pallet,0
+11556,Inspeksi,Camera Offline,1
+11556,Inspeksi,Meja,0
+11556,Inspeksi,Shrink,0
+11556,Inspeksi,Repallet,0
+11556,Inspeksi,Pembuatan Partisi,0
+11556,Inspeksi,Cleaning Pallet,0
+11560,Inspeksi,Camera Offline,1
+11560,Inspeksi,Repallet,0
+11560,Inspeksi,Pembuatan Partisi,0
+11560,Inspeksi,Cleaning Pallet,0
+11561,Delivery,Dispatcer,1
+11561,Delivery,Loader,0
+11572,Inspeksi,Camera Offline,1
+11572,Inspeksi,Meja,0
+11572,Inspeksi,Shrink,0
+11572,Inspeksi,Repallet,0
+11572,Inspeksi,Pembuatan Partisi,0
+11572,Inspeksi,Cleaning Pallet,0
+11576,Loader,Loader,1
+11601,Inspeksi,Camera Offline,1
+11601,Inspeksi,Meja,0
+11601,Inspeksi,Cluster,0
+11601,Inspeksi,Stickering,0
+11601,Inspeksi,Rework,0
+11602,Inspeksi,Camera Offline,1
+11602,Inspeksi,Meja,0
+11602,Inspeksi,Shrink,0
+11602,Inspeksi,Cluster,0
+11602,Inspeksi,Stickering,0
+11602,Inspeksi,Rework,0
+11603,Finished goods,Penandaan,1
+11603,Finished goods,Putway,0
+11603,Finished goods,Meja,0
+11603,Finished goods,Camera Offline,0
+11603,Finished goods,shrink,0
+11603,Finished goods,cluster,0
+11603,Finished goods,stickering,0
+11608,Inspeksi,Camera Offline,1
+11608,Inspeksi,Meja,0
+11608,Inspeksi,Shrink,0
+11608,Inspeksi,Cluster,0
+11608,Inspeksi,Stickering,0
+11608,Inspeksi,Rework,0
+11609,Finished goods,Penandaan,1
+11609,Finished goods,Putway,0
+11609,Finished goods,Meja,0
+11609,Finished goods,Camera Offline,0
+11609,Finished goods,shrink,0
+11609,Finished goods,cluster,0
+11609,Finished goods,stickering,0
+11611,Inspeksi,Camera Offline,1
+11611,Inspeksi,Meja,0
+11611,Inspeksi,Shrink,0
+11611,Inspeksi,Cluster,0
+11611,Inspeksi,Stickering,0
+11611,Inspeksi,Rework,0
+11612,Inspeksi,Camera Offline,1
+11612,Inspeksi,Meja,0
+11612,Inspeksi,Shrink,0
+11612,Inspeksi,Cluster,0
+11612,Inspeksi,Stickering,0
+11612,Inspeksi,Rework,0
+11614,Inspeksi,Camera Offline,1
+11614,Inspeksi,Meja,0
+11614,Inspeksi,Shrink,0
+11614,Inspeksi,Cluster,0
+11614,Inspeksi,Stickering,0
+11614,Inspeksi,Rework,0
+11617,Finished goods,Penandaan,1
+11617,Finished goods,Putway,0
+11617,Finished goods,Meja,0
+11617,Finished goods,Camera Offline,0
+11617,Finished goods,shrink,0
+11617,Finished goods,cluster,0
+11617,Finished goods,stickering,0
+11621,Inspeksi,Camera Offline,1
+11621,Inspeksi,Meja,0
+11621,Inspeksi,Cluster,0
+11621,Inspeksi,Stickering,0
+11621,Inspeksi,Rework,0
+11622,Inspeksi,Camera Offline,1
+11622,Inspeksi,Meja,0
+11622,Inspeksi,Shrink,0
+11622,Inspeksi,Cluster,0
+11622,Inspeksi,Stickering,0
+11622,Inspeksi,Rework,0
+11625,Inspeksi,Camera Offline,1
+11625,Inspeksi,Meja,0
+11625,Inspeksi,Shrink,0
+11625,Inspeksi,Cluster,0
+11625,Inspeksi,Stickering,0
+11625,Inspeksi,Rework,0
+11628,Inspeksi,Camera Offline,1
+11628,Inspeksi,Meja,0
+11628,Inspeksi,Shrink,0
+11628,Inspeksi,Cluster,0
+11628,Inspeksi,Stickering,0
+11628,Inspeksi,Rework,0
+11629,Inspeksi,Camera Offline,1
+11629,Inspeksi,Meja,0
+11629,Inspeksi,Shrink,0
+11629,Inspeksi,Cluster,0
+11629,Inspeksi,Stickering,0
+11629,Inspeksi,Rework,0
+11630,Inspeksi,Camera Offline,1
+11630,Inspeksi,Meja,0
+11630,Inspeksi,Cluster,0
+11630,Inspeksi,Stickering,0
+11630,Inspeksi,Rework,0
+11637,Inspeksi,Camera Offline,1
+11637,Inspeksi,Meja,0
+11637,Inspeksi,Shrink,0
+11637,Inspeksi,Repallet,0
+11637,Inspeksi,Pembuatan Partisi,0
+11637,Inspeksi,Cleaning Pallet,0
+11643,Inspeksi,Camera Offline,1
+11643,Inspeksi,Bongkar Material/Cap/Juice,0
+11647,Inspeksi,Camera Offline,1
+11647,Inspeksi,Meja,0
+11647,Inspeksi,Shrink,0
+11647,Inspeksi,Repallet,0
+11647,Inspeksi,Pembuatan Partisi,0
+11647,Inspeksi,Cleaning Pallet,0
+11649,Inspeksi,Camera Offline,1
+11649,Inspeksi,Meja,0
+11649,Inspeksi,Shrink,0
+11649,Inspeksi,Repallet,0
+11649,Inspeksi,Pembuatan Partisi,0
+11649,Inspeksi,Cleaning Pallet,0
+11656,Inspeksi,Camera Offline,1
+11656,Inspeksi,Meja,0
+11656,Inspeksi,Shrink,0
+11656,Inspeksi,Repallet,0
+11656,Inspeksi,Pembuatan Partisi,0
+11656,Inspeksi,Cleaning Pallet,0
+11659,Inspeksi,Camera Offline,1
+11659,Inspeksi,Meja,0
+11659,Inspeksi,Shrink,0
+11659,Inspeksi,Repallet,0
+11659,Inspeksi,Pembuatan Partisi,0
+11659,Inspeksi,Cleaning Pallet,0
+11663,Finished goods,Penandaan,1
+11663,Finished goods,Putway,0
+11663,Finished goods,Meja,0
+11663,Finished goods,Camera Offline,0
+11663,Finished goods,shrink,0
+11663,Finished goods,cluster,0
+11663,Finished goods,stickering,0
+11665,Inspeksi,Camera Offline,1
+11665,Inspeksi,Meja,0
+11665,Inspeksi,Cluster,0
+11665,Inspeksi,Stickering,0
+11665,Inspeksi,Rework,0
+11668,Inspeksi,Camera Offline,1
+11668,Inspeksi,Meja,0
+11668,Inspeksi,Shrink,0
+11668,Inspeksi,Cluster,0
+11668,Inspeksi,Stickering,0
+11668,Inspeksi,Rework,0
+11671,Inspeksi,Camera Offline,1
+11671,Inspeksi,Meja,0
+11671,Inspeksi,Shrink,0
+11671,Inspeksi,Cluster,0
+11671,Inspeksi,Stickering,0
+11671,Inspeksi,Rework,0
+11673,Inspeksi,Camera Offline,1
+11673,Inspeksi,Meja,0
+11673,Inspeksi,Shrink,0
+11673,Inspeksi,Cluster,0
+11673,Inspeksi,Stickering,0
+11673,Inspeksi,Rework,0
+11674,Inspeksi,Camera Offline,1
+11674,Inspeksi,Meja,0
+11674,Inspeksi,Shrink,0
+11674,Inspeksi,Cluster,0
+11674,Inspeksi,Stickering,0
+11674,Inspeksi,Rework,0
+11676,Inspeksi,Camera Offline,1
+11676,Inspeksi,Meja,0
+11676,Inspeksi,Shrink,0
+11676,Inspeksi,Cluster,0
+11676,Inspeksi,Stickering,0
+11676,Inspeksi,Rework,0
+11677,Inspeksi,Camera Offline,1
+11677,Inspeksi,Meja,0
+11677,Inspeksi,Shrink,0
+11677,Inspeksi,Cluster,0
+11677,Inspeksi,Stickering,0
+11677,Inspeksi,Rework,0
+11682,Inspeksi,Camera Offline,1
+11682,Inspeksi,Meja,0
+11682,Inspeksi,Shrink,0
+11682,Inspeksi,Cluster,0
+11682,Inspeksi,Stickering,0
+11682,Inspeksi,Rework,0
+11683,Inspeksi,Camera Offline,1
+11683,Inspeksi,Meja,0
+11683,Inspeksi,Cluster,0
+11683,Inspeksi,Stickering,0
+11683,Inspeksi,Rework,0
+11684,Inspeksi,Camera Offline,1
+11684,Inspeksi,Meja,0
+11684,Inspeksi,Shrink,0
+11684,Inspeksi,Cluster,0
+11684,Inspeksi,Stickering,0
+11684,Inspeksi,Rework,0
+11687,Inspeksi,Camera Offline,1
+11687,Inspeksi,Meja,0
+11687,Inspeksi,Shrink,0
+11687,Inspeksi,Cluster,0
+11687,Inspeksi,Stickering,0
+11687,Inspeksi,Rework,0
+11688,Inspeksi,Camera Offline,1
+11688,Inspeksi,Meja,0
+11688,Inspeksi,Cluster,0
+11688,Inspeksi,Stickering,0
+11688,Inspeksi,Rework,0
+11689,Inspeksi,Camera Offline,1
+11689,Inspeksi,Meja,0
+11689,Inspeksi,Shrink,0
+11689,Inspeksi,Cluster,0
+11689,Inspeksi,Stickering,0
+11689,Inspeksi,Rework,0
+11691,Inspeksi,Camera Offline,1
+11691,Inspeksi,Meja,0
+11691,Inspeksi,Shrink,0
+11691,Inspeksi,Cluster,0
+11691,Inspeksi,Stickering,0
+11691,Inspeksi,Rework,0
+11693,Finished goods,Penandaan,1
+11693,Finished goods,Meja,0
+11693,Finished goods,Camera Offline,0
+11693,Finished goods,rework,0
+11693,Finished goods,shrink,0
+11693,Finished goods,cluster,0
+11693,Finished goods,stickering,0
+11694,Inspeksi,Camera Offline,1
+11694,Inspeksi,Meja,0
+11694,Inspeksi,Shrink,0
+11694,Inspeksi,Cluster,0
+11694,Inspeksi,Stickering,0
+11694,Inspeksi,Rework,0
+11695,Inspeksi,Camera Offline,1
+11695,Inspeksi,Meja,0
+11695,Inspeksi,Shrink,0
+11695,Inspeksi,Cluster,0
+11695,Inspeksi,Stickering,0
+11695,Inspeksi,Rework,0
+11702,Loader,Loader,1
+11708,Loader,Loader,1
+11709,Loader,Loader,1
+11713,Loader,Loader,1
+11716,Loader,Loader,1
+11716,Loader,Bongkar Material/Cap/Juice,0
+11726,Loader,Loader,1
+11728,Loader,Loader,1
+11728,Loader,Bongkar Material/Cap/Juice,0
+11729,Loader,Loader,1
+11731,Loader,Loader,1
+11732,Loader,Loader,1
+11733,Loader,Loader,1
+11736,Loader,Loader,1
+11740,Loader,Loader,1
+11742,Loader,Loader,1
+11745,Loader,Loader,1
+11746,Loader,Loader,1
+11747,Loader,Loader,1
+11748,Loader,Loader,1
+11749,Loader,Loader,1
+11750,Loader,Loader,1
+11751,Loader,Loader,1
+11752,Loader,Loader,1
+11753,Loader,Loader,1
+11754,Loader,Loader,1
+11755,Loader,Loader,1
+11756,Loader,Loader,1
+11757,Loader,Loader,1
+11758,Loader,Loader,1
+11759,Loader,Loader,1
+11760,Loader,Loader,1
+11761,Loader,Loader,1
+11762,Loader,Loader,1
+11763,Loader,Loader,1
+11764,Loader,Loader,1
+11765,Produksi,Reject,1
+11766,Produksi,Reject,1
+11767,Produksi,Reject,1
+11768,Produksi,Reject,1
+11769,Produksi,Reject,1
+11770,Produksi,Reject,1
+11771,Produksi,Reject,1
+11772,Produksi,Reject,1

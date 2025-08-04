@@ -39,16 +39,16 @@ export default function Index({ requests, auth }) {
   const handleRequestRevision = (requestId) => {
     if (!confirm('Request revision for this manpower request?')) return;
 
-    console.log('Initiating revision for request:', requestId);
+    // console.log('Initiating revision for request:', requestId);
 
     post(route('manpower-requests.request-revision', requestId), {
       preserveScroll: true,
       onSuccess: () => {
-        console.log('Revision initiated for request:', requestId);
+        // console.log('Revision initiated for request:', requestId);
         window.location.href = route('manpower-requests.revision.edit', requestId);
       },
       onError: (errors) => {
-        console.error('Revision failed:', errors);
+        // console.error('Revision failed:', errors);
         toast.error('Failed to request revision');
       }
     });
@@ -63,7 +63,7 @@ export default function Index({ requests, auth }) {
   const confirmDelete = () => {
     if (!requestToDelete) return;
     
-    console.log('Attempting to delete request ID:', requestToDelete);
+    // console.log('Attempting to delete request ID:', requestToDelete);
     
     destroy(route('manpower-requests.destroy', requestToDelete), {
       preserveScroll: true,

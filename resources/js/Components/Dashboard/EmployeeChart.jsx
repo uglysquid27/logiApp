@@ -21,7 +21,9 @@ const EmployeeChart = ({
     sections, 
     filters, 
     setFilters,
-    formatDate 
+    formatDate,
+    fetchModalData, // Added fetchModalData
+    applyFilters // Added applyFilters
 }) => {
     const getChartOptions = (onClick) => ({
         responsive: true,
@@ -80,7 +82,7 @@ const EmployeeChart = ({
         responsiveAnimationDuration: 0
     });
 
-    const handleEmployeeAssignmentBarClick = (labelIndex) => {
+    const handleEmployeeAssignmentBarClick = async (labelIndex) => { // Made async
         const subSectionId = data.subSectionIds?.[labelIndex];
         const subSectionName = data.labels[labelIndex];
 
@@ -88,11 +90,17 @@ const EmployeeChart = ({
         params.append('filter_date_from', filters.dateRange.from);
         params.append('filter_date_to', filters.dateRange.to);
 
+        const url = `${route('dashboard.schedules.bySubSection', { subSectionId })}?${params.toString()}`;
+
+        // Fetch data before opening modal
+        const fetchedData = await fetchModalData(url); // Use the passed-down fetchModalData
+
         setChartModalState(prev => ({
             ...prev,
             open: true,
             title: `Employee Assignments - ${subSectionName}`,
-            url: `${route('dashboard.schedules.bySubSection', { subSectionId })}?${params.toString()}`,
+            url: url,
+            data: fetchedData, // Set the fetched data here
             columns: [
                 { header: 'Date', field: 'date', render: formatDate },
                 { header: 'Employee', field: 'employee', render: (item) => item.employee?.name || 'N/A' },
@@ -116,6 +124,9 @@ const EmployeeChart = ({
                                 ...prev,
                                 section: newSection
                             }));
+                            // Immediately apply filter when section changes to update chart data
+                            // The `applyFilters` function in Dashboard.jsx will handle the fetch
+                            applyFilters('employeeAssignments'); 
                         }}
                         className="border rounded px-2 py-1 text-sm min-w-[150px] h-[34px]"
                     >
@@ -132,7 +143,7 @@ const EmployeeChart = ({
                 className="relative" 
                 style={{ height: `${height}px` }}
             >
-                {data.labels.length > 0 ? (
+                {data.labels.length > 0 && data.datasets.some(dataset => dataset.data.length > 0) ? ( 
                     <Bar
                         data={data}
                         options={getChartOptions((e, elements) => {

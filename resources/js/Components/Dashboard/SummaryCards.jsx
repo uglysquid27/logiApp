@@ -4,78 +4,91 @@ import { cardVariants } from '@/Animations';
 import { router } from '@inertiajs/react';
 
 const SummaryCards = ({ summary, setModalState, formatDate }) => {
+    const handleCardClick = async (title, url, columns) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            setModalState(prev => ({
+                ...prev,
+                open: true,
+                title: title,
+                data: data, // Set the fetched data here
+                columns: columns,
+                url: url // Keep the URL for pagination/filtering within the modal if needed
+            }));
+        } catch (error) {
+            console.error("Failed to fetch modal data:", error);
+            // Optionally, handle error state in the UI
+        }
+    };
+
     const cardData = [
         {
             title: 'Active Employees',
             value: summary.activeEmployeesCount,
             total: summary.totalEmployeesCount,
             color: 'indigo',
-            onClick: () => setModalState(prev => ({
-                ...prev,
-                open: true,
-                title: 'Active Employees',
-                url: route('dashboard.employees.active'),
-                columns: [
+            onClick: () => handleCardClick(
+                'Active Employees',
+                route('dashboard.employees.active'),
+                [
                     { header: 'NIK', field: 'nik' },
                     { header: 'Name', field: 'name' },
                     { header: 'Type', field: 'type' },
                     { header: 'Status', field: 'status' }
                 ]
-            }))
+            )
         },
         {
             title: 'Pending Requests',
             value: summary.pendingRequestsCount,
             total: summary.totalRequestsCount,
             color: 'yellow',
-            onClick: () => setModalState(prev => ({
-                ...prev,
-                open: true,
-                title: 'Pending Requests',
-                url: route('dashboard.requests.pending'),
-                columns: [
+            onClick: () => handleCardClick(
+                'Pending Requests',
+                route('dashboard.requests.pending'),
+                [
                     { header: 'Date', field: 'date', render: (item) => formatDate(item.date) },
                     { header: 'Sub Section', field: 'sub_section', render: (item) => item.sub_section?.name || 'N/A' },
                     { header: 'Shift', field: 'shift', render: (item) => item.shift?.name || 'N/A' },
                     { header: 'Amount', field: 'requested_amount' }
                 ]
-            }))
+            )
         },
         {
             title: 'Fulfilled Requests',
             value: summary.fulfilledRequestsCount,
             total: summary.totalRequestsCount,
             color: 'green',
-            onClick: () => setModalState(prev => ({
-                ...prev,
-                open: true,
-                title: 'Fulfilled Requests',
-                url: route('dashboard.requests.fulfilled'),
-                columns: [
+            onClick: () => handleCardClick(
+                'Fulfilled Requests',
+                route('dashboard.requests.fulfilled'),
+                [
                     { header: 'Date', field: 'date', render: (item) => formatDate(item.date) },
                     { header: 'Sub Section', field: 'sub_section', render: (item) => item.sub_section?.name || 'N/A' },
                     { header: 'Shift', field: 'shift', render: (item) => item.shift?.name || 'N/A' },
                     { header: 'Amount', field: 'requested_amount' }
                 ]
-            }))
+            )
         },
         {
             title: 'This Week Schedules',
             value: summary.thisWeekSchedulesCount,
             total: summary.totalSchedulesCount,
             color: 'blue',
-            onClick: () => setModalState(prev => ({
-                ...prev,
-                open: true,
-                title: 'Upcoming Schedules',
-                url: route('dashboard.schedules.upcoming'),
-                columns: [
+            onClick: () => handleCardClick(
+                'Upcoming Schedules',
+                route('dashboard.schedules.upcoming'),
+                [
                     { header: 'Date', field: 'date', render: (item) => formatDate(item.date) },
                     { header: 'Employee', field: 'employee', render: (item) => item.employee?.name || 'N/A' },
                     { header: 'Sub Section', field: 'sub_section', render: (item) => item.sub_section?.name || 'N/A' },
                     { header: 'Shift', field: 'shift', render: (item) => item.man_power_request?.shift?.name || 'N/A' }
                 ]
-            }))
+            )
         },
         {
             title: "Today's Lunch Coupons",

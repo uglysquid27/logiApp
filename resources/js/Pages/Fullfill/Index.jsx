@@ -13,16 +13,16 @@ export default function Fulfill({
     auth 
 }) {
     // Debug incoming data
-    useEffect(() => {
-        console.log('Request:', {
-            ...request,
-            date: dayjs(request.date).format('YYYY-MM-DD')
-        });
-        console.log('Same Sub-Section Employees:', sameSubSectionEmployees);
-        console.log('Other Sub-Section Employees:', otherSubSectionEmployees);
-        console.log('Current Scheduled IDs:', currentScheduledIds);
-        console.log('Auth User:', auth.user);
-    }, []);
+    // useEffect(() => {
+    //     // console.log('Request:', {
+    //     //     ...request,
+    //     //     date: dayjs(request.date).format('YYYY-MM-DD')
+    //     // });
+    //     // console.log('Same Sub-Section Employees:', sameSubSectionEmployees);
+    //     // console.log('Other Sub-Section Employees:', otherSubSectionEmployees);
+    //     // console.log('Current Scheduled IDs:', currentScheduledIds);
+    //     // console.log('Auth User:', auth.user);
+    // }, []);
 
     // Normalize gender with strict validation
     const normalizeGender = (gender) => {
@@ -57,15 +57,15 @@ export default function Fulfill({
             }))
         ];
 
-        console.log('Combined Employees:', employees.map(e => ({
-            id: e.id,
-            name: e.name,
-            gender: e.gender,
-            originalGender: e.originalGender,
-            type: e.type,
-            subSection: e.subSections?.[0]?.name,
-            isCurrentlyScheduled: e.isCurrentlyScheduled
-        })));
+        // console.log('Combined Employees:', employees.map(e => ({
+        //     id: e.id,
+        //     name: e.name,
+        //     gender: e.gender,
+        //     originalGender: e.originalGender,
+        //     type: e.type,
+        //     subSection: e.subSections?.[0]?.name,
+        //     isCurrentlyScheduled: e.isCurrentlyScheduled
+        // })));
 
         return employees;
     }, [sameSubSectionEmployees, otherSubSectionEmployees, currentScheduledIds]);
@@ -103,16 +103,16 @@ export default function Fulfill({
             return b.calculated_rating - a.calculated_rating;
         });
 
-        console.log('Sorted Employees:', sorted.map(e => ({
-            id: e.id,
-            name: e.name,
-            gender: e.gender,
-            type: e.type,
-            subSection: e.subSections?.[0]?.name,
-            rating: e.calculated_rating,
-            weight: e.working_day_weight,
-            isCurrentlyScheduled: e.isCurrentlyScheduled
-        })));
+        // console.log('Sorted Employees:', sorted.map(e => ({
+        //     id: e.id,
+        //     name: e.name,
+        //     gender: e.gender,
+        //     type: e.type,
+        //     subSection: e.subSections?.[0]?.name,
+        //     rating: e.calculated_rating,
+        //     weight: e.working_day_weight,
+        //     isCurrentlyScheduled: e.isCurrentlyScheduled
+        // })));
 
         return sorted;
     }, [combinedEmployees, request.sub_section_id, request.male_count, request.female_count]);
@@ -191,17 +191,17 @@ export default function Fulfill({
             selected.push(...remaining.map(e => e.id));
         }
 
-        console.log('Initial Selection:', {
-            selectedIds: selected,
-            maleCount: selected.filter(id => {
-                const emp = allSortedEligibleEmployees.find(e => e.id === id);
-                return emp?.gender === 'male';
-            }).length,
-            femaleCount: selected.filter(id => {
-                const emp = allSortedEligibleEmployees.find(e => e.id === id);
-                return emp?.gender === 'female';
-            }).length
-        });
+        // console.log('Initial Selection:', {
+        //     selectedIds: selected,
+        //     maleCount: selected.filter(id => {
+        //         const emp = allSortedEligibleEmployees.find(e => e.id === id);
+        //         return emp?.gender === 'male';
+        //     }).length,
+        //     femaleCount: selected.filter(id => {
+        //         const emp = allSortedEligibleEmployees.find(e => e.id === id);
+        //         return emp?.gender === 'female';
+        //     }).length
+        // });
 
         return selected.slice(0, request.requested_amount);
     }, [allSortedEligibleEmployees, request.requested_amount, request.male_count, request.female_count, request.sub_section_id, currentScheduledIds]);
@@ -258,7 +258,7 @@ export default function Fulfill({
             }
         });
 
-        console.log('Gender Statistics:', stats);
+        // console.log('Gender Statistics:', stats);
         return stats;
     }, [selectedIds, allSortedEligibleEmployees, request.male_count, request.female_count]);
 

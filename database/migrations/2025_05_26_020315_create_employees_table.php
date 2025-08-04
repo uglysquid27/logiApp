@@ -16,6 +16,17 @@ return new class extends Migration {
             $table->enum('status', ['available', 'assigned', 'on leave', 'deactivated'])->default('available');
             $table->enum('cuti', ['yes', 'no'])->default('no');
             $table->enum('gender', ['male', 'female']);
+            $table->string('group')->nullable(); // Added group field
+            
+            // Personal data fields
+            $table->date('birth_date')->nullable();
+            $table->string('birth_place')->nullable();
+            $table->text('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('religion')->nullable();
+            $table->string('phone')->nullable();
+            $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
+            
             $table->string('deactivation_reason')->nullable();
             $table->text('deactivation_notes')->nullable();
             $table->timestamp('deactivated_at')->nullable();
