@@ -61,7 +61,7 @@ class SubSectionSeeder extends Seeder
         'Leader Meja',
         // Removed several not in data
     ],
-    'Reject' => [
+    'Produksi' => [
         'Reject'
     ]
     // Removed 'Store' section as not in data
