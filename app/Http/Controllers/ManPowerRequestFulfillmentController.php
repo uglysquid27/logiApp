@@ -126,7 +126,7 @@ class ManPowerRequestFulfillmentController extends Controller
         $sortedSameSubSectionEmployees = $sortEmployees($sameSubSectionEligible);
         $sortedOtherSubSectionEmployees = $sortEmployees($otherSubSectionEligible);
 
-        return Inertia::render('Fullfill/Index', [
+        return Inertia::render('Fullfill/Fulfill', [
             'request' => $request,
             'sameSubSectionEmployees' => $sortedSameSubSectionEmployees,
             'otherSubSectionEmployees' => $sortedOtherSubSectionEmployees,
