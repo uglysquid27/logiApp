@@ -9,6 +9,7 @@ export default function SectionSelection({ sections, onSelect }) {
         {sections.map(section => (
           <button
             key={section.id}
+            type="button"
             onClick={() => onSelect(section)}
             className="p-4 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
           >

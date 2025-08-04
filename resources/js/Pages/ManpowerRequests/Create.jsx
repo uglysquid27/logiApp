@@ -7,6 +7,7 @@ import RequestForm from './components/RequestForm';
 
 export default function Create({ sections, shifts }) {
   const [selectedSection, setSelectedSection] = useState(null);
+  const [showSectionModal, setShowSectionModal] = useState(false);
   const [requests, setRequests] = useState([]);
   const [activeRequestIndex, setActiveRequestIndex] = useState(0);
 
@@ -16,6 +17,7 @@ export default function Create({ sections, shifts }) {
 
   const handleSectionSelect = (section) => {
     setSelectedSection(section);
+    setShowSectionModal(false);
   };
 
   const handleSubSectionSelect = (subSection) => {
@@ -182,7 +184,7 @@ export default function Create({ sections, shifts }) {
                     ))}
                     <button
                       type="button"
-                      onClick={() => setSelectedSection(sections[0])} // Default to first section
+                      onClick={() => setShowSectionModal(true)}
                       className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-md"
                     >
                       + Tambah Sub Section
@@ -225,6 +227,46 @@ export default function Create({ sections, shifts }) {
           </div>
         </div>
       </div>
+
+      {/* Section Selection Modal */}
+      {showSectionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+              Pilih Section
+            </h3>
+            <div className="grid grid-cols-1 gap-3">
+              {sections.map(section => (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedSection(section);
+                    setShowSectionModal(false);
+                  }}
+                  className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+                >
+                  <h4 className="font-medium text-gray-700 dark:text-gray-300">
+                    {section.name}
+                  </h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {section.sub_sections.length} sub section
+                  </p>
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowSectionModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthenticatedLayout>
   );
 }
