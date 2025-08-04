@@ -1,12 +1,13 @@
 // js/pages/ManpowerRequests/Create/Create.jsx
 import { useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SectionSelection from './components/SectionSelection';
 import RequestForm from './components/RequestForm';
 
 export default function Create({ sections, shifts }) {
   const [selectedSection, setSelectedSection] = useState(null);
+  const [lastSelectedSection, setLastSelectedSection] = useState(null);
   const [showSectionModal, setShowSectionModal] = useState(false);
   const [requests, setRequests] = useState([]);
   const [activeRequestIndex, setActiveRequestIndex] = useState(0);
@@ -17,6 +18,7 @@ export default function Create({ sections, shifts }) {
 
   const handleSectionSelect = (section) => {
     setSelectedSection(section);
+    setLastSelectedSection(section);
     setShowSectionModal(false);
   };
 
@@ -46,6 +48,14 @@ export default function Create({ sections, shifts }) {
     setRequests([...requests, newRequest]);
     setActiveRequestIndex(requests.length);
     setSelectedSection(null);
+  };
+
+  const handleAddSubSection = () => {
+    if (lastSelectedSection) {
+      setSelectedSection(lastSelectedSection);
+    } else {
+      setShowSectionModal(true);
+    }
   };
 
   const handleRequestChange = (index, field, value) => {
@@ -100,6 +110,7 @@ export default function Create({ sections, shifts }) {
     post('/manpower-requests', {
       onSuccess: () => {
         setRequests([]);
+        setLastSelectedSection(null);
       }
     });
   };
@@ -184,7 +195,7 @@ export default function Create({ sections, shifts }) {
                     ))}
                     <button
                       type="button"
-                      onClick={() => setShowSectionModal(true)}
+                      onClick={handleAddSubSection}
                       className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-md"
                     >
                       + Tambah Sub Section
@@ -240,11 +251,10 @@ export default function Create({ sections, shifts }) {
                 <button
                   key={section.id}
                   type="button"
-                  onClick={() => {
-                    setSelectedSection(section);
-                    setShowSectionModal(false);
-                  }}
-                  className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+                  onClick={() => handleSectionSelect(section)}
+                  className={`p-3 border rounded-md text-left ${lastSelectedSection?.id === section.id 
+                    ? 'border-indigo-500 bg-indigo-50 dark:bg-gray-700' 
+                    : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                 >
                   <h4 className="font-medium text-gray-700 dark:text-gray-300">
                     {section.name}
