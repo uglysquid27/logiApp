@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ManPowerRequest;
+use App\Models\Section;
 use App\Models\SubSection;
 use App\Models\Shift;
 use Illuminate\Http\Request;
@@ -30,16 +31,16 @@ class ManPowerRequestController extends Controller
         ]);
     }
 
-    public function create(): Response
-    {
-        $subSections = SubSection::with('section')->get();
-        $shifts = Shift::all();
+   public function create(): Response
+{
+    $sections = Section::with('subSections')->get();
+    $shifts = Shift::all();
 
-        return Inertia::render('ManpowerRequests/Create', [
-            'subSections' => $subSections,
-            'shifts' => $shifts,
-        ]);
-    }
+    return Inertia::render('ManpowerRequests/Create', [
+        'sections' => $sections,
+        'shifts' => $shifts,
+    ]);
+}
 
     public function checkDuplicates(Request $request)
     {
@@ -73,92 +74,72 @@ class ManPowerRequestController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+   // In ManPowerRequestController.php
+public function store(Request $request)
 {
     Log::info('Manpower request submission started', ['request_data' => $request->all()]);
 
     try {
         $validated = $request->validate([
-            'sub_section_id' => ['required', 'exists:sub_sections,id'],
-            'date' => ['required', 'date', 'after_or_equal:today'],
-            'time_slots' => ['nullable', 'array'],
-            'time_slots.*.requested_amount' => ['nullable', 'integer', 'min:0'],
-            'time_slots.*.male_count' => ['nullable', 'integer', 'min:0'],
-            'time_slots.*.female_count' => ['nullable', 'integer', 'min:0'],
-            'time_slots.*.start_time' => [
+            'requests' => ['required', 'array', 'min:1'],
+            'requests.*.sub_section_id' => ['required', 'exists:sub_sections,id'],
+            'requests.*.date' => ['required', 'date', 'after_or_equal:today'],
+            'requests.*.time_slots' => ['required', 'array'],
+            'requests.*.time_slots.*.requested_amount' => ['required', 'integer', 'min:1'],
+            'requests.*.time_slots.*.male_count' => ['nullable', 'integer', 'min:0'],
+            'requests.*.time_slots.*.female_count' => ['nullable', 'integer', 'min:0'],
+            'requests.*.time_slots.*.start_time' => [
                 'nullable',
                 'date_format:H:i:s',
-                'required_with:time_slots.*.requested_amount'
+                'required_with:requests.*.time_slots.*.requested_amount'
             ],
-            'time_slots.*.end_time' => [
+            'requests.*.time_slots.*.end_time' => [
                 'nullable',
                 'date_format:H:i:s',
-                'required_with:time_slots.*.requested_amount',
-                new ShiftTimeOrder('time_slots.*.start_time', 'time_slots.*.end_time'),
+                'required_with:requests.*.time_slots.*.requested_amount',
+                new ShiftTimeOrder('requests.*.time_slots.*.start_time', 'requests.*.time_slots.*.end_time'),
             ],
-            'time_slots.*.reason' => [
+            'requests.*.time_slots.*.reason' => [
                 'nullable',
                 'string',
                 'min:10',
-                'required_if:time_slots.*.is_additional,true'
+                'required_if:requests.*.time_slots.*.is_additional,true'
             ],
-            'time_slots.*.is_additional' => ['nullable', 'boolean'],
+            'requests.*.time_slots.*.is_additional' => ['nullable', 'boolean'],
         ], [
-            'sub_section_id.required' => 'Sub Section harus dipilih.',
-            'date.required' => 'Tanggal dibutuhkan harus diisi.',
-            'time_slots.*.requested_amount.min' => 'Jumlah yang diminta harus lebih dari 0.',
-            'time_slots.*.male_count.min' => 'Jumlah laki-laki tidak boleh negatif.',
-            'time_slots.*.female_count.min' => 'Jumlah perempuan tidak boleh negatif.',
-            'time_slots.*.reason.required_if' => 'Alasan harus diisi untuk permintaan tambahan.',
-            'time_slots.*.reason.min' => 'Alasan harus minimal 10 karakter.',
+            'requests.required' => 'Setidaknya satu permintaan harus dibuat.',
+            'requests.*.sub_section_id.required' => 'Sub Section harus dipilih.',
+            'requests.*.date.required' => 'Tanggal dibutuhkan harus diisi.',
+            'requests.*.time_slots.*.requested_amount.required' => 'Jumlah yang diminta harus diisi.',
+            'requests.*.time_slots.*.requested_amount.min' => 'Jumlah yang diminta harus lebih dari 0.',
+            'requests.*.time_slots.*.male_count.min' => 'Jumlah laki-laki tidak boleh negatif.',
+            'requests.*.time_slots.*.female_count.min' => 'Jumlah perempuan tidak boleh negatif.',
+            'requests.*.time_slots.*.reason.required_if' => 'Alasan harus diisi untuk permintaan tambahan.',
+            'requests.*.time_slots.*.reason.min' => 'Alasan harus minimal 10 karakter.',
         ]);
 
         Log::info('Validation passed', ['validated_data' => $validated]);
 
-        // Check if at least one time slot has requested_amount > 0
-        $hasValidRequest = collect($validated['time_slots'] ?? [])
-            ->contains(fn ($slot) => ($slot['requested_amount'] ?? 0) > 0);
-
-        if (!$hasValidRequest) {
-            Log::warning('No valid time slots found');
-            throw ValidationException::withMessages([
-                'time_slots' => 'Setidaknya satu shift harus memiliki jumlah yang diminta lebih dari 0.',
-            ]);
-        }
-
-        Log::info('Starting database transaction');
         DB::transaction(function () use ($validated) {
-            foreach ($validated['time_slots'] as $shiftId => $slot) {
-                $requestedAmount = (int) ($slot['requested_amount'] ?? 0);
-                Log::debug('Processing shift', ['shift_id' => $shiftId, 'slot_data' => $slot]);
-                
-                if ($requestedAmount > 0) {
+            foreach ($validated['requests'] as $requestData) {
+                foreach ($requestData['time_slots'] as $shiftId => $slot) {
                     $isAdditional = $slot['is_additional'] ?? false;
                     
                     if (!$isAdditional && ManPowerRequest::hasExistingRequest(
-                        $validated['sub_section_id'],
+                        $requestData['sub_section_id'],
                         $shiftId,
-                        $validated['date']
+                        $requestData['date']
                     )) {
                         $isAdditional = true;
-                        Log::debug('Marking as additional due to existing request', ['shift_id' => $shiftId]);
                     }
-    
-                    Log::info('Creating manpower request', [
-                        'sub_section_id' => $validated['sub_section_id'],
-                        'date' => $validated['date'],
-                        'shift_id' => $shiftId,
-                        'requested_amount' => $requestedAmount,
-                        'is_additional' => $isAdditional
-                    ]);
-                    
+
                     ManPowerRequest::create([
-                        'sub_section_id' => $validated['sub_section_id'],
-                        'date' => $validated['date'],
+                        'sub_section_id' => $requestData['sub_section_id'],
+                        'date' => $requestData['date'],
                         'shift_id' => $shiftId,
-                        'requested_amount' => $requestedAmount,
-                        'male_count' => (int) ($slot['male_count'] ?? 0),
-                        'female_count' => (int) ($slot['female_count'] ?? 0),
+                        'requested_amount' => $slot['requested_amount'],
+                        'male_count' => $slot['male_count'] ?? 0,
+                        'female_count' => $slot['female_count'] ?? 0,
                         'start_time' => $slot['start_time'] ?? null,
                         'end_time' => $slot['end_time'] ?? null,
                         'reason' => $isAdditional ? ($slot['reason'] ?? 'Duplicate request') : null,
@@ -169,7 +150,6 @@ class ManPowerRequestController extends Controller
             }
         });
 
-        Log::info('Manpower request created successfully');
         return redirect()->route('manpower-requests.index')
             ->with('success', 'Permintaan tenaga kerja berhasil dibuat!');
 
@@ -177,10 +157,7 @@ class ManPowerRequestController extends Controller
         Log::error('Validation failed', ['errors' => $e->errors()]);
         return back()->withErrors($e->errors())->withInput();
     } catch (\Exception $e) {
-        Log::error('Error creating manpower request: ' . $e->getMessage(), [
-            'exception' => $e,
-            'trace' => $e->getTraceAsString()
-        ]);
+        Log::error('Error creating manpower request: ' . $e->getMessage());
         return back()->with('error', 'Terjadi kesalahan. Silakan coba lagi.')->withInput();
     }
 }

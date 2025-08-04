@@ -15,7 +15,8 @@ class SectionSeeder extends Seeder
             'Loader',
             'RM/PM',
             'Operator Forklift',
-            'Inspeksi'
+            'Inspeksi',
+            'Produksi'
         ];
 
         foreach ($sections as $sectionName) {

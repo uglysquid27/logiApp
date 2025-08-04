@@ -1,32 +1,106 @@
 // js/pages/ManpowerRequests/Create/Create.jsx
-import { Link } from '@inertiajs/react';
+import { useForm, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import useManpowerForm from './hooks/useManpowerForm';
-import SubSectionModal from './components/SubSectionModal';
-import DuplicateWarning from './components/DuplicateWarning';
-import ShiftSlot from './components/ShiftSlot';
+import { useState } from 'react';
+import SectionSelection from './components/SectionSelection';
+import RequestForm from './components/RequestForm';
 
-export default function Create({ subSections, shifts }) {
-  const {
-    data,
-    setData,
-    errors,
-    processing,
-    sectionsWithSubs,
-    isModalOpen,
-    setIsModalOpen,
-    searchTerm,
-    setSearchTerm,
-    filteredSections,
-    selectSubSection,
-    duplicateRequests,
-    showDuplicateWarning,
-    setShowDuplicateWarning,
-    handleSlotChange,
-    handleNumberFocus,
-    submit,
-    today
-  } = useManpowerForm(subSections, shifts);
+export default function Create({ sections, shifts }) {
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [requests, setRequests] = useState([]);
+  const [activeRequestIndex, setActiveRequestIndex] = useState(0);
+
+  const { data, setData, post, processing, errors } = useForm({
+    requests: []
+  });
+
+  const handleSectionSelect = (section) => {
+    setSelectedSection(section);
+  };
+
+  const handleSubSectionSelect = (subSection) => {
+    // Initialize time slots for this sub-section
+    const initialTimeSlots = {};
+    shifts.forEach(shift => {
+      initialTimeSlots[shift.id] = {
+        requested_amount: '',
+        male_count: 0,
+        female_count: 0,
+        start_time: shift.start_time || '',
+        end_time: shift.end_time || '',
+        reason: '',
+        is_additional: false,
+      };
+    });
+
+    const newRequest = {
+      sub_section_id: subSection.id,
+      sub_section_name: subSection.name,
+      section_name: selectedSection.name,
+      date: '',
+      time_slots: initialTimeSlots
+    };
+
+    setRequests([...requests, newRequest]);
+    setActiveRequestIndex(requests.length);
+    setSelectedSection(null);
+  };
+
+  const handleRequestChange = (index, field, value) => {
+    const updatedRequests = [...requests];
+    updatedRequests[index][field] = value;
+    setRequests(updatedRequests);
+  };
+
+  const handleSlotChange = (index, shiftId, field, value) => {
+    const updatedRequests = [...requests];
+    updatedRequests[index].time_slots[shiftId][field] = value;
+    setRequests(updatedRequests);
+  };
+
+  const removeRequest = (index) => {
+    const updatedRequests = [...requests];
+    updatedRequests.splice(index, 1);
+    setRequests(updatedRequests);
+    if (activeRequestIndex >= index) {
+      setActiveRequestIndex(Math.max(0, activeRequestIndex - 1));
+    }
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    // Prepare the data to be sent
+    const formattedRequests = requests.map(request => ({
+      sub_section_id: request.sub_section_id,
+      date: request.date,
+      time_slots: Object.entries(request.time_slots).reduce((acc, [shiftId, slot]) => {
+        if (slot.requested_amount && parseInt(slot.requested_amount) > 0) {
+          acc[shiftId] = {
+            requested_amount: parseInt(slot.requested_amount),
+            male_count: parseInt(slot.male_count) || 0,
+            female_count: parseInt(slot.female_count) || 0,
+            start_time: slot.start_time,
+            end_time: slot.end_time,
+            reason: slot.reason || '',
+            is_additional: slot.is_additional || false
+          };
+        }
+        return acc;
+      }, {})
+    })).filter(request => Object.keys(request.time_slots).length > 0);
+
+    if (formattedRequests.length === 0) {
+      alert('Setidaknya satu permintaan harus memiliki jumlah yang diminta lebih dari 0');
+      return;
+    }
+
+    setData('requests', formattedRequests);
+    post('/manpower-requests', {
+      onSuccess: () => {
+        setRequests([]);
+      }
+    });
+  };
 
   return (
     <AuthenticatedLayout
@@ -55,84 +129,82 @@ export default function Create({ subSections, shifts }) {
                 </Link>
               </div>
 
-              <form onSubmit={submit} className="space-y-6">
-                {/* Sub Section Field */}
-                <div>
-                  <label htmlFor="sub_section_id" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Sub Section <span className="text-red-500">*</span>
-                  </label>
-
-                  {/* Selected sub-section display */}
-                  <div
-                    onClick={() => setIsModalOpen(true)}
-                    className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.sub_section_id ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100 cursor-pointer`}
-                  >
-                    {data.sub_section_name ? (
-                      <span className="block truncate">{data.sub_section_name}</span>
-                    ) : (
-                      <span className="text-gray-400 dark:text-gray-400">-- Pilih Sub Section --</span>
-                    )}
-                  </div>
-                  {errors.sub_section_id && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.sub_section_id}</p>}
-                </div>
-
-                {/* Date Field */}
-                <div>
-                  <label htmlFor="date" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Tanggal Dibutuhkan <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    value={data.date}
-                    onChange={(e) => setData('date', e.target.value)}
-                    min={today}
-                    className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.date ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-                    required
-                  />
-                  {errors.date && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.date}</p>}
-                </div>
-
-                {/* Shift-based Manpower Slots */}
-                <div className="space-y-4 mt-4 pt-4 border-t">
+              {!selectedSection && requests.length === 0 ? (
+                <SectionSelection 
+                  sections={sections} 
+                  onSelect={handleSectionSelect} 
+                />
+              ) : selectedSection ? (
+                <div className="space-y-4">
                   <h3 className="font-medium text-gray-800 dark:text-gray-200 text-lg">
-                    Jumlah Man Power per Shift
+                    Pilih Sub Section dari {selectedSection.name}
                   </h3>
-                  <p className="mb-4 text-gray-600 dark:text-gray-400 text-sm italic">
-                    Isi hanya shift yang Anda butuhkan *manpower*nya. Shift lain akan diabaikan.
-                  </p>
-
-                  {shifts && Array.isArray(shifts) && shifts.map((shift) => (
-                    <ShiftSlot
-                      key={shift.id}
-                      shift={shift}
-                      slotData={data.time_slots[shift.id] || {}}
-                      errors={errors}
-                      duplicateRequests={duplicateRequests}
-                      showDuplicateWarning={showDuplicateWarning}
-                      handleSlotChange={handleSlotChange}
-                      handleNumberFocus={handleNumberFocus}
-                    />
-                  ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {selectedSection.sub_sections.map(subSection => (
+                      <button
+                        key={subSection.id}
+                        type="button"
+                        onClick={() => handleSubSectionSelect(subSection)}
+                        className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-left"
+                      >
+                        {subSection.name}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSection(null)}
+                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                  >
+                    Kembali ke pilih section
+                  </button>
                 </div>
+              ) : (
+                <form onSubmit={submit} className="space-y-6">
+                  {/* Request tabs */}
+                  <div className="flex overflow-x-auto pb-2">
+                    {requests.map((request, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setActiveRequestIndex(index)}
+                        className={`px-4 py-2 mr-2 text-sm font-medium rounded-t-md ${activeRequestIndex === index ? 'bg-indigo-100 dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 border-b-2 border-indigo-500' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                      >
+                        {request.section_name} - {request.sub_section_name}
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); removeRequest(index); }}
+                          className="ml-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                        >
+                          &times;
+                        </button>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSection(sections[0])} // Default to first section
+                      className="px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-md"
+                    >
+                      + Tambah Sub Section
+                    </button>
+                  </div>
 
-                {/* Duplicate Requests Warning */}
-                {showDuplicateWarning && (
-                  <DuplicateWarning
-                    duplicateRequests={duplicateRequests}
-                    setShowDuplicateWarning={setShowDuplicateWarning}
-                    processSubmission={submit}
-                  />
-                )}
+                  {/* Active request form */}
+                  {requests.length > 0 && (
+                    <RequestForm
+                      request={requests[activeRequestIndex]}
+                      shifts={shifts}
+                      errors={errors.requests?.[activeRequestIndex] || {}}
+                      onChange={(field, value) => handleRequestChange(activeRequestIndex, field, value)}
+                      onSlotChange={(shiftId, field, value) => handleSlotChange(activeRequestIndex, shiftId, field, value)}
+                    />
+                  )}
 
-                {/* Submit Button - Only show if no duplicates or warning dismissed */}
-                {!showDuplicateWarning && (
                   <div className="flex justify-end items-center pt-2">
                     <button
                       type="submit"
+                      disabled={processing || requests.length === 0}
                       className={`inline-flex justify-center bg-indigo-600 hover:bg-indigo-700 disabled:opacity-75 shadow-sm px-4 sm:px-6 py-2 border border-transparent rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 font-medium text-white text-sm disabled:cursor-not-allowed ${processing ? 'opacity-75' : ''}`}
-                      disabled={processing}
                     >
                       {processing ? (
                         <>
@@ -143,29 +215,16 @@ export default function Create({ subSections, shifts }) {
                           Menyimpan...
                         </>
                       ) : (
-                        'Submit Request'
+                        'Submit Semua Request'
                       )}
                     </button>
                   </div>
-                )}
-              </form>
+                </form>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Sub-section Selection Modal */}
-      {isModalOpen && (
-        <SubSectionModal
-          isModalOpen={isModalOpen}
-          setIsModalOpen={setIsModalOpen}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filteredSections={filteredSections}
-          data={data}
-          selectSubSection={selectSubSection}
-        />
-      )}
     </AuthenticatedLayout>
   );
 }

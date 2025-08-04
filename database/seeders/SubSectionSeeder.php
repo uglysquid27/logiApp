@@ -62,7 +62,9 @@ class SubSectionSeeder extends Seeder
         // Removed several not in data
     ],
     'Produksi' => [
-        'Reject'
+        'Reject',
+        'OC1',
+        'OC2'
     ]
     // Removed 'Store' section as not in data
 ];
