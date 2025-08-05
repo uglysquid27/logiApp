@@ -6,13 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -20,10 +22,20 @@ class Employee extends Authenticatable
         'nik',
         'type',
         'status',
-          'deactivation_reason',
-    'deactivated_at',
+        'deactivation_reason',
+        'deactivation_notes',
+        'deactivated_at',
+        'deactivated_by',
         'cuti',
         'gender',
+        'group',
+        'birth_date',
+        'birth_place',
+        'address',
+        'city',
+        'religion',
+        'phone',
+        'marital_status',
     ];
 
     protected $hidden = [
@@ -33,7 +45,8 @@ class Employee extends Authenticatable
 
     protected $casts = [
         'password' => 'hashed',
-          'deactivated_at' => 'datetime'
+        'deactivated_at' => 'datetime',
+        'birth_date' => 'date',
     ];
     
     public function scopeActive($query)
@@ -41,11 +54,10 @@ class Employee extends Authenticatable
         return $query->whereNull('deactivated_at');
     }
 
-    // In App\Models\Employee
-public function blindTests()
-{
-    return $this->hasMany(BlindTest::class);
-}
+    public function blindTests()
+    {
+        return $this->hasMany(BlindTest::class);
+    }
     
     public function scopeInactive($query)
     {
@@ -67,9 +79,6 @@ public function blindTests()
         return $this->hasMany(Permit::class);
     }
 
-    /**
-     * Check if the employee is assigned to any schedule today.
-     */
     public function isAssignedToday(): bool
     {
         return $this->schedules()
@@ -77,21 +86,16 @@ public function blindTests()
             ->exists();
     }
 
-    // In your Employee model
-public function operatorLicense()
-{
-    return $this->hasOne(OperatorLicense::class);
-}
+    public function operatorLicense()
+    {
+        return $this->hasOne(OperatorLicense::class);
+    }
 
-public function hasValidLicense()
-{
-    return $this->operatorLicense && $this->operatorLicense->isValid();
-}
+    public function hasValidLicense()
+    {
+        return $this->operatorLicense && $this->operatorLicense->isValid();
+    }
 
- /**
-     * Get the ratings for the employee.
-     * ADD THIS NEW METHOD
-     */
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
@@ -100,5 +104,10 @@ public function hasValidLicense()
     public function workload()
     {
         return $this->hasMany(Workload::class);
+    }
+
+    public function deactivatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deactivated_by');
     }
 }

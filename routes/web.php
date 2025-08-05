@@ -17,6 +17,7 @@ use App\Http\Controllers\EmployeeDashboardController;
 use App\Http\Controllers\LunchCouponController;
 use App\Http\Controllers\RatingController;
 use App\Http\Middleware\PreventBackAfterLogout;
+use App\Http\Controllers\EmployeeProfileController;
 // app/Http/Controllers/LicenseVerificationController.php
 /*
 |--------------------------------------------------------------------------
@@ -41,21 +42,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // GET route - shows the form
     Route::get('/license-check', [LicenseVerificationController::class, 'showForm'])
         ->name('license.check');
-    
+
     // POST route - handles form submission
     Route::post('/verify-license', [LicenseVerificationController::class, 'verify'])
         ->name('license.verify');
 });
 
 // API-style endpoint
-Route::middleware(['auth:sanctum'])->post('/api/verify-license', 
-    [LicenseVerificationController::class, 'verify']);
+Route::middleware(['auth:sanctum'])->post(
+    '/api/verify-license',
+    [LicenseVerificationController::class, 'verify']
+);
 // Authentication routes
 Route::middleware(['prevent.back'])->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
     Route::post('/employee/login', [AuthenticatedSessionController::class, 'store'])->name('employee.login');
-    
+
     // Unified Logout Route with session cleanup
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->middleware(['auth:web,employee'])
@@ -77,8 +80,8 @@ Route::middleware(['prevent.back'])->group(function () {
         ->name('dashboard.requests.fulfilled');
     Route::get('/dashboard/schedules/upcoming', [DashboardController::class, 'getUpcomingSchedules'])
         ->name('dashboard.schedules.upcoming');
-  Route::get('/dashboard/lunch-coupons/{date}', [DashboardController::class, 'getLunchCouponsByDate'])
-    ->name('dashboard.lunch-coupons.by-date');
+    Route::get('/dashboard/lunch-coupons/{date}', [DashboardController::class, 'getLunchCouponsByDate'])
+        ->name('dashboard.lunch-coupons.by-date');
 
     Route::get('/permits', [PermitController::class, 'index'])->name('permits.index');
     Route::post('/permits', [PermitController::class, 'store'])->name('permits.store');
@@ -96,6 +99,14 @@ Route::middleware(['auth:employee', 'prevent.back'])
             ->name('schedule.same-shift');
         Route::resource('permits', PermitController::class);
         Route::post('/operator-license', [LicenseVerificationController::class, 'store']);
+        Route::get('/employees/{employee}/edit', [EmployeeProfileController::class, 'edit'])
+            ->name('employees.edit');
+
+        Route::put('/employees/{employee}', [EmployeeProfileController::class, 'update'])
+            ->name('employees.update');
+
+        Route::put('/employees/{employee}/password', [EmployeeProfileController::class, 'updatePassword'])
+            ->name('employees.password.update');
     });
 
 // Admin routes with session protection
@@ -114,29 +125,29 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         Route::post('/reset-all-statuses', [EmployeeSum::class, 'resetAllStatuses'])
             ->name('employee-attendance.reset-all-statuses');
         Route::post('/employee-attendance/update-workloads', [EmployeeSum::class, 'updateWorkloads'])
-        ->name('employee-attendance.update-workloads')
-        ->middleware(['auth', 'verified']);
-        
-        // Individual employee routes
-       Route::prefix('/{employee}')->group(function () {
-    Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
-    Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
-    
-    // Add the license route within the same prefix group
-    // Route::get('employee-license/{employee}', [LicenseVerificationController::class, 'showForm'])->name('employee-license.show');
+            ->name('employee-attendance.update-workloads')
+            ->middleware(['auth', 'verified']);
 
-    Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
-    Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
-    Route::post('/activate', [EmployeeSum::class, 'activate'])
-        ->name('employee-attendance.activate');
-    Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
-        ->name('employee-attendance.process-deactivation');
-});
+        // Individual employee routes
+        Route::prefix('/{employee}')->group(function () {
+            Route::get('/', [EmployeeSum::class, 'show'])->name('employee-attendance.show');
+            Route::get('/edit', [EmployeeSum::class, 'edit'])->name('employee-attendance.edit');
+
+            // Add the license route within the same prefix group
+            // Route::get('employee-license/{employee}', [LicenseVerificationController::class, 'showForm'])->name('employee-license.show');
+
+            Route::put('/', [EmployeeSum::class, 'update'])->name('employee-attendance.update');
+            Route::get('/deactivate', [EmployeeSum::class, 'deactivate'])->name('employee-attendance.deactivate');
+            Route::post('/activate', [EmployeeSum::class, 'activate'])
+                ->name('employee-attendance.activate');
+            Route::post('/process-deactivation', [EmployeeSum::class, 'processDeactivation'])
+                ->name('employee-attendance.process-deactivation');
+        });
     });
 
     Route::get('/employees/{employee}/license', [LicenseVerificationController::class, 'showEmployeeLicense'])
-    ->name('employees.license.show');
-     Route::get('/employees/{employee}/rate', [RatingController::class, 'create'])->name('ratings.create');
+        ->name('employees.license.show');
+    Route::get('/employees/{employee}/rate', [RatingController::class, 'create'])->name('ratings.create');
     Route::post('/ratings', [RatingController::class, 'store'])->name('ratings.store');
     Route::put('/ratings/{rating}', [RatingController::class, 'update'])->name('ratings.update');
 
@@ -150,9 +161,9 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         ->name('manpower-requests.request-revision');
     Route::get('/manpower-requests/{manpower_request}/revision', [ManPowerRequestController::class, 'edit'])
         ->name('manpower-requests.revision.edit');
-        Route::delete('/manpower-requests/{manpowerRequest}', [ManPowerRequestController::class, 'destroy'])
+    Route::delete('/manpower-requests/{manpowerRequest}', [ManPowerRequestController::class, 'destroy'])
         ->name('manpower-requests.destroy');
-        Route::post('/manpower-requests/check-duplicates', [ManPowerRequestController::class, 'checkDuplicates'])
+    Route::post('/manpower-requests/check-duplicates', [ManPowerRequestController::class, 'checkDuplicates'])
         ->name('manpower-requests.check-duplicates');
 
     // Additional dashboard routes
@@ -160,17 +171,17 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         ->name('dashboard.requests.byMonth');
     Route::get('/dashboard/schedules/by-subsection/{subSectionId}', [DashboardController::class, 'getSchedulesBySubSection'])
         ->name('dashboard.schedules.bySubSection');
-        Route::get('/dashboard/manpower-requests/filtered', [DashboardController::class, 'getFilteredManpowerRequests'])
-    ->name('dashboard.manpower.requests.filtered');
+    Route::get('/dashboard/manpower-requests/filtered', [DashboardController::class, 'getFilteredManpowerRequests'])
+        ->name('dashboard.manpower.requests.filtered');
 
     Route::get('/dashboard/employee-assignments/filtered', [DashboardController::class, 'getFilteredEmployeeAssignments'])
-    ->name('dashboard.employee.assignments.filtered');
+        ->name('dashboard.employee.assignments.filtered');
 
-Route::get('/dashboard/schedules/sub-section/{subSectionId}', [DashboardController::class, 'getSchedulesBySubSection'])
-    ->name('dashboard.schedules.bySubSection');
+    Route::get('/dashboard/schedules/sub-section/{subSectionId}', [DashboardController::class, 'getSchedulesBySubSection'])
+        ->name('dashboard.schedules.bySubSection');
 
     Route::get('/dashboard/requests/{periodType}/{period}/{status}', [DashboardController::class, 'getManpowerRequestsByPeriod'])
-    ->name('dashboard.requests.byPeriod');
+        ->name('dashboard.requests.byPeriod');
 
     // Schedule routes
     Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
@@ -178,27 +189,27 @@ Route::get('/dashboard/schedules/sub-section/{subSectionId}', [DashboardControll
     Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
 
     // Lunch routes
- 
-        // routes/web.php
-Route::resource('lunch-coupons', LunchCouponController::class)->only(['index', 'store']);
-Route::get('/lunch-coupons/by-date/{date}', [LunchCouponController::class, 'getByDate'])
-    ->name('lunch-coupons.by-date');
 
-     // Blind Test Routes
-     Route::get('/employee-blind-test', [EmployeeBlindTestController::class, 'index'])
-     ->name('employee-blind-test.index');
-     
- Route::get('/employee-blind-test/create/{employee}', [EmployeeBlindTestController::class, 'create'])
-     ->name('employee-blind-test.create');
-     
- Route::post('/employee-blind-test/store/{employee}', [EmployeeBlindTestController::class, 'store'])
-     ->name('employee-blind-test.store');
-     
- Route::get('/employee-blind-test/{employee}', [EmployeeBlindTestController::class, 'show'])
-     ->name('employee-blind-test.show');
-     
- Route::delete('/employee-blind-test/{blindTest}', [EmployeeBlindTestController::class, 'destroy'])
-     ->name('employee-blind-test.destroy');
+    // routes/web.php
+    Route::resource('lunch-coupons', LunchCouponController::class)->only(['index', 'store']);
+    Route::get('/lunch-coupons/by-date/{date}', [LunchCouponController::class, 'getByDate'])
+        ->name('lunch-coupons.by-date');
+
+    // Blind Test Routes
+    Route::get('/employee-blind-test', [EmployeeBlindTestController::class, 'index'])
+        ->name('employee-blind-test.index');
+
+    Route::get('/employee-blind-test/create/{employee}', [EmployeeBlindTestController::class, 'create'])
+        ->name('employee-blind-test.create');
+
+    Route::post('/employee-blind-test/store/{employee}', [EmployeeBlindTestController::class, 'store'])
+        ->name('employee-blind-test.store');
+
+    Route::get('/employee-blind-test/{employee}', [EmployeeBlindTestController::class, 'show'])
+        ->name('employee-blind-test.show');
+
+    Route::delete('/employee-blind-test/{blindTest}', [EmployeeBlindTestController::class, 'destroy'])
+        ->name('employee-blind-test.destroy');
 
     // Shift routes
     Route::resource('shifts', ShiftController::class);
