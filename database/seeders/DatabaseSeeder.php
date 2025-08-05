@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             // Dependent Data (order matters)
             SubSectionSeeder::class, // Depends on Sections
             EmployeeSeeder::class,   // Depends on nothing initially, but used by others
+            WorkloadSeeder::class,
 
             // Junction table seeder
             EmployeeSubSectionSeeder::class, // Depends on Employees and SubSections

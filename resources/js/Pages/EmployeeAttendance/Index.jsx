@@ -12,6 +12,8 @@ export default function Index() {
   const [filterSection, setFilterSection] = useState(filters.section || 'All');
   const [filterSubSection, setFilterSubSection] = useState(filters.sub_section || 'All');
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
+  const [processing, setProcessing] = useState(false);
+
 
   // Helper function for status badges
   const getStatusClasses = (status) => {
@@ -52,7 +54,6 @@ export default function Index() {
   const handleSectionChange = (e) => {
     const newSection = e.target.value;
     setFilterSection(newSection);
-    // When section changes, reset sub_section to 'All'
     setFilterSubSection('All');
     applyFilters({ status: filterStatus, section: newSection, sub_section: 'All', search: searchTerm });
   };
@@ -63,16 +64,40 @@ export default function Index() {
     applyFilters({ status: filterStatus, section: filterSection, sub_section: newSubSection, search: searchTerm });
   };
 
-  // Handle search term change
   const handleSearchChange = (e) => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
     applyFilters({ status: filterStatus, section: filterSection, sub_section: filterSubSection, search: newSearchTerm });
   };
 
-  // Calculate totals
-  const totalSchedulesCount = employees.reduce((sum, employee) => sum + (employee.schedules_count || 0), 0);
-  const totalWeeklySchedulesCount = employees.reduce((sum, employee) => sum + (employee.schedules_count_weekly || 0), 0);
+  // Handle update workloads
+  const handleUpdateWorkloads = async () => {
+    if (!confirm('Are you sure you want to update all workload data? This will scan all schedules and may take some time.')) {
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      await router.post(route('employee-attendance.update-workloads'), {}, {
+        onSuccess: () => {
+          alert('Workload data updated successfully!');
+          router.reload({ preserveState: false });
+        },
+        onError: (errors) => {
+          alert('Failed to update workload data. Please try again.');
+        },
+      });
+    } catch (error) {
+      alert('An unexpected error occurred. Check console for details.');
+      console.error(error);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Calculate totals from database
+  const totalWorkCount = employees.reduce((sum, employee) => sum + (employee.total_work_count || 0), 0);
+  const totalWeeklyWorkCount = employees.reduce((sum, employee) => sum + (employee.weekly_work_count || 0), 0);
 
   // Handle reset all statuses
   const handleResetAllStatuses = () => {
@@ -133,6 +158,29 @@ export default function Index() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
                     <span>Reset All Statuses</span>
+                  </button>
+                  <button
+                    onClick={handleUpdateWorkloads}
+                    disabled={processing}
+                    className={`flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 rounded-md font-medium text-white text-sm transition-colors duration-200 ${processing ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'
+                      }`}
+                  >
+                    {processing ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Update Workloads</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -333,15 +381,15 @@ export default function Index() {
                         <div className="grid grid-cols-3 gap-2 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                           <div>
                             <p className="text-gray-500 dark:text-gray-400">Total</p>
-                            <p>{employee.schedules_count}</p>
+                            <p>{employee.total_work_count || 0}</p>
                           </div>
                           <div>
                             <p className="text-gray-500 dark:text-gray-400">Minggu Ini</p>
-                            <p>{employee.schedules_count_weekly}</p>
+                            <p>{employee.weekly_work_count || 0}</p>
                           </div>
                           <div>
                             <p className="text-gray-500 dark:text-gray-400">Workload</p>
-                            <p>{employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}</p>
+                            <p>{employee.workload_point !== undefined ? employee.workload_point : 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-gray-500 dark:text-gray-400">Rating</p>
@@ -371,11 +419,11 @@ export default function Index() {
                             Deactivate
                           </Link>
                           <Link
-                             href={route('ratings.create', employee.id)}
-                             className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
-                           >
-                             Rate ({employee.ratings_count || 0}) 
-                           </Link>
+                            href={route('ratings.create', employee.id)}
+                            className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
+                          >
+                            Rate ({employee.ratings_count || 0})
+                          </Link>
                         </div>
                       </div>
                     );
@@ -425,10 +473,10 @@ export default function Index() {
                             <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
                               {employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}
                             </td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.schedules_count}</td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.schedules_count_weekly}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.total_work_count || 0}</td>
+                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.weekly_work_count || 0}</td>
                             <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">
-                              {employee.working_day_weight !== undefined ? employee.working_day_weight : 'N/A'}
+                              {employee.workload_point !== undefined ? employee.workload_point : 'N/A'}
                             </td>
                             <td className="px-4 py-4 text-sm whitespace-nowrap">
                               <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusClasses(employee.status)}`}>
@@ -460,7 +508,6 @@ export default function Index() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                                   </svg>
                                 </Link>
-                                {/* Conditional rendering for License link, now merged into Actions */}
                                 {employee.sub_sections && employee.sub_sections.some(ss => ss.section?.name === 'Operator Forklift') && (
                                   <Link
                                     href={route('employees.license.show', employee.id)}
@@ -495,8 +542,8 @@ export default function Index() {
                     )}
                     <tr className="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300">
                       <td colSpan="6" className="px-4 py-3 text-right">Total Penugasan:</td>
-                      <td className="px-4 py-3 text-center">{totalSchedulesCount}</td>
-                      <td className="px-4 py-3 text-center">{totalWeeklySchedulesCount}</td>
+                      <td className="px-4 py-3 text-center">{totalWorkCount}</td>
+                      <td className="px-4 py-3 text-center">{totalWeeklyWorkCount}</td>
                       <td colSpan="5" className="px-4 py-3 text-center"></td>
                     </tr>
                   </tbody>

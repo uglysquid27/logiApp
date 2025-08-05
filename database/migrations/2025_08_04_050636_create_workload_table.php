@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('workload', function (Blueprint $table) {
             $table->id();
             $table->foreignId('employee_id')->constrained('employees')->onDelete('cascade');
-            $table->integer('week');
-            $table->integer('total_work_count');
+            $table->string('nik');
+            // $table->date('date');
+            $table->integer('week')->nullable(); 
+            $table->integer('total_work_count')->nullable(); 
             $table->integer('workload_point');
             $table->timestamps();
         });

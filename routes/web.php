@@ -113,6 +113,9 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
         Route::post('/', [EmployeeSum::class, 'store'])->name('employee-attendance.store');
         Route::post('/reset-all-statuses', [EmployeeSum::class, 'resetAllStatuses'])
             ->name('employee-attendance.reset-all-statuses');
+        Route::post('/employee-attendance/update-workloads', [EmployeeSum::class, 'updateWorkloads'])
+        ->name('employee-attendance.update-workloads')
+        ->middleware(['auth', 'verified']);
         
         // Individual employee routes
        Route::prefix('/{employee}')->group(function () {

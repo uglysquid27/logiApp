@@ -6,6 +6,8 @@ use App\Models\Employee;
 use App\Models\Section;
 use App\Models\SubSection;
 use App\Models\OperatorLicense;
+use App\Models\Workload;
+use App\Models\Schedule;
 use App\Models\BlindTest; // Import the BlindTest model
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,28 +26,24 @@ class EmployeeSum extends Controller
 {
     use AuthorizesRequests;
 
-    public function index(Request $request): Response
+  public function index(Request $request): Response
     {
-        $startDate = Carbon::now()->subDays(6)->startOfDay();
-        $endDate = Carbon::now()->endOfDay();
-
-        $query = Employee::withCount('schedules')
-            ->withCount(['schedules as schedules_count_weekly' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
-            }])
-            ->withCount('ratings') // Keep this for the count on the button
-            // Removed withAvg('ratings', 'rating') as per request
-            ->with(['schedules' => function ($query) {
+        $query = Employee::with([
+            'workload' => function($query) {
+                $query->latest()->limit(1);
+            },
+            'schedules' => function ($query) {
                 $query->whereDate('date', Carbon::today())
                     ->with('manPowerRequest.shift');
-            }, 'subSections.section'])
-            ->with(['blindTests' => function ($query) { // Eager load the latest blind test result
+            }, 
+            'subSections.section',
+            'blindTests' => function ($query) {
                 $query->orderBy('test_date', 'desc')->limit(1);
-            }])
-            // Eager load the latest single rating for the employee
-            ->with(['ratings' => function ($query) {
+            },
+            'ratings' => function ($query) {
                 $query->latest()->limit(1);
-            }]);
+            }
+        ]);
 
         // Apply Filters
         if ($request->has('status') && $request->input('status') !== 'All') {
@@ -76,49 +74,42 @@ class EmployeeSum extends Controller
         }
 
         $employees = $query->orderBy('name')
-            ->paginate(10)
-            ->through(function ($employee) {
-                // Override status based on today's schedule
-                $employee->status = $employee->isAssignedToday() ? 'assigned' : 'available';
+        ->paginate(10)
+        ->through(function ($employee) {
+            // Override status based on today's schedule
+            $employee->status = $employee->isAssignedToday() ? 'assigned' : 'available';
 
-                // Calculate total assigned hours (for today's schedules only)
-                $totalWorkingHours = $employee->schedules
-                    ->sum(function ($schedule) {
-                        return $schedule->manPowerRequest->shift->hours ?? 0;
-                    });
+            // Get workload data
+            $latestWorkload = $employee->workload->first();
+            $totalWorkCount = $latestWorkload ? $latestWorkload->total_work_count : 0;
+            $weeklyWorkCount = $latestWorkload ? $latestWorkload->week : 0;
+            
+            // Use the same calculation method as in update
+            $workloadPoint = $this->calculateWorkloadPoint($weeklyWorkCount);
 
-                // --- Start Rating Logic (Updated to use latest individual rating from DB) ---
-                // Get the 'rating' value from the latest individual rating, defaulting to 0 if no ratings.
+                // Rating Logic
                 $latestIndividualRating = $employee->ratings->first();
                 $actualRating = $latestIndividualRating ? $latestIndividualRating->rating : 0;
-
-                // Set 'calculated_rating' to the actual latest individual rating from the database.
                 $employee->setAttribute('calculated_rating', $actualRating);
-                // --- End Rating Logic ---
 
-                // --- Start Blind Test KPI Contribution Calculation ---
+                // Blind Test KPI Contribution
                 $blindTestKpiContribution = 0;
-                // Get the eager loaded latest blind test result
                 $latestBlindTest = $employee->blindTests->first();
-
                 if ($latestBlindTest) {
-                    // Directly add the actual value of blind test (0-100) to workload
                     $blindTestKpiContribution = $latestBlindTest->result;
                 }
-                // --- End Blind Test KPI Contribution Calculation ---
 
-                // Initialize workingDayWeight to a base value, independent of average rating.
-                // Then add the blind test contribution.
-                $workingDayWeight = 165; // Default base value, as per previous logic's 'default' case
-                $workingDayWeight += $blindTestKpiContribution;
+                $workingDayWeight = 165 + $blindTestKpiContribution;
 
-                $employee->setAttribute('working_day_weight', $workingDayWeight);
-                $employee->setAttribute('total_assigned_hours', $totalWorkingHours);
+                  $employee->setAttribute('total_work_count', $totalWorkCount);
+            $employee->setAttribute('weekly_work_count', $weeklyWorkCount);
+            $employee->setAttribute('workload_point', $workloadPoint);
 
-                // Remove schedules, blindTests, and ratings from response to reduce payload
+                // Remove unnecessary relations
                 unset($employee->schedules);
                 unset($employee->blindTests);
-                unset($employee->ratings); // Remove the eager loaded ratings collection
+                unset($employee->ratings);
+                unset($employee->workload);
 
                 return $employee;
             });
@@ -136,6 +127,76 @@ class EmployeeSum extends Controller
             'uniqueSubSections' => array_merge(['All'], $allSubSections),
         ]);
     }
+
+   public function updateWorkloads(Request $request)
+{
+    try {
+        DB::beginTransaction();
+        
+        // Log::info('Starting workload update process');
+        $currentWeekStart = Carbon::now()->startOfWeek();
+        $currentWeekEnd = Carbon::now()->endOfWeek();
+        
+        // Log::info('Getting all employees with their schedules');
+        $employees = Employee::with(['schedules' => function($query) use ($currentWeekStart, $currentWeekEnd) {
+            $query->whereBetween('date', [$currentWeekStart, $currentWeekEnd]);
+        }])->get();
+
+        // Log::info('Processing '.$employees->count().' employees');
+        
+        foreach ($employees as $employee) {
+            // Log::debug('Processing employee: '.$employee->id);
+            
+            // Calculate total work count (all time)
+            $totalWorkCount = Schedule::where('employee_id', $employee->id)->count();
+            Log::debug('Total work count: '.$totalWorkCount);
+
+            // Calculate weekly work count (from preloaded schedules)
+            $weeklyWorkCount = $employee->schedules->count();
+            // Log::debug('Weekly work count: '.$weeklyWorkCount);
+
+            // Calculate workload point based on weekly work count
+            $workloadPoint = $this->calculateWorkloadPoint($weeklyWorkCount);
+            // Log::debug('Calculated workload point: '.$workloadPoint);
+
+            // Update existing record or create if doesn't exist
+            Workload::updateOrCreate(
+                ['employee_id' => $employee->id],
+                [
+                    'week' => $weeklyWorkCount,
+                    'total_work_count' => $totalWorkCount,
+                    'workload_point' => $workloadPoint
+                ]
+            );
+            
+            Log::debug('Workload record updated for employee: '.$employee->id);
+        }
+
+        DB::commit();
+        // Log::info('Workload update completed successfully');
+        
+        return redirect()->back()->with('success', 'Workload data updated successfully.');
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error updating workloads: ' . $e->getMessage());
+        Log::error($e->getTraceAsString());
+        return redirect()->back()->with('error', 'Failed to update workload data. Please try again.');
+    }
+}
+
+protected function calculateWorkloadPoint(int $weeklyWorkCount): int
+{
+    return match($weeklyWorkCount) {
+        0 => 165,
+        1 => 135,
+        2 => 105,
+        3 => 75,
+        4 => 45,
+        5 => 15,
+        default => max(0, 165 - ($weeklyWorkCount * 30)) // Fallback for counts > 5
+    };
+}
 
     public function resetAllStatuses(Request $request)
     {

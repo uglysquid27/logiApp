@@ -96,4 +96,9 @@ public function hasValidLicense()
     {
         return $this->hasMany(Rating::class);
     }
+
+    public function workload()
+    {
+        return $this->hasMany(Workload::class);
+    }
 }
