@@ -70,8 +70,6 @@ export default function Fulfill({
         return employees;
     }, [sameSubSectionEmployees, otherSubSectionEmployees, currentScheduledIds]);
 
-    // Sort employees with gender priority
-    // Sort employees with gender priority
 const allSortedEligibleEmployees = useMemo(() => {
     const sorted = [...combinedEmployees].sort((a, b) => {
         // 1. Currently scheduled employees first
@@ -79,34 +77,40 @@ const allSortedEligibleEmployees = useMemo(() => {
             return a.isCurrentlyScheduled ? -1 : 1;
         }
 
-        // 2. Priority to matching gender requirements
+        // 2. Calculate total score as simple sum of components
+        const aTotalScore = (a.workload_points || 0) + (a.blind_test_points || 0) + (a.average_rating || 0);
+        const bTotalScore = (b.workload_points || 0) + (b.blind_test_points || 0) + (b.average_rating || 0);
+        console.log(aTotalScore)
+        console.log(bTotalScore)
+
+        // 3. Priority to matching gender requirements
         const aGenderMatch = request.male_count > 0 && a.gender === 'male' ? 0 :
             request.female_count > 0 && a.gender === 'female' ? 0 : 1;
         const bGenderMatch = request.male_count > 0 && b.gender === 'male' ? 0 :
             request.female_count > 0 && b.gender === 'female' ? 0 : 1;
         if (aGenderMatch !== bGenderMatch) return aGenderMatch - bGenderMatch;
 
-        // 3. Same sub-section first
+        // 4. Higher total score first (new simple sum)
+        if (aTotalScore !== bTotalScore) {
+            return bTotalScore - aTotalScore;
+        }
+
+        // 5. Same sub-section first
         const aIsSame = a.subSections.some(ss => ss.id === request.sub_section_id);
         const bIsSame = b.subSections.some(ss => ss.id === request.sub_section_id);
         if (aIsSame !== bIsSame) return aIsSame ? -1 : 1;
 
-        // 4. Higher total score first (new priority)
-        if (a.total_score !== b.total_score) {
-            return b.total_score - a.total_score;
-        }
-
-        // 5. Bulanan before harian
+        // 6. Bulanan before harian
         if (a.type === 'bulanan' && b.type === 'harian') return -1;
         if (a.type === 'harian' && b.type === 'bulanan') return 1;
 
-        // 6. For harian, higher weight first
+        // 7. For harian, higher weight first
         if (a.type === 'harian' && b.type === 'harian') {
             return b.working_day_weight - a.working_day_weight;
         }
 
-        // 7. Higher rating first (fallback)
-        return b.calculated_rating - a.calculated_rating;
+        // 8. Finally, sort by ID to ensure consistent ordering
+        return a.id - b.id;
     });
 
     return sorted;

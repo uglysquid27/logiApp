@@ -53,38 +53,51 @@ export default function Fulfill({
     }, [sameSubSectionEmployees, otherSubSectionEmployees, currentScheduledIds]);
 
     // Sort employees with gender priority
-    const allSortedEligibleEmployees = useMemo(() => {
-        return [...combinedEmployees].sort((a, b) => {
-            // 1. Currently scheduled employees first
-            if (a.isCurrentlyScheduled !== b.isCurrentlyScheduled) {
-                return a.isCurrentlyScheduled ? -1 : 1;
-            }
+   const allSortedEligibleEmployees = useMemo(() => {
+    const sorted = [...combinedEmployees].sort((a, b) => {
+        // 1. Currently scheduled employees first
+        if (a.isCurrentlyScheduled !== b.isCurrentlyScheduled) {
+            return a.isCurrentlyScheduled ? -1 : 1;
+        }
 
-            // 2. Priority to matching gender requirements
-            const aGenderMatch = request.male_count > 0 && a.gender === 'male' ? 0 :
-                request.female_count > 0 && a.gender === 'female' ? 0 : 1;
-            const bGenderMatch = request.male_count > 0 && b.gender === 'male' ? 0 :
-                request.female_count > 0 && b.gender === 'female' ? 0 : 1;
-            if (aGenderMatch !== bGenderMatch) return aGenderMatch - bGenderMatch;
+        // 2. Calculate total score as simple sum of components
+        const aTotalScore = (a.workload_points || 0) + (a.blind_test_points || 0) + (a.average_rating || 0);
+        const bTotalScore = (b.workload_points || 0) + (b.blind_test_points || 0) + (b.average_rating || 0);
+ 
 
-            // 3. Same sub-section first
-            const aIsSame = a.subSections.some(ss => ss.id === request.sub_section_id);
-            const bIsSame = b.subSections.some(ss => ss.id === request.sub_section_id);
-            if (aIsSame !== bIsSame) return aIsSame ? -1 : 1;
+        // 3. Priority to matching gender requirements
+        const aGenderMatch = request.male_count > 0 && a.gender === 'male' ? 0 :
+            request.female_count > 0 && a.gender === 'female' ? 0 : 1;
+        const bGenderMatch = request.male_count > 0 && b.gender === 'male' ? 0 :
+            request.female_count > 0 && b.gender === 'female' ? 0 : 1;
+        if (aGenderMatch !== bGenderMatch) return aGenderMatch - bGenderMatch;
 
-            // 4. Bulanan before harian
-            if (a.type === 'bulanan' && b.type === 'harian') return -1;
-            if (a.type === 'harian' && b.type === 'bulanan') return 1;
+        // 4. Higher total score first (new simple sum)
+        if (aTotalScore !== bTotalScore) {
+            return bTotalScore - aTotalScore;
+        }
 
-            // 5. For harian, higher weight first
-            if (a.type === 'harian' && b.type === 'harian') {
-                return b.working_day_weight - a.working_day_weight;
-            }
+        // 5. Same sub-section first
+        const aIsSame = a.subSections.some(ss => ss.id === request.sub_section_id);
+        const bIsSame = b.subSections.some(ss => ss.id === request.sub_section_id);
+        if (aIsSame !== bIsSame) return aIsSame ? -1 : 1;
 
-            // 6. Higher rating first
-            return b.calculated_rating - a.calculated_rating;
-        });
-    }, [combinedEmployees, request.sub_section_id, request.male_count, request.female_count]);
+        // 6. Bulanan before harian
+        if (a.type === 'bulanan' && b.type === 'harian') return -1;
+        if (a.type === 'harian' && b.type === 'bulanan') return 1;
+
+        // 7. For harian, higher weight first
+        if (a.type === 'harian' && b.type === 'harian') {
+            return b.working_day_weight - a.working_day_weight;
+        }
+
+        // 8. Finally, sort by ID to ensure consistent ordering
+        return a.id - b.id;
+    });
+
+    return sorted;
+}, [combinedEmployees, request.sub_section_id, request.male_count, request.female_count]);
+
 
     // Initial selection - prioritize currently scheduled employees
     const initialSelectedIds = useMemo(() => {

@@ -71,12 +71,16 @@ export default function EmployeeModal({
                                                     <p>NIK: {emp.nik}</p>
                                                     <p>Tipe: {emp.type}</p>
                                                     <p>Sub: {displaySubSectionName}</p>
+                                                    <p>Skor: {emp.total_score.toFixed(2)}</p>
                                                     {emp.type === 'harian' && (
                                                         <p>Bobot Kerja: {emp.working_day_weight}</p>
                                                     )}
+                                                    <p>Beban Kerja: {emp.workload_points}</p>
+                                                    <p>Test Buta: {emp.blind_test_points}</p>
+                                                    <p>Rating: {emp.average_rating.toFixed(1)}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col items-end">
+                                             <div className="flex flex-col items-end">
                                                 <span className={`text-xs px-1 rounded mb-1 ${isFemale
                                                         ? 'bg-pink-100 text-pink-800'
                                                         : 'bg-blue-100 text-blue-800'
@@ -142,7 +146,19 @@ export default function EmployeeModal({
                                                     <p>Rating: {emp.average_rating.toFixed(1)}</p>
                                                 </div>
                                             </div>
-                                            {/* ... rest of the button code ... */}
+                                             <div className="flex flex-col items-end">
+                                                <span className={`text-xs px-1 rounded mb-1 ${isFemale
+                                                        ? 'bg-pink-100 text-pink-800'
+                                                        : 'bg-blue-100 text-blue-800'
+                                                    }`}>
+                                                    {isFemale ? 'P' : 'L'}
+                                                </span>
+                                                {isCurrentlyScheduled && (
+                                                    <span className="text-xs px-1 rounded bg-green-100 text-green-800">
+                                                        Sudah dijadwalkan
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </button>
                                 );
