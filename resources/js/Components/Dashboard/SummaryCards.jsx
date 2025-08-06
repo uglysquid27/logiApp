@@ -15,13 +15,12 @@ const SummaryCards = ({ summary, setModalState, formatDate }) => {
                 ...prev,
                 open: true,
                 title: title,
-                data: data, // Set the fetched data here
+                data: data,
                 columns: columns,
-                url: url // Keep the URL for pagination/filtering within the modal if needed
+                url: url
             }));
         } catch (error) {
             console.error("Failed to fetch modal data:", error);
-            // Optionally, handle error state in the UI
         }
     };
 
@@ -115,15 +114,17 @@ const SummaryCards = ({ summary, setModalState, formatDate }) => {
                     onClick={card.onClick}
                     whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
                     whileTap={{ scale: 0.98 }}
-                    className={`bg-white p-4 rounded-lg shadow cursor-pointer transition-all border-t-4 border-${card.color}-500`}
+                    className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/30 dark:border-gray-600/30 p-6 cursor-pointer transition-all duration-300 border-t-4 border-${card.color}-500`}
                 >
-                    <h3 className="text-sm font-medium text-gray-600">{card.title}</h3>
+                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">{card.title}</h3>
                     <div className="mt-2 flex items-baseline">
-                        <span className={`text-2xl sm:text-3xl font-bold text-${card.color}-600`}>
-                            {typeof card.value === 'number' ? card.value.toLocaleString() : 'N/A'}
-                        </span>
+                        <div className="w-20 sm:w-24">
+                            <span className={`text-2xl sm:text-3xl font-bold text-${card.color}-600 dark:text-${card.color}-400`}>
+                                {typeof card.value === 'number' ? card.value.toLocaleString() : 'N/A'}
+                            </span>
+                        </div>
                         {card.hasOwnProperty('total') && (
-                            <span className="ml-2 text-xs sm:text-sm text-gray-500">
+                            <span className="ml-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                                 / {typeof card.total === 'number' ? card.total.toLocaleString() : 'N/A'}
                             </span>
                         )}

@@ -148,6 +148,8 @@ export default function Dashboard() {
         }));
     };
 
+    const cardStyle = "bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/30 dark:border-gray-600/30 p-6 transition-all duration-300";
+
     return (
         <ErrorBoundary>
             <AuthenticatedLayout header={<h2 className="text-xl font-semibold">Dashboard</h2>}>
@@ -157,64 +159,76 @@ export default function Dashboard() {
                     initial="hidden"
                     animate="show"
                     variants={staggerContainer}
-                    className="py-6 px-4 sm:px-6 lg:px-8"
+                    className="py-6 px-4 sm:px-6 lg:px-8 space-y-6"
                 >
-                    <SummaryCards
-                        summary={summary}
-                        setModalState={setModalState}
-                        formatDate={formatDate}
-                    />
-
-                    <DateFilter
-                        filters={filters}
-                        setFilters={setFilters}
-                        applyFilters={applyFilters}
-                        resetFilters={resetFilters}
-                    />
-
-                    <div className="flex flex-col md:flex-row gap-6 mb-8">
-                        <ManpowerChart
-                            data={manpowerRequestChartData}
-                            height={componentHeights.chart1}
-                            handleResize={handleResize('chart1')}
-                            setChartModalState={setChartModalState}
+                    <div className={cardStyle}>
+                        <SummaryCards
+                            summary={summary}
+                            setModalState={setModalState}
                             formatDate={formatDate}
-                            fetchModalData={fetchModalData} 
                         />
+                    </div>
 
-                        <EmployeeChart
-                            data={employeeAssignmentChartData}
-                            height={componentHeights.chart2}
-                            handleResize={handleResize('chart2')}
-                            setChartModalState={setChartModalState}
-                            sections={sections}
+                    <div className={cardStyle}>
+                        <DateFilter
                             filters={filters}
                             setFilters={setFilters}
-                            formatDate={formatDate}
-                            fetchModalData={fetchModalData} 
-                            applyFilters={applyFilters} 
+                            applyFilters={applyFilters}
+                            resetFilters={resetFilters}
                         />
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-6">
-                        <PendingRequestsTable
-                            data={recentPendingRequests}
-                            height={componentHeights.table1}
-                            handleResize={handleResize('table1')}
-                            formatDate={formatDate}
-                        />
+                        <div className={`flex-1 ${cardStyle}`}>
+                            <ManpowerChart
+                                data={manpowerRequestChartData}
+                                height={componentHeights.chart1}
+                                handleResize={handleResize('chart1')}
+                                setChartModalState={setChartModalState}
+                                formatDate={formatDate}
+                                fetchModalData={fetchModalData}
+                            />
+                        </div>
 
-                        <UpcomingSchedulesTable
-                            data={upcomingSchedules}
-                            height={componentHeights.table2}
-                            handleResize={handleResize('table2')}
-                            formatDate={formatDate}
-                        />
+                        <div className={`flex-1 ${cardStyle}`}>
+                            <EmployeeChart
+                                data={employeeAssignmentChartData}
+                                height={componentHeights.chart2}
+                                handleResize={handleResize('chart2')}
+                                setChartModalState={setChartModalState}
+                                sections={sections}
+                                filters={filters}
+                                setFilters={setFilters}
+                                formatDate={formatDate}
+                                fetchModalData={fetchModalData}
+                                applyFilters={applyFilters}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-6">
+                        <div className={`flex-1 ${cardStyle}`}>
+                            <PendingRequestsTable
+                                data={recentPendingRequests}
+                                height={componentHeights.table1}
+                                handleResize={handleResize('table1')}
+                                formatDate={formatDate}
+                            />
+                        </div>
+
+                        <div className={`flex-1 ${cardStyle}`}>
+                            <UpcomingSchedulesTable
+                                data={upcomingSchedules}
+                                height={componentHeights.table2}
+                                handleResize={handleResize('table2')}
+                                formatDate={formatDate}
+                            />
+                        </div>
                     </div>
 
                     <div className="my-6">
-                        <LunchCouponsCard   
-                            formatDate={formatDate} 
+                        <LunchCouponsCard
+                            formatDate={formatDate}
                         />
                     </div>
 

@@ -52,19 +52,19 @@ const DetailModal = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300"
                 >
                     <motion.div
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 20, opacity: 0 }}
-                        className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col"
+                        className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/30 dark:border-gray-600/30 max-w-6xl w-full max-h-[90vh] flex flex-col transition-all duration-300"
                     >
-                        <div className="px-6 py-4 border-b flex justify-between items-center">
-                            <h3 className="text-lg font-medium">{title}</h3>
+                        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-transparent">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{title}</h3>
                             <button
                                 onClick={onClose}
-                                className="text-gray-500 hover:text-gray-700"
+                                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
                             >
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -72,25 +72,25 @@ const DetailModal = ({
                             </button>
                         </div>
                         <div className="p-6 overflow-auto flex-grow">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead className="bg-white/50 dark:bg-gray-700/50">
                                     <tr>
                                         {columns.map((column, idx) => (
                                             <th
                                                 key={idx}
-                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                                             >
                                                 {column.header}
                                             </th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="bg-transparent divide-y divide-gray-200 dark:divide-gray-700">
                                     {items.length > 0 ? (
                                         items.map((item, itemIdx) => (
-                                            <tr key={itemIdx} className="hover:bg-gray-50">
+                                            <tr key={itemIdx} className="hover:bg-gray-100/50 dark:hover:bg-gray-700/50 transition-colors duration-200">
                                                 {columns.map((column, colIdx) => (
-                                                    <td key={colIdx} className="px-4 py-4 whitespace-nowrap text-sm">
+                                                    <td key={colIdx} className="px-4 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-200">
                                                         {column.render ? column.render(item) : item[column.field]}
                                                     </td>
                                                 ))}
@@ -107,16 +107,19 @@ const DetailModal = ({
                             </table>
                         </div>
                         {isPaginated && (
-                            <div className="px-6 py-3 border-t flex justify-between items-center bg-gray-50">
-                                <div className="flex space-x-2">
+                            <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-center items-center bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm">
+                                <div className="flex flex-wrap justify-center space-x-2">
                                     {paginationLinks.map((link, idx) => (
                                         <button
                                             key={idx}
-                                            onClick={() => onFilterOrPaginate(link.url, null)}
+                                            onClick={() => link.url && onFilterOrPaginate(link.url, null)}
                                             disabled={!link.url || link.active}
-                                            className={`px-3 py-1 rounded text-sm ${link.active ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border'} ${!link.url ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'}`}
+                                            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${link.active
+                                                ? 'bg-indigo-600 text-white shadow-md'
+                                                : 'bg-white text-gray-700 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            } ${!link.url ? 'opacity-50 cursor-not-allowed' : ''}`}
                                         >
-                                            {link.label.replace('&laquo;', '«').replace('&raquo;', '»')}
+                                            <span dangerouslySetInnerHTML={{ __html: link.label }} />
                                         </button>
                                     ))}
                                 </div>
