@@ -41,7 +41,7 @@ export default function EmployeeDashboard() {
     };
 
     // Function to fetch coworkers data
-    const fetchSameShiftEmployees = async (scheduleId) => {
+    const fetchSameDayEmployees = async (scheduleId) => {
         if (coworkersData?.current_schedule?.id === scheduleId) {
             setCoworkersData(null);
             return;
@@ -49,7 +49,7 @@ export default function EmployeeDashboard() {
 
         setLoadingCoworkers(true);
         try {
-            const response = await fetch(route('employee.schedule.same-shift', scheduleId));
+            const response = await fetch(route('employee.schedule.same-day', scheduleId));
             const data = await response.json();
             setCoworkersData(data);
         } catch (error) {
@@ -214,7 +214,7 @@ export default function EmployeeDashboard() {
                                                                     Diterima
                                                                 </span>
                                                                 <button
-                                                                    onClick={() => fetchSameShiftEmployees(schedule.id)}
+                                                                    onClick={() => fetchSameDayEmployees(schedule.id)}
                                                                     className="flex items-center justify-center bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
                                                                 >
                                                                     {loadingCoworkers && coworkersData?.current_schedule?.id === schedule.id ? (
@@ -231,7 +231,7 @@ export default function EmployeeDashboard() {
                                                                     Ditolak
                                                                 </span>
                                                                 <button
-                                                                    onClick={() => fetchSameShiftEmployees(schedule.id)}
+                                                                    onClick={() => fetchSameDayEmployees(schedule.id)}
                                                                     className="flex items-center justify-center bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
                                                                 >
                                                                     {loadingCoworkers && coworkersData?.current_schedule?.id === schedule.id ? (
@@ -260,7 +260,7 @@ export default function EmployeeDashboard() {
                                                                 </button>
 
                                                                 <button
-                                                                    onClick={() => fetchSameShiftEmployees(schedule.id)}
+                                                                    onClick={() => fetchSameDayEmployees(schedule.id)}
                                                                     className="flex items-center justify-center bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-md text-xs sm:text-sm font-medium shadow-md transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-800"
                                                                 >
                                                                     {loadingCoworkers && coworkersData?.current_schedule?.id === schedule.id ? (
@@ -289,48 +289,55 @@ export default function EmployeeDashboard() {
                                                         <td colSpan="7" className="px-3 py-4 sm:px-6 sm:py-4">
                                                             <div className="space-y-3">
                                                                 <h3 className="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200">
-                                                                    Rekan Kerja di Shift yang Sama:
+                                                                    Rekan Kerja di Hari yang Sama (Section: {coworkersData.current_schedule.section_name}):
                                                                 </h3>
-                                                                {coworkersData.coworkers.length > 0 ? (
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                                                        {coworkersData.coworkers.map((coworker) => (
-                                                                            <div key={coworker.id} className={`p-3 rounded-lg border-l-4 ${coworker.status === 'accepted' ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-700' :
-                                                                                    coworker.status === 'rejected' ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-700' :
-                                                                                        'border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-700'
-                                                                                }`}>
-                                                                                <div className="flex items-center space-x-3">
-                                                                                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                                                                                        <span className="text-indigo-600 dark:text-indigo-300 font-medium">
-                                                                                            {coworker.employee.name.charAt(0)}
-                                                                                        </span>
+                                                                {Object.entries(coworkersData.shiftGroups).map(([shiftId, shiftGroup]) => (
+                                                                    <div key={shiftId} className="mb-6">
+                                                                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                                                            Shift: {shiftGroup.shift_name} ({shiftGroup.start_time} - {shiftGroup.end_time})
+                                                                        </h4>
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                                            {shiftGroup.employees.length > 0 ? (
+                                                                                shiftGroup.employees.map((coworker) => (
+                                                                                    <div key={coworker.id} className={`p-3 rounded-lg border-l-4 ${coworker.status === 'accepted' ? 'border-green-500 bg-green-50 dark:bg-green-900 dark:border-green-700' :
+                                                                                            coworker.status === 'rejected' ? 'border-red-500 bg-red-50 dark:bg-red-900 dark:border-red-700' :
+                                                                                                'border-yellow-500 bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-700'
+                                                                                        }`}>
+                                                                                        <div className="flex items-center space-x-3">
+                                                                                            <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                                                                                <span className="text-indigo-600 dark:text-indigo-300 font-medium">
+                                                                                                    {coworker.employee.name.charAt(0)}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                                <p className="font-medium text-gray-800 dark:text-gray-100">
+                                                                                                    {coworker.employee.name}
+                                                                                                    <span className="ml-2 text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded-full">
+                                                                                                        {coworker.sub_section}
+                                                                                                    </span>
+                                                                                                </p>
+                                                                                                <p className="text-xs text-gray-500 dark:text-gray-400">NIK: {coworker.employee.nik}</p>
+                                                                                                <p className={`text-xs ${coworker.status === 'accepted' ? 'text-green-600 dark:text-green-400' :
+                                                                                                        coworker.status === 'rejected' ? 'text-red-600 dark:text-red-400' :
+                                                                                                            'text-yellow-600 dark:text-yellow-400'
+                                                                                                    }`}>
+                                                                                                    Status: {coworker.status === 'accepted' ? 'Diterima' : coworker.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
+                                                                                                </p>
+                                                                                                {coworker.status === 'rejected' && coworker.rejection_reason && (
+                                                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                                                                        Alasan: "{coworker.rejection_reason}"
+                                                                                                    </p>
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
                                                                                     </div>
-                                                                                    <div>
-                                                                                        <p className="font-medium text-gray-800 dark:text-gray-100">
-                                                                                            {coworker.employee.name}
-                                                                                            <span className="ml-2 text-xs px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded-full">
-                                                                                                {coworker.sub_section}
-                                                                                            </span>
-                                                                                        </p>
-                                                                                        <p className="text-xs text-gray-500 dark:text-gray-400">NIK: {coworker.employee.nik}</p>
-                                                                                        <p className={`text-xs ${coworker.status === 'accepted' ? 'text-green-600 dark:text-green-400' :
-                                                                                                coworker.status === 'rejected' ? 'text-red-600 dark:text-red-400' :
-                                                                                                    'text-yellow-600 dark:text-yellow-400'
-                                                                                            }`}>
-                                                                                            Status: {coworker.status === 'accepted' ? 'Diterima' : coworker.status === 'rejected' ? 'Ditolak' : 'Menunggu'}
-                                                                                        </p>
-                                                                                        {coworker.status === 'rejected' && coworker.rejection_reason && (
-                                                                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                                                                Alasan: "{coworker.rejection_reason}"
-                                                                                            </p>
-                                                                                        )}
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        ))}
+                                                                                ))
+                                                                            ) : (
+                                                                                <p className="text-gray-500 dark:text-gray-400 text-sm">Tidak ada rekan kerja di shift ini</p>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
-                                                                ) : (
-                                                                    <p className="text-gray-500 dark:text-gray-400 text-sm">Tidak ada rekan kerja yang ditemukan untuk shift ini</p>
-                                                                )}
+                                                                ))}
                                                             </div>
                                                         </td>
                                                     </tr>

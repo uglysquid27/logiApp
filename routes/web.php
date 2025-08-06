@@ -94,17 +94,23 @@ Route::middleware(['auth:employee', 'prevent.back'])
     ->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         Route::get('/license', [LicenseVerificationController::class, 'showForm'])->name('license');
+        
+        // Schedule routes
         Route::post('/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('schedule.respond');
-        Route::get('/schedule/{schedule}/same-shift', [EmployeeDashboardController::class, 'sameShiftEmployees'])
-            ->name('schedule.same-shift');
+        Route::get('/schedule/{schedule}/same-day', [EmployeeDashboardController::class, 'sameDayEmployees'])
+            ->name('schedule.same-day'); // Changed from 'employee.schedule.same-day'
+        
+        // Old same-shift route (you can remove this if not used anymore)
+        // Route::get('/schedule/{schedule}/same-shift', [EmployeeDashboardController::class, 'sameShiftEmployees'])
+        //     ->name('schedule.same-shift');
+        
+        // Other routes
         Route::resource('permits', PermitController::class);
         Route::post('/operator-license', [LicenseVerificationController::class, 'store']);
         Route::get('/employees/{employee}/edit', [EmployeeProfileController::class, 'edit'])
             ->name('employees.edit');
-
         Route::put('/employees/{employee}', [EmployeeProfileController::class, 'update'])
             ->name('employees.update');
-
         Route::put('/employees/{employee}/password', [EmployeeProfileController::class, 'updatePassword'])
             ->name('employees.password.update');
     });

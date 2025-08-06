@@ -36,49 +36,61 @@ class EmployeeDashboardController extends Controller
         ]);
     }
 
-    public function sameShiftEmployees(Schedule $schedule)
+    public function sameDayEmployees(Schedule $schedule)
     {
         $employee = Auth::guard('employee')->user();
         
         // Verify schedule ownership
         abort_unless($schedule->employee_id === $employee->id, 403);
     
-        // Get the current sub-section
-        $currentSubSection = $schedule->subSection;
-    
-        // Determine if we should include both Penandaan and Putway
-        $includeBoth = in_array($currentSubSection->name, ['Penandaan', 'Putway']);
-    
+        // Get the current section
+        $currentSection = $schedule->subSection->section;
+        
+        // Get all schedules for the same day and section
+        $schedules = Schedule::with(['employee', 'subSection', 'manPowerRequest.shift'])
+            ->whereHas('subSection', function($q) use ($currentSection) {
+                $q->where('section_id', $currentSection->id);
+            })
+            ->whereDate('date', $schedule->date)
+            ->where('employee_id', '!=', $employee->id)
+            ->get();
+            
+        // Group by shift
+        $shiftGroups = [];
+        
+        foreach ($schedules as $s) {
+            $shiftId = $s->manPowerRequest->shift_id;
+            
+            if (!isset($shiftGroups[$shiftId])) {
+                $shiftGroups[$shiftId] = [
+                    'shift_name' => $s->manPowerRequest->shift->name,
+                    'start_time' => $s->manPowerRequest->start_time,
+                    'end_time' => $s->manPowerRequest->end_time,
+                    'employees' => []
+                ];
+            }
+            
+            $shiftGroups[$shiftId]['employees'][] = [
+                'id' => $s->id,
+                'employee' => $s->employee,
+                'sub_section' => $s->subSection->name,
+                'status' => $s->status,
+                'rejection_reason' => $s->rejection_reason
+            ];
+        }
+        
+        // Sort shifts by start time
+        uasort($shiftGroups, function($a, $b) {
+            return strcmp($a['start_time'], $b['start_time']);
+        });
+
         return response()->json([
             'current_schedule' => [
                 'id' => $schedule->id,
                 'status' => $schedule->status,
-                'sub_section' => $currentSubSection->name
+                'section_name' => $currentSection->name
             ],
-            'coworkers' => Schedule::with(['employee', 'subSection'])
-                ->whereHas('manPowerRequest', function($q) use ($schedule) {
-                    $q->where('shift_id', $schedule->manPowerRequest->shift_id);
-                })
-                ->whereDate('date', $schedule->date)
-                ->where(function($query) use ($schedule, $includeBoth, $currentSubSection) {
-                    $query->where('sub_section_id', $schedule->sub_section_id);
-                    
-                    if ($includeBoth) {
-                        $query->orWhereHas('subSection', function($q) use ($currentSubSection) {
-                            $q->where('section_id', $currentSubSection->section_id)
-                              ->whereIn('name', ['Penandaan', 'Putway']);
-                        });
-                    }
-                })
-                ->where('employee_id', '!=', $employee->id)
-                ->get()
-                ->map(fn($s) => [
-                    'id' => $s->id,
-                    'employee' => $s->employee,
-                    'sub_section' => $s->subSection->name, // Include sub-section name
-                    'status' => $s->status,
-                    'rejection_reason' => $s->rejection_reason
-                ])
+            'shiftGroups' => $shiftGroups
         ]);
     }
 
