@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState } from 'react'; // useState tidak digunakan di sini, tapi saya biarkan karena mungkin ada logika lain yang membutuhkannya
 
 export default function UpdateProfileInformationForm({ employee, className }) {
     const { data, setData, put, errors, processing, recentlySuccessful } = useForm({
@@ -22,17 +22,17 @@ export default function UpdateProfileInformationForm({ employee, className }) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
+                <h2 className="text-lg font-semibold text-gray-800">Informasi Pribadi</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                    Update your personal details and contact information.
+                    Perbarui detail pribadi dan informasi kontak Anda.
                 </p>
             </header>
 
             <form onSubmit={submit} className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                {/* Name */}
+                {/* Nama Lengkap */}
                 <div className="sm:col-span-6">
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                        Full Name <span className="text-red-500">*</span>
+                        Nama Lengkap <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1">
                         <input
@@ -47,10 +47,10 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                 </div>
 
-                {/* Gender */}
+                {/* Jenis Kelamin */}
                 <div className="sm:col-span-3">
                     <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
-                        Gender <span className="text-red-500">*</span>
+                        Jenis Kelamin <span className="text-red-500">*</span>
                     </label>
                     <div className="mt-1">
                         <select
@@ -60,18 +60,18 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
                             required
                         >
-                            <option value="">Select Gender</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
+                            <option value="">Pilih Jenis Kelamin</option>
+                            <option value="male">Laki-laki</option>
+                            <option value="female">Perempuan</option>
                         </select>
                     </div>
                     {errors.gender && <p className="mt-1 text-sm text-red-600">{errors.gender}</p>}
                 </div>
 
-                {/* Birth Date */}
+                {/* Tanggal Lahir */}
                 <div className="sm:col-span-3">
                     <label htmlFor="birth_date" className="block text-sm font-medium text-gray-700">
-                        Birth Date
+                        Tanggal Lahir
                     </label>
                     <div className="mt-1">
                         <input
@@ -85,10 +85,10 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.birth_date && <p className="mt-1 text-sm text-red-600">{errors.birth_date}</p>}
                 </div>
 
-                {/* Birth Place */}
+                {/* Tempat Lahir */}
                 <div className="sm:col-span-3">
                     <label htmlFor="birth_place" className="block text-sm font-medium text-gray-700">
-                        Birth Place
+                        Alamat KTP
                     </label>
                     <div className="mt-1">
                         <input
@@ -102,10 +102,10 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.birth_place && <p className="mt-1 text-sm text-red-600">{errors.birth_place}</p>}
                 </div>
 
-                {/* Religion */}
+                {/* Agama */}
                 <div className="sm:col-span-3">
                     <label htmlFor="religion" className="block text-sm font-medium text-gray-700">
-                        Religion
+                        Agama
                     </label>
                     <div className="mt-1">
                         <select
@@ -114,21 +114,21 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                             onChange={(e) => setData('religion', e.target.value)}
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
                         >
-                            <option value="">Select Religion</option>
+                            <option value="">Pilih Agama</option>
                             <option value="islam">Islam</option>
-                            <option value="christianity">Christianity</option>
-                            <option value="hinduism">Hinduism</option>
-                            <option value="buddhism">Buddhism</option>
-                            <option value="other">Other</option>
+                            <option value="christianity">Kristen</option>
+                            <option value="hinduism">Hindu</option>
+                            <option value="buddhism">Buddha</option>
+                            <option value="other">Lainnya</option>
                         </select>
                     </div>
                     {errors.religion && <p className="mt-1 text-sm text-red-600">{errors.religion}</p>}
                 </div>
 
-                {/* Marital Status */}
+                {/* Status Pernikahan */}
                 <div className="sm:col-span-3">
                     <label htmlFor="marital_status" className="block text-sm font-medium text-gray-700">
-                        Marital Status
+                        Status Pernikahan
                     </label>
                     <div className="mt-1">
                         <select
@@ -137,20 +137,20 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                             onChange={(e) => setData('marital_status', e.target.value)}
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
                         >
-                            <option value="">Select Status</option>
-                            <option value="single">Single</option>
-                            <option value="married">Married</option>
-                            <option value="divorced">Divorced</option>
-                            <option value="widowed">Widowed</option>
+                            <option value="">Pilih Status</option>
+                            <option value="single">Belum Menikah</option>
+                            <option value="married">Menikah</option>
+                            <option value="divorced">Bercerai</option>
+                            <option value="widowed">Janda/Duda</option>
                         </select>
                     </div>
                     {errors.marital_status && <p className="mt-1 text-sm text-red-600">{errors.marital_status}</p>}
                 </div>
 
-                {/* Phone */}
+                {/* Nomor Telepon */}
                 <div className="sm:col-span-3">
                     <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                        Phone Number
+                        Nomor Telepon
                     </label>
                     <div className="mt-1">
                         <input
@@ -164,10 +164,10 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                 </div>
 
-                {/* City */}
+                {/* Kota */}
                 <div className="sm:col-span-3">
                     <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                        City
+                        Kota
                     </label>
                     <div className="mt-1">
                         <input
@@ -181,10 +181,10 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
                 </div>
 
-                {/* Address */}
+                {/* Alamat */}
                 <div className="sm:col-span-6">
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                        Address
+                        Alamat
                     </label>
                     <div className="mt-1">
                         <textarea
@@ -205,7 +205,7 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                                 <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                Profile updated successfully
+                                Profil berhasil diperbarui
                             </div>
                         )}
                     </div>
@@ -214,10 +214,11 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                         className="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-medium text-sm text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm"
                         disabled={processing}
                     >
-                        {processing ? 'Saving...' : 'Save Changes'}
+                        {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
                     </button>
                 </div>
             </form>
         </section>
     );
 }
+

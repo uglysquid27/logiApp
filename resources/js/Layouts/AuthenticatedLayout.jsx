@@ -62,9 +62,9 @@ export default function AuthenticatedLayout({ header, children }) {
     const isEmployee = user && typeof user.nik === 'string' && user.nik.trim() !== '';
 
     return (
-        <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 dark:bg-gray-900 font-sans antialiased ">
+        <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 font-sans antialiased transition-all duration-300">
             {/* Mobile Header */}
-            <header className="md:hidden bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center sticky top-0 z-40">
+            <header className="md:hidden bg-transparent backdrop-blur-sm shadow-lg p-4 flex justify-between items-center sticky top-0 z-40 transition-colors duration-300">
                 <button
                     onClick={toggleMobileMenu}
                     className="text-gray-600 dark:text-gray-300 focus:outline-none transition-transform hover:scale-110"
@@ -75,11 +75,11 @@ export default function AuthenticatedLayout({ header, children }) {
                     </svg>
                 </button>
 
-                <label htmlFor="theme-toggle-checkbox" className="flex items-center cursor-pointer transition-transform hover:scale-110" title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+                <label htmlFor="theme-toggle-checkbox-mobile" className="flex items-center cursor-pointer transition-transform hover:scale-110" title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
                     <div className="relative">
                         <input
                             type="checkbox"
-                            id="theme-toggle-checkbox"
+                            id="theme-toggle-checkbox-mobile"
                             className="sr-only"
                             checked={isDark}
                             onChange={toggleDarkMode}
@@ -93,7 +93,7 @@ export default function AuthenticatedLayout({ header, children }) {
             </header>
 
             {/* Sidebar */}
-            <aside className={`fixed md:sticky top-0 inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 w-64 bg-gray-100 dark:bg-gray-800 flex flex-col shadow-lg pt-4 md:pt-8 z-40 transition-transform duration-300 ease-in-out h-screen`}>
+            <aside className={`fixed md:sticky top-0 inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 w-64 bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg flex flex-col shadow-2xl pt-4 md:pt-8 z-40 transition-transform duration-300 ease-in-out h-screen border-r border-gray-200 dark:border-gray-700 rounded-r-3xl`}>
                 {/* Close button for mobile */}
                 <div className="md:hidden flex justify-end p-4">
                     <button
@@ -114,61 +114,61 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
 
                 {/* Main Navigation */}
-                <nav className="flex flex-col flex-grow p-3 space-y-2 overflow-y-auto">
+                <nav className="flex flex-col flex-grow p-3 space-y-2 overflow-y-auto custom-scrollbar">
                     {isAdmin && (
                         <>
                             <NavLink
                                 href={route('dashboard')}
                                 active={route().current('dashboard')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Admin Dashboard</span>
                             </NavLink>
                             <NavLink
                                 href={route('manpower-requests.index')}
                                 active={route().current('manpower-requests.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Manpower Requests</span>
                             </NavLink>
                             <NavLink
                                 href={route('schedules.index')}
                                 active={route().current('schedules.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Schedules</span>
                             </NavLink>
                             <NavLink
                                 href={route('employee-attendance.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Employees</span>
                             </NavLink>
                             <NavLink
                                 href={route('employee-blind-test.index')}
                                 active={route().current('employee-blind-test.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Blind Tests</span>
                             </NavLink>
                             <NavLink
                                 href={route('shifts.index')}
                                 active={route().current('shifts.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Shifts</span>
                             </NavLink>
                             <NavLink
                                 href={route('admin.permits.index')}
                                 active={route().current('admin.permits.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Admin Permits</span>
                             </NavLink>
                             <NavLink
                                 href={route('lunch-coupons.index')}
                                 active={route().current('lunch-coupons.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Lunch Coupons</span>
                             </NavLink>
@@ -180,28 +180,28 @@ export default function AuthenticatedLayout({ header, children }) {
                             <NavLink
                                 href={route('employee.dashboard')}
                                 active={route().current('employee.dashboard')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Employee Dashboard</span>
                             </NavLink>
                             <NavLink
                                 href={route('employee.permits.index')}
                                 active={route().current('employee.permits.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Leave Requests</span>
                             </NavLink>
                             <NavLink
                                 href={route('employee.license')}
                                 active={route().current('employee.permits.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">SIO Input</span>
                             </NavLink>
                             <NavLink
                                 href={route('employee.employees.edit', { employee: auth.user.id })}
                                 active={route().current('employee.employees.edit')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
                                 <span className="block">Edit Profile</span>
                             </NavLink>
@@ -214,13 +214,13 @@ export default function AuthenticatedLayout({ header, children }) {
                         href={route('logout')}
                         method="post"
                         as="button"
-                        className="w-full text-left py-4 md:py-6 px-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-700 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-all duration-200 ease-in-out"
+                        className="w-full text-left py-4 md:py-6 px-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-red-100/50 dark:hover:bg-red-700/50 hover:text-red-600 dark:hover:text-red-400 rounded-lg transition-all duration-200 ease-in-out"
                     >
                         Log Out
                     </Link>
                 </nav>
 
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex flex-col space-y-3 transition-colors duration-200">
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm flex flex-col space-y-3 transition-colors duration-200 rounded-br-3xl">
                     <div className="font-semibold text-gray-800 dark:text-gray-100">{user ? user.name : 'Memuat...'}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">{user ? (user.email || user.nik) : ''}</div>
                 </div>
@@ -229,24 +229,24 @@ export default function AuthenticatedLayout({ header, children }) {
             {/* Overlay for mobile menu */}
             {isMobileMenuOpen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden transition-opacity duration-300 ease-in-out opacity-100"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300 ease-in-out opacity-100"
                     onClick={toggleMobileMenu}
                 ></div>
             )}
 
             <div className="flex-1 flex flex-col">
                 {header && (
-                    <header className="hidden md:block bg-gray-100 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-4 sticky top-0 z-50">
-                        <div className="p-4 shadow-md rounded-md bg-white dark:bg-gray-800 flex justify-between items-center transition-colors duration-200">
+                    <header className="hidden md:block bg-transparent px-4 sm:px-6 lg:px-8 pt-4 sticky top-0 z-50">
+                        <div className="p-4 shadow-xl rounded-2xl bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm flex justify-between items-center transition-colors duration-200 border border-white/50 dark:border-gray-700/50">
                             <div className="flex-grow">
                                 {header}
                             </div>
 
-                            <label htmlFor="theme-toggle-checkbox" className="flex items-center cursor-pointer ml-4 transition-transform hover:scale-110" title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+                            <label htmlFor="theme-toggle-checkbox-desktop" className="flex items-center cursor-pointer ml-4 transition-transform hover:scale-110" title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}>
                                 <div className="relative">
                                     <input
                                         type="checkbox"
-                                        id="theme-toggle-checkbox"
+                                        id="theme-toggle-checkbox-desktop"
                                         className="sr-only"
                                         checked={isDark}
                                         onChange={toggleDarkMode}
@@ -260,7 +260,7 @@ export default function AuthenticatedLayout({ header, children }) {
                         </div>
                     </header>
                 )}
-                <main className="flex-1 bg-gray-100 dark:bg-gray-900 overflow-y-auto p-4 md:px-6 md:py-4 transition-all duration-200">
+                <main className="flex-1 overflow-y-auto p-4 md:px-6 md:py-4 transition-all duration-200">
                     {children}
                 </main>
             </div>
