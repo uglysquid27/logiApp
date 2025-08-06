@@ -59,6 +59,7 @@ export default function AuthenticatedLayout({ header, children }) {
     };
 
     const isAdmin = user && user.role === 'admin';
+    const isUser = user && user.role === 'user';
     const isEmployee = user && typeof user.nik === 'string' && user.nik.trim() !== '';
 
     return (
@@ -115,68 +116,80 @@ export default function AuthenticatedLayout({ header, children }) {
 
                 {/* Main Navigation */}
                 <nav className="flex flex-col flex-grow p-3 space-y-2 overflow-y-auto custom-scrollbar">
-                    {isAdmin && (
+                    {/* Admin/User Links - Shown at the top */}
+                    {(isAdmin || isUser) && (
                         <>
                             <NavLink
                                 href={route('dashboard')}
                                 active={route().current('dashboard')}
                                 className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
                             >
-                                <span className="block">Admin Dashboard</span>
+                                <span className="block">{isAdmin ? 'Admin Dashboard' : 'User Dashboard'}</span>
                             </NavLink>
-                            <NavLink
-                                href={route('manpower-requests.index')}
-                                active={route().current('manpower-requests.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
-                            >
-                                <span className="block">Manpower Requests</span>
-                            </NavLink>
-                            <NavLink
-                                href={route('schedules.index')}
-                                active={route().current('schedules.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
-                            >
-                                <span className="block">Schedules</span>
-                            </NavLink>
-                            <NavLink
-                                href={route('employee-attendance.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
-                            >
-                                <span className="block">Employees</span>
-                            </NavLink>
-                            <NavLink
-                                href={route('employee-blind-test.index')}
-                                active={route().current('employee-blind-test.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
-                            >
-                                <span className="block">Blind Tests</span>
-                            </NavLink>
-                            <NavLink
-                                href={route('shifts.index')}
-                                active={route().current('shifts.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
-                            >
-                                <span className="block">Shifts</span>
-                            </NavLink>
-                            <NavLink
-                                href={route('admin.permits.index')}
-                                active={route().current('admin.permits.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
-                            >
-                                <span className="block">Admin Permits</span>
-                            </NavLink>
-                            <NavLink
-                                href={route('lunch-coupons.index')}
-                                active={route().current('lunch-coupons.index')}
-                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
-                            >
-                                <span className="block">Lunch Coupons</span>
-                            </NavLink>
+                            
+                            {(isAdmin || isUser) && (
+                                <>
+                                    <NavLink
+                                        href={route('manpower-requests.index')}
+                                        active={route().current('manpower-requests.index')}
+                                        className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                    >
+                                        <span className="block">Manpower Requests</span>
+                                    </NavLink>
+                                    <NavLink
+                                        href={route('schedules.index')}
+                                        active={route().current('schedules.index')}
+                                        className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                    >
+                                        <span className="block">Schedules</span>
+                                    </NavLink>
+                                    <NavLink
+                                        href={route('employee-attendance.index')}
+                                        className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                    >
+                                        <span className="block">Employees</span>
+                                    </NavLink>
+                                    <NavLink
+                                        href={route('employee-blind-test.index')}
+                                        active={route().current('employee-blind-test.index')}
+                                        className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                    >
+                                        <span className="block">Blind Tests</span>
+                                    </NavLink>
+                                    {isAdmin && (
+                                        <>
+                                            <NavLink
+                                                href={route('shifts.index')}
+                                                active={route().current('shifts.index')}
+                                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                            >
+                                                <span className="block">Shifts</span>
+                                            </NavLink>
+                                            <NavLink
+                                                href={route('admin.permits.index')}
+                                                active={route().current('admin.permits.index')}
+                                                className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                            >
+                                                <span className="block">Admin Permits</span>
+                                            </NavLink>
+                                        </>
+                                    )}
+                                    <NavLink
+                                        href={route('lunch-coupons.index')}
+                                        active={route().current('lunch-coupons.index')}
+                                        className="block py-3 md:py-4 px-3 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-indigo-50/50 dark:hover:bg-gray-700/50 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 ease-in-out text-center md:text-left"
+                                    >
+                                        <span className="block">Lunch Coupons</span>
+                                    </NavLink>
+                                </>
+                            )}
                         </>
                     )}
 
-                    {!isAdmin && (
+                    {/* Employee Links - Shown at the bottom */}
+                    {!isAdmin && !isUser && (
                         <>
+                            <div className="flex-grow"></div> {/* Pushes employee links to the bottom */}
                             <NavLink
                                 href={route('employee.dashboard')}
                                 active={route().current('employee.dashboard')}

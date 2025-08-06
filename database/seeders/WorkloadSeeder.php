@@ -35,8 +35,8 @@ class WorkloadSeeder extends Seeder
                 Workload::create([
                     'employee_id' => $employee->id, // Auto-incremented ID
                     'nik' => $data[0],             // NIK from CSV
-                    'week' => null,                // Set to null
-                    'total_work_count' => null,    // Set to null
+                    'week' => 0,                // Set to null
+                    'total_work_count' => 0,    // Set to null
                     'workload_point' => 165,       // Fixed value
                 ]);
             }

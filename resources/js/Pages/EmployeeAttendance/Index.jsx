@@ -3,9 +3,10 @@ import { usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Index() {
-  const { employees: paginationData, filters, uniqueStatuses, uniqueSections, uniqueSubSections } = usePage().props;
+  const { employees: paginationData, filters, uniqueStatuses, uniqueSections, uniqueSubSections, auth } = usePage().props;
   const employees = paginationData.data;
   const paginationLinks = paginationData.links;
+  const isUser = auth.user?.role === 'user';
 
   // State for filters
   const [filterStatus, setFilterStatus] = useState(filters.status || 'All');
@@ -13,7 +14,6 @@ export default function Index() {
   const [filterSubSection, setFilterSubSection] = useState(filters.sub_section || 'All');
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [processing, setProcessing] = useState(false);
-
 
   // Helper function for status badges
   const getStatusClasses = (status) => {
@@ -128,72 +128,74 @@ export default function Index() {
           <div className="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg overflow-hidden">
             <div className="p-4 sm:p-6 md:p-8 text-gray-900 dark:text-gray-100">
               <div className="flex flex-col justify-between gap-4 mb-6">
-  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
-    <h1 className="font-bold text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">
-      Ringkasan Penugasan Pegawai
-    </h1>
-    
-    {/* Buttons container - will wrap on mobile */}
-    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-      {/* Add Employee - full width on mobile, auto on larger */}
-      <Link
-        href={route('employee-attendance.create')}
-        className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-        </svg>
-        <span className="whitespace-nowrap">Add Employee</span>
-      </Link>
-      
-      {/* Inactive Employees - full width on mobile, auto on larger */}
-      <Link
-        href={route('employee-attendance.inactive')}
-        className="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4m10 6l6-6m-6-6l6 6" />
-        </svg>
-        <span className="whitespace-nowrap">Inactive Employees</span>
-      </Link>
-      
-      {/* Reset All Statuses - full width on mobile, auto on larger */}
-      <button
-        onClick={handleResetAllStatuses}
-        className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
-        <span className="whitespace-nowrap">Reset All Statuses</span>
-      </button>
-      
-      {/* Update Workloads - full width on mobile, auto on larger */}
-      <button
-        onClick={handleUpdateWorkloads}
-        disabled={processing}
-        className={`flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto ${processing ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
-      >
-        {processing ? (
-          <>
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span>Processing...</span>
-          </>
-        ) : (
-          <>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span className="whitespace-nowrap">Update Workloads</span>
-          </>
-        )}
-      </button>
-    </div>
-  </div>
-</div>
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                  <h1 className="font-bold text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">
+                    Ringkasan Penugasan Pegawai
+                  </h1>
+                  
+                  {/* Buttons container - will wrap on mobile */}
+                  {!isUser && (
+                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                      {/* Add Employee - full width on mobile, auto on larger */}
+                      <Link
+                        href={route('employee-attendance.create')}
+                        className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span className="whitespace-nowrap">Add Employee</span>
+                      </Link>
+                      
+                      {/* Inactive Employees - full width on mobile, auto on larger */}
+                      <Link
+                        href={route('employee-attendance.inactive')}
+                        className="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4m10 6l6-6m-6-6l6 6" />
+                        </svg>
+                        <span className="whitespace-nowrap">Inactive Employees</span>
+                      </Link>
+                      
+                      {/* Reset All Statuses - full width on mobile, auto on larger */}
+                      <button
+                        onClick={handleResetAllStatuses}
+                        className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span className="whitespace-nowrap">Reset All Statuses</span>
+                      </button>
+                      
+                      {/* Update Workloads - full width on mobile, auto on larger */}
+                      <button
+                        onClick={handleUpdateWorkloads}
+                        disabled={processing}
+                        className={`flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto ${processing ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
+                      >
+                        {processing ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Processing...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span className="whitespace-nowrap">Update Workloads</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               {/* Mobile Filters */}
               <div className="sm:hidden space-y-3 mb-4">
@@ -416,18 +418,22 @@ export default function Index() {
                               View License
                             </Link>
                           )}
-                          <Link
-                            href={route('employee-attendance.edit', employee.id)}
-                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
-                          >
-                            Edit
-                          </Link>
-                          <Link
-                            href={route('employee-attendance.deactivate', employee.id)}
-                            className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
-                          >
-                            Deactivate
-                          </Link>
+                          {!isUser && (
+                            <>
+                              <Link
+                                href={route('employee-attendance.edit', employee.id)}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                              >
+                                Edit
+                              </Link>
+                              <Link
+                                href={route('employee-attendance.deactivate', employee.id)}
+                                className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
+                              >
+                                Deactivate
+                              </Link>
+                            </>
+                          )}
                           <Link
                             href={route('ratings.create', employee.id)}
                             className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
@@ -456,14 +462,16 @@ export default function Index() {
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Workload</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cuti</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                      {!isUser && (
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                      )}
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {employees.length === 0 ? (
                       <tr>
-                        <td colSpan="13" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
+                        <td colSpan={isUser ? 12 : 13} className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
                           Tidak ada data pegawai dengan kriteria filter atau pencarian ini.
                         </td>
                       </tr>
@@ -498,40 +506,42 @@ export default function Index() {
                                 {employee.cuti}
                               </span>
                             </td>
-                            <td className="px-4 py-4 text-sm whitespace-nowrap">
-                              <div className="flex space-x-2">
-                                <Link
-                                  href={route('employee-attendance.edit', employee.id)}
-                                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                  title="Edit"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                </Link>
-                                <Link
-                                  href={route('employee-attendance.deactivate', employee.id)}
-                                  className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
-                                  title="Deactivate"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                                  </svg>
-                                </Link>
-                                {employee.sub_sections && employee.sub_sections.some(ss => ss.section?.name === 'Operator Forklift') && (
+                            {!isUser && (
+                              <td className="px-4 py-4 text-sm whitespace-nowrap">
+                                <div className="flex space-x-2">
                                   <Link
-                                    href={route('employees.license.show', employee.id)}
-                                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                    title="View License"
+                                    href={route('employee-attendance.edit', employee.id)}
+                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                    title="Edit"
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                   </Link>
-                                )}
-                              </div>
-                            </td>
+                                  <Link
+                                    href={route('employee-attendance.deactivate', employee.id)}
+                                    className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+                                    title="Deactivate"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                  </Link>
+                                  {employee.sub_sections && employee.sub_sections.some(ss => ss.section?.name === 'Operator Forklift') && (
+                                    <Link
+                                      href={route('employees.license.show', employee.id)}
+                                      className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                      title="View License"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                      </svg>
+                                    </Link>
+                                  )}
+                                </div>
+                              </td>
+                            )}
                             <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 {employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}
@@ -554,7 +564,7 @@ export default function Index() {
                       <td colSpan="6" className="px-4 py-3 text-right">Total Penugasan:</td>
                       <td className="px-4 py-3 text-center">{totalWorkCount}</td>
                       <td className="px-4 py-3 text-center">{totalWeeklyWorkCount}</td>
-                      <td colSpan="5" className="px-4 py-3 text-center"></td>
+                      <td colSpan={isUser ? 4 : 5} className="px-4 py-3 text-center"></td>
                     </tr>
                   </tbody>
                 </table>

@@ -8,46 +8,55 @@ use App\Models\User;
 
 class UserSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        // Admin user
+        // Admin user (original)
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@example.com',
+            'email' => 'admin@arina.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
-        // LO User
+        // New Admin users for Arina
         User::create([
-            'name' => 'LO User',
-            'email' => 'lo@example.com',
+            'name' => 'Hadi',
+            'email' => 'hadi@arina.com',
             'password' => Hash::make('password'),
-            'role' => 'lo',
+            'role' => 'admin',
         ]);
 
-        // SPV 1 (with admin role)
         User::create([
-            'name' => 'SPV 1',
-            'email' => 'spv1@example.com',
+            'name' => 'Lukman',
+            'email' => 'lukman@arina.com',
             'password' => Hash::make('password'),
-            'role' => 'admin', // SPV has admin role as requested
+            'role' => 'admin',
         ]);
 
-        // SPV 2 (with admin role)
         User::create([
-            'name' => 'SPV 2',
-            'email' => 'spv2@example.com',
+            'name' => 'Redia',
+            'email' => 'redia@arina.com',
             'password' => Hash::make('password'),
-            'role' => 'admin', // SPV has admin role as requested
+            'role' => 'admin',
         ]);
 
-        // Regular user
         User::create([
-            'name' => 'Regular User',
-            'email' => 'user@example.com',
+            'name' => 'Subchan',
+            'email' => 'subchan@arina.com',
             'password' => Hash::make('password'),
-            'role' => 'user', // Regular user has user role
+            'role' => 'admin',
+        ]);
+
+        // New Regular user for Arina
+        User::create([
+            'name' => 'Otsuka1',
+            'email' => 'user1@otsuka.com',
+            'password' => Hash::make('password'),
+            'role' => 'user',
         ]);
     }
 }
+

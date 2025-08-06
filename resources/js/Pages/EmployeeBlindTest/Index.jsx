@@ -3,8 +3,9 @@ import { usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Index() {
-  const { employees, filters } = usePage().props;
+  const { employees, filters, auth } = usePage().props;
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
+  const isUser = auth.user?.role === 'user';
 
   const handleSearchChange = (e) => {
     const newSearchTerm = e.target.value;
@@ -54,13 +55,15 @@ export default function Index() {
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">NIK</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Test Date</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Result</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                      {!isUser && (
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {employees.data.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
+                        <td colSpan={isUser ? 4 : 5} className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
                           No employees found with the current search criteria.
                         </td>
                       </tr>
@@ -88,7 +91,7 @@ export default function Index() {
                                 '-'
                               )}
                             </td>
-                            <td className="px-4 py-4 text-sm whitespace-nowrap">
+                            {!isUser && (
                               <td className="px-4 py-4 text-sm whitespace-nowrap">
                                 <div className="flex space-x-2">
                                   <Link
@@ -112,7 +115,7 @@ export default function Index() {
                                   </Link>
                                 </div>
                               </td>
-                            </td>
+                            )}
                           </tr>
                         );
                       })

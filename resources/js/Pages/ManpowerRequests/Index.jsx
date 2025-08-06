@@ -8,6 +8,7 @@ export default function Index({ requests, auth }) {
   const { post, delete: destroy } = useForm({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState(null);
+  const user = auth && auth.user ? auth.user : null;
 
   // Status styling configuration
   const statusClasses = {
@@ -17,7 +18,7 @@ export default function Index({ requests, auth }) {
     revision_requested: 'bg-purple-100 text-purple-700',
   };
 
-  const getStatusClasses = (status) => 
+  const getStatusClasses = (status) =>
     statusClasses[status?.toLowerCase()] || 'bg-blue-100 text-blue-700';
 
   // Format date with error handling
@@ -62,9 +63,9 @@ export default function Index({ requests, auth }) {
 
   const confirmDelete = () => {
     if (!requestToDelete) return;
-    
+
     // console.log('Attempting to delete request ID:', requestToDelete);
-    
+
     destroy(route('manpower-requests.destroy', requestToDelete), {
       preserveScroll: true,
       onSuccess: () => {
@@ -85,12 +86,14 @@ export default function Index({ requests, auth }) {
   const manpowerRequests = requests?.data || [];
   const paginationLinks = requests?.links || [];
 
+  const isUser = user && user.role === 'user';
+
   return (
     <AuthenticatedLayout
       user={auth.user}
       header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manpower Requests</h2>}
     >
-      <ToastContainer 
+      <ToastContainer
         position="top-right"
         autoClose={5000}
         hideProgressBar={false}
@@ -127,13 +130,14 @@ export default function Index({ requests, auth }) {
                   <EmptyState />
                 ) : (
                   manpowerRequests.map((req) => (
-                    <MobileRequestCard 
+                    <MobileRequestCard
                       key={req.id}
                       request={req}
                       onDelete={handleDeleteRequest}
                       onRevision={handleRequestRevision}
                       getStatusClasses={getStatusClasses}
                       formatDate={formatDate}
+                      isUser={user?.role === 'user'}
                     />
                   ))
                 )}
@@ -141,13 +145,14 @@ export default function Index({ requests, auth }) {
 
               {/* Desktop View */}
               <div className="hidden sm:block overflow-x-auto">
-                <DesktopRequestTable 
+                <DesktopRequestTable
                   requests={manpowerRequests}
                   onDelete={handleDeleteRequest}
                   onRevision={handleRequestRevision}
                   getStatusClasses={getStatusClasses}
                   formatDate={formatDate}
                   isEmpty={manpowerRequests.length === 0}
+                  isUser={user?.role === 'user'}
                 />
               </div>
 
@@ -164,7 +169,7 @@ export default function Index({ requests, auth }) {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 transition-opacity"></div>
-          
+
           <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50">
@@ -228,7 +233,7 @@ function EmptyState() {
   );
 }
 
-function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, formatDate }) {
+function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, formatDate, isUser }) {
   return (
     <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
       <div className="flex justify-between items-start mb-2">
@@ -278,15 +283,17 @@ function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, fo
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </Link>
-            <Link
-              href={route('manpower-requests.fulfill', request.id)}
-              className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
-              title="Fulfill"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </Link>
+            {!isUser && (
+              <Link
+                href={route('manpower-requests.fulfill', request.id)}
+                className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+                title="Fulfill"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </Link>
+            )}
             <button
               onClick={() => onDelete(request.id)}
               className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
@@ -352,7 +359,7 @@ function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, fo
   );
 }
 
-function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses, formatDate, isEmpty }) {
+function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses, formatDate, isEmpty, isUser }) {
   return (
     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
       <thead className="bg-gray-50 dark:bg-gray-700">
@@ -403,7 +410,11 @@ function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses,
               </td>
               <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-center">
                 {req.status === 'pending' && (
-                  <PendingActions requestId={req.id} onDelete={onDelete} />
+                  <PendingActions
+                    requestId={req.id}
+                    onDelete={onDelete}
+                    isUser={isUser}
+                  />
                 )}
                 {req.status === 'fulfilled' && (
                   <FulfilledActions requestId={req.id} onDelete={onDelete} onRevision={onRevision} />
@@ -423,7 +434,7 @@ function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses,
   );
 }
 
-function PendingActions({ requestId, onDelete }) {
+function PendingActions({ requestId, onDelete, isUser }) {
   return (
     <div className="flex justify-center items-center space-x-2">
       <Link
@@ -435,15 +446,17 @@ function PendingActions({ requestId, onDelete }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
         </svg>
       </Link>
-      <Link
-        href={route('manpower-requests.fulfill', requestId)}
-        className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
-        title="Fulfill"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-      </Link>
+      {!isUser && (
+        <Link
+          href={route('manpower-requests.fulfill', requestId)}
+          className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+          title="Fulfill"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </Link>
+      )}
       <button
         onClick={() => onDelete(requestId)}
         className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
@@ -460,7 +473,7 @@ function PendingActions({ requestId, onDelete }) {
 function FulfilledActions({ requestId, onDelete, onRevision }) {
   return (
     <div className="flex justify-center items-center space-x-2">
-      <span 
+      <span
         className="p-2 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 inline-flex items-center"
         title="Fulfilled"
       >
@@ -522,11 +535,10 @@ function Pagination({ links }) {
         <Link
           key={index}
           href={link.url || '#'}
-          className={`px-3 py-1 rounded-md text-sm transition-all ${
-            link.active
-              ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-          } ${!link.url && 'pointer-events-none opacity-50'}`}
+          className={`px-3 py-1 rounded-md text-sm transition-all ${link.active
+            ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            } ${!link.url && 'pointer-events-none opacity-50'}`}
           dangerouslySetInnerHTML={{ __html: link.label }}
           preserveScroll
         />
