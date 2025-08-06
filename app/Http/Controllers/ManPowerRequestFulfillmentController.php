@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\ManPowerRequest;
 use App\Models\Schedule;
+use App\Models\Workload;
+use App\Models\BlindTest;
+use App\Models\Rating;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -48,7 +51,7 @@ class ManPowerRequestFulfillmentController extends Controller
             })
             ->where('cuti', 'no')
             ->whereNotIn('id', array_diff($scheduledEmployeeIdsOnRequestDate, $currentScheduledIds))
-            ->with(['subSections.section'])
+            ->with(['subSections.section', 'workloads', 'blindTests', 'ratings'])
             ->withCount(['schedules' => function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
             }])
@@ -82,6 +85,19 @@ class ManPowerRequestFulfillmentController extends Controller
                 elseif ($rating === 0) { $workingDayWeight = 165; }
                 else { $workingDayWeight = 0; }
 
+                // Calculate workload points (sum of latest week)
+                $workloadPoints = $employee->workloads->sortByDesc('week')->first()->workload_point ?? 0;
+                
+                // Get latest blind test result (convert to points: Pass=3, Fail=0)
+                $blindTestResult = $employee->blindTests->sortByDesc('test_date')->first()->result ?? 'Fail';
+                $blindTestPoints = $blindTestResult === 'Pass' ? 3 : 0;
+                
+                // Get average rating (from ratings table)
+                $averageRating = $employee->ratings->avg('rating') ?? 0;
+                
+                // Calculate total score (higher is better)
+                $totalScore = ($workloadPoints * 0.5) + ($blindTestPoints * 0.3) + ($averageRating * 0.2);
+
                 $subSectionsData = $employee->subSections->map(function($subSection) {
                     return [
                         'id' => $subSection->id,
@@ -106,14 +122,20 @@ class ManPowerRequestFulfillmentController extends Controller
                     'working_day_weight' => $workingDayWeight,
                     'total_assigned_hours' => $totalWorkingHours,
                     'sub_sections_data' => $subSectionsData,
+                    'workload_points' => $workloadPoints,
+                    'blind_test_points' => $blindTestPoints,
+                    'average_rating' => $averageRating,
+                    'total_score' => $totalScore,
                 ];
             });
 
         $sortEmployees = function ($employees) {
-            return $employees->sortBy(function($employee) {
-                return $employee['type'] === 'bulanan' ? 0 : 1;
-            })->sortBy('working_day_weight')
-            ->values();
+            return $employees->sortByDesc('total_score')
+                ->sortByDesc(function($employee) {
+                    return $employee['type'] === 'bulanan' ? 1 : 0;
+                })
+                ->sortBy('working_day_weight')
+                ->values();
         };
 
         $sameSubSectionEligible = $eligibleEmployees->filter(fn($employee) =>

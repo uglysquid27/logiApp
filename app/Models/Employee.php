@@ -101,6 +101,10 @@ class Employee extends Authenticatable
         return $this->hasMany(Rating::class);
     }
 
+    public function workloads()
+    {
+        return $this->hasMany(Workload::class);
+    }
     public function workload()
     {
         return $this->hasMany(Workload::class);

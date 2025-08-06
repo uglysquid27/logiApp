@@ -71,51 +71,46 @@ export default function Fulfill({
     }, [sameSubSectionEmployees, otherSubSectionEmployees, currentScheduledIds]);
 
     // Sort employees with gender priority
-    const allSortedEligibleEmployees = useMemo(() => {
-        const sorted = [...combinedEmployees].sort((a, b) => {
-            // 1. Currently scheduled employees first
-            if (a.isCurrentlyScheduled !== b.isCurrentlyScheduled) {
-                return a.isCurrentlyScheduled ? -1 : 1;
-            }
+    // Sort employees with gender priority
+const allSortedEligibleEmployees = useMemo(() => {
+    const sorted = [...combinedEmployees].sort((a, b) => {
+        // 1. Currently scheduled employees first
+        if (a.isCurrentlyScheduled !== b.isCurrentlyScheduled) {
+            return a.isCurrentlyScheduled ? -1 : 1;
+        }
 
-            // 2. Priority to matching gender requirements
-            const aGenderMatch = request.male_count > 0 && a.gender === 'male' ? 0 :
-                request.female_count > 0 && a.gender === 'female' ? 0 : 1;
-            const bGenderMatch = request.male_count > 0 && b.gender === 'male' ? 0 :
-                request.female_count > 0 && b.gender === 'female' ? 0 : 1;
-            if (aGenderMatch !== bGenderMatch) return aGenderMatch - bGenderMatch;
+        // 2. Priority to matching gender requirements
+        const aGenderMatch = request.male_count > 0 && a.gender === 'male' ? 0 :
+            request.female_count > 0 && a.gender === 'female' ? 0 : 1;
+        const bGenderMatch = request.male_count > 0 && b.gender === 'male' ? 0 :
+            request.female_count > 0 && b.gender === 'female' ? 0 : 1;
+        if (aGenderMatch !== bGenderMatch) return aGenderMatch - bGenderMatch;
 
-            // 3. Same sub-section first
-            const aIsSame = a.subSections.some(ss => ss.id === request.sub_section_id);
-            const bIsSame = b.subSections.some(ss => ss.id === request.sub_section_id);
-            if (aIsSame !== bIsSame) return aIsSame ? -1 : 1;
+        // 3. Same sub-section first
+        const aIsSame = a.subSections.some(ss => ss.id === request.sub_section_id);
+        const bIsSame = b.subSections.some(ss => ss.id === request.sub_section_id);
+        if (aIsSame !== bIsSame) return aIsSame ? -1 : 1;
 
-            // 4. Bulanan before harian
-            if (a.type === 'bulanan' && b.type === 'harian') return -1;
-            if (a.type === 'harian' && b.type === 'bulanan') return 1;
+        // 4. Higher total score first (new priority)
+        if (a.total_score !== b.total_score) {
+            return b.total_score - a.total_score;
+        }
 
-            // 5. For harian, higher weight first
-            if (a.type === 'harian' && b.type === 'harian') {
-                return b.working_day_weight - a.working_day_weight;
-            }
+        // 5. Bulanan before harian
+        if (a.type === 'bulanan' && b.type === 'harian') return -1;
+        if (a.type === 'harian' && b.type === 'bulanan') return 1;
 
-            // 6. Higher rating first
-            return b.calculated_rating - a.calculated_rating;
-        });
+        // 6. For harian, higher weight first
+        if (a.type === 'harian' && b.type === 'harian') {
+            return b.working_day_weight - a.working_day_weight;
+        }
 
-        // console.log('Sorted Employees:', sorted.map(e => ({
-        //     id: e.id,
-        //     name: e.name,
-        //     gender: e.gender,
-        //     type: e.type,
-        //     subSection: e.subSections?.[0]?.name,
-        //     rating: e.calculated_rating,
-        //     weight: e.working_day_weight,
-        //     isCurrentlyScheduled: e.isCurrentlyScheduled
-        // })));
+        // 7. Higher rating first (fallback)
+        return b.calculated_rating - a.calculated_rating;
+    });
 
-        return sorted;
-    }, [combinedEmployees, request.sub_section_id, request.male_count, request.female_count]);
+    return sorted;
+}, [combinedEmployees, request.sub_section_id, request.male_count, request.female_count]);
 
     // Initial selection - prioritize currently scheduled employees
     const initialSelectedIds = useMemo(() => {
