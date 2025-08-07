@@ -80,8 +80,8 @@ const allSortedEligibleEmployees = useMemo(() => {
         // 2. Calculate total score as simple sum of components
         const aTotalScore = (a.workload_points || 0) + (a.blind_test_points || 0) + (a.average_rating || 0);
         const bTotalScore = (b.workload_points || 0) + (b.blind_test_points || 0) + (b.average_rating || 0);
-        console.log(aTotalScore)
-        console.log(bTotalScore)
+        // console.log(aTotalScore)
+        // console.log(bTotalScore)
 
         // 3. Priority to matching gender requirements
         const aGenderMatch = request.male_count > 0 && a.gender === 'male' ? 0 :

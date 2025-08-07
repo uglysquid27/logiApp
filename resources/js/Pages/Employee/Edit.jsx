@@ -9,10 +9,10 @@ export default function Edit({ employee }) {
             header={
                 <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-gray-800">
-                        Employee Profile
+                        Profil Karyawan
                     </h2>
                     <div className="text-sm text-gray-500">
-                        Employee ID: {employee.nik || 'N/A'}
+                        Nomer Induk Karyawan: {employee.nik || 'N/A'}
                     </div>
                 </div>
             }

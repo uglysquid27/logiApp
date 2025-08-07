@@ -19,30 +19,19 @@ export default {
 
     // Pastikan properti safelist ditambahkan di sini
     safelist: [
-        // Kelas border untuk garis atas kartu
-        'border-indigo-500',
-        'border-yellow-500',
-        'border-green-500',
-        'border-blue-500',
-        'border-purple-500',
-        'border-pink-500',
-
-        // Kelas warna teks untuk angka
-        'text-indigo-600',
-        'text-yellow-600',
-        'text-green-600',
-        'text-blue-600',
-        'text-purple-600',
-        'text-pink-600',
-
-        // Kelas warna teks untuk dark mode
-        'dark:text-indigo-400',
-        'dark:text-yellow-400',
-        'dark:text-green-400',
-        'dark:text-blue-400',
-        'dark:text-purple-400',
-        'dark:text-pink-400',
-    ],
+    'border-indigo-500',
+    'text-indigo-600',
+    'border-yellow-500',
+    'text-yellow-600',
+    'border-green-500',
+    'text-green-600',
+    'border-blue-500',
+    'text-blue-600',
+    'border-purple-500',
+    'text-purple-600',
+    'border-pink-500',
+    'text-pink-600',
+  ],
 
     darkMode: 'class',
     theme: {

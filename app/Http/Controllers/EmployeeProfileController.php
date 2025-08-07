@@ -14,16 +14,14 @@ class EmployeeProfileController extends Controller
         return inertia('Employee/Edit', [
             'employee' => $employee->only([
                 'id',
+                'email',
                 'nik',
                 'name',
                 'gender',
                 'birth_date',
-                'birth_place',
                 'address',
-                'city',
                 'religion',
                 'phone',
-                'marital_status',
             ]),
         ]);
     }
@@ -34,24 +32,21 @@ class EmployeeProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:male,female'],
             'birth_date' => ['nullable', 'date'],
-            'birth_place' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:500'],
             'city' => ['nullable', 'string', 'max:100'],
             'religion' => ['nullable', 'string', 'max:50'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'marital_status' => ['nullable', 'in:single,married,divorced,widowed'],
         ]);
 
         $employee->update($request->only([
             'name',
             'gender',
             'birth_date',
-            'birth_place',
+            'email',
             'address',
-            'city',
             'religion',
             'phone',
-            'marital_status',
         ]));
 
         return redirect()->route('employee.employees.edit', $employee)

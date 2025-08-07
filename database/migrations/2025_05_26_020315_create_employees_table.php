@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id();
             $table->string('nik')->unique();
             $table->string('name');
+            $table->string('email')->unique()->nullable();
             $table->string('password');
             $table->enum('type', ['harian', 'bulanan']);
             $table->enum('status', ['available', 'assigned', 'on leave', 'deactivated'])->default('available');
@@ -20,12 +21,9 @@ return new class extends Migration {
             
             // Personal data fields
             $table->date('birth_date')->nullable();
-            $table->string('birth_place')->nullable();
             $table->text('address')->nullable();
-            $table->string('city')->nullable();
             $table->string('religion')->nullable();
             $table->string('phone')->nullable();
-            $table->enum('marital_status', ['single', 'married', 'divorced', 'widowed'])->nullable();
             
             $table->string('deactivation_reason')->nullable();
             $table->text('deactivation_notes')->nullable();

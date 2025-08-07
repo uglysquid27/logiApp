@@ -1,17 +1,16 @@
 import { useForm } from '@inertiajs/react';
-import { useState } from 'react'; // useState tidak digunakan di sini, tapi saya biarkan karena mungkin ada logika lain yang membutuhkannya
 
 export default function UpdateProfileInformationForm({ employee, className }) {
     const { data, setData, put, errors, processing, recentlySuccessful } = useForm({
         name: employee.name,
+        email: employee.email,
+        type: employee.type,
         gender: employee.gender,
+        group: employee.group,
         birth_date: employee.birth_date,
-        birth_place: employee.birth_place,
         address: employee.address,
-        city: employee.city,
         religion: employee.religion,
         phone: employee.phone,
-        marital_status: employee.marital_status,
     });
 
     const submit = (e) => {
@@ -22,14 +21,30 @@ export default function UpdateProfileInformationForm({ employee, className }) {
     return (
         <section className={className}>
             <header>
-                <h2 className="text-lg font-semibold text-gray-800">Informasi Pribadi</h2>
+                <h2 className="text-lg font-semibold text-gray-800">Profil Karyawan</h2>
                 <p className="mt-1 text-sm text-gray-600">
-                    Perbarui detail pribadi dan informasi kontak Anda.
+                    Perbarui informasi pribadi dan detail kontak karyawan.
                 </p>
             </header>
 
             <form onSubmit={submit} className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                {/* Nama Lengkap */}
+                {/* NIK */}
+                <div className="sm:col-span-3">
+                    <label htmlFor="nik" className="block text-sm font-medium text-gray-700">
+                        NIK <span className="text-red-500">*</span>
+                    </label>
+                    <div className="mt-1">
+                        <input
+                            id="nik"
+                            type="text"
+                            value={employee.nik}
+                            readOnly
+                            className="block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 sm:text-sm py-2 px-3"
+                        />
+                    </div>
+                </div>
+
+                {/* Name */}
                 <div className="sm:col-span-6">
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                         Nama Lengkap <span className="text-red-500">*</span>
@@ -47,7 +62,44 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                 </div>
 
-                {/* Jenis Kelamin */}
+                {/* Email */}
+                <div className="sm:col-span-6">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                        Email
+                    </label>
+                    <div className="mt-1">
+                        <input
+                            id="email"
+                            type="email"
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                        />
+                    </div>
+                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                </div>
+
+                {/* Type */}
+                <div className="sm:col-span-3">
+                    <label htmlFor="type" className="block text-sm font-medium text-gray-700">
+                        Tipe Karyawan <span className="text-red-500">*</span>
+                    </label>
+                    <div className="mt-1">
+                        <select
+                            id="type"
+                            value={data.type}
+                            onChange={(e) => setData('type', e.target.value)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            required
+                        >
+                            <option value="harian">Harian</option>
+                            <option value="bulanan">Bulanan</option>
+                        </select>
+                    </div>
+                    {errors.type && <p className="mt-1 text-sm text-red-600">{errors.type}</p>}
+                </div>
+
+                {/* Gender */}
                 <div className="sm:col-span-3">
                     <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
                         Jenis Kelamin <span className="text-red-500">*</span>
@@ -60,7 +112,6 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
                             required
                         >
-                            <option value="">Pilih Jenis Kelamin</option>
                             <option value="male">Laki-laki</option>
                             <option value="female">Perempuan</option>
                         </select>
@@ -68,7 +119,7 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.gender && <p className="mt-1 text-sm text-red-600">{errors.gender}</p>}
                 </div>
 
-                {/* Tanggal Lahir */}
+                {/* Birth Date */}
                 <div className="sm:col-span-3">
                     <label htmlFor="birth_date" className="block text-sm font-medium text-gray-700">
                         Tanggal Lahir
@@ -85,103 +136,7 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.birth_date && <p className="mt-1 text-sm text-red-600">{errors.birth_date}</p>}
                 </div>
 
-                {/* Tempat Lahir */}
-                <div className="sm:col-span-3">
-                    <label htmlFor="birth_place" className="block text-sm font-medium text-gray-700">
-                        Alamat KTP
-                    </label>
-                    <div className="mt-1">
-                        <input
-                            id="birth_place"
-                            type="text"
-                            value={data.birth_place}
-                            onChange={(e) => setData('birth_place', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
-                        />
-                    </div>
-                    {errors.birth_place && <p className="mt-1 text-sm text-red-600">{errors.birth_place}</p>}
-                </div>
-
-                {/* Agama */}
-                <div className="sm:col-span-3">
-                    <label htmlFor="religion" className="block text-sm font-medium text-gray-700">
-                        Agama
-                    </label>
-                    <div className="mt-1">
-                        <select
-                            id="religion"
-                            value={data.religion}
-                            onChange={(e) => setData('religion', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
-                        >
-                            <option value="">Pilih Agama</option>
-                            <option value="islam">Islam</option>
-                            <option value="christianity">Kristen</option>
-                            <option value="hinduism">Hindu</option>
-                            <option value="buddhism">Buddha</option>
-                            <option value="other">Lainnya</option>
-                        </select>
-                    </div>
-                    {errors.religion && <p className="mt-1 text-sm text-red-600">{errors.religion}</p>}
-                </div>
-
-                {/* Status Pernikahan */}
-                <div className="sm:col-span-3">
-                    <label htmlFor="marital_status" className="block text-sm font-medium text-gray-700">
-                        Status Pernikahan
-                    </label>
-                    <div className="mt-1">
-                        <select
-                            id="marital_status"
-                            value={data.marital_status}
-                            onChange={(e) => setData('marital_status', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
-                        >
-                            <option value="">Pilih Status</option>
-                            <option value="single">Belum Menikah</option>
-                            <option value="married">Menikah</option>
-                            <option value="divorced">Bercerai</option>
-                            <option value="widowed">Janda/Duda</option>
-                        </select>
-                    </div>
-                    {errors.marital_status && <p className="mt-1 text-sm text-red-600">{errors.marital_status}</p>}
-                </div>
-
-                {/* Nomor Telepon */}
-                <div className="sm:col-span-3">
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                        Nomor Telepon
-                    </label>
-                    <div className="mt-1">
-                        <input
-                            id="phone"
-                            type="tel"
-                            value={data.phone}
-                            onChange={(e) => setData('phone', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
-                        />
-                    </div>
-                    {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-                </div>
-
-                {/* Kota */}
-                <div className="sm:col-span-3">
-                    <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                        Kota
-                    </label>
-                    <div className="mt-1">
-                        <input
-                            id="city"
-                            type="text"
-                            value={data.city}
-                            onChange={(e) => setData('city', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
-                        />
-                    </div>
-                    {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
-                </div>
-
-                {/* Alamat */}
+                {/* Address */}
                 <div className="sm:col-span-6">
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700">
                         Alamat
@@ -196,6 +151,40 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                         />
                     </div>
                     {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
+                </div>
+
+                {/* Religion */}
+                <div className="sm:col-span-3">
+                    <label htmlFor="religion" className="block text-sm font-medium text-gray-700">
+                        Agama
+                    </label>
+                    <div className="mt-1">
+                        <input
+                            id="religion"
+                            type="text"
+                            value={data.religion}
+                            onChange={(e) => setData('religion', e.target.value)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                        />
+                    </div>
+                    {errors.religion && <p className="mt-1 text-sm text-red-600">{errors.religion}</p>}
+                </div>
+
+                {/* Phone */}
+                <div className="sm:col-span-3">
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                        Nomor Telepon
+                    </label>
+                    <div className="mt-1">
+                        <input
+                            id="phone"
+                            type="tel"
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                        />
+                    </div>
+                    {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                 </div>
 
                 <div className="sm:col-span-6 flex items-center justify-between pt-4 border-t border-gray-200">
@@ -221,4 +210,3 @@ export default function UpdateProfileInformationForm({ employee, className }) {
         </section>
     );
 }
-

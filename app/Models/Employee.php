@@ -18,6 +18,7 @@ class Employee extends Authenticatable
 
     protected $fillable = [
         'name',
+        'email',
         'password',
         'nik',
         'type',
@@ -30,12 +31,9 @@ class Employee extends Authenticatable
         'gender',
         'group',
         'birth_date',
-        'birth_place',
         'address',
-        'city',
         'religion',
         'phone',
-        'marital_status',
     ];
 
     protected $hidden = [

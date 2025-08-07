@@ -189,7 +189,6 @@ export default function AuthenticatedLayout({ header, children }) {
                     {/* Employee Links - Shown at the bottom */}
                     {!isAdmin && !isUser && (
                         <>
-                            <div className="flex-grow"></div> {/* Pushes employee links to the bottom */}
                             <NavLink
                                 href={route('employee.dashboard')}
                                 active={route().current('employee.dashboard')}

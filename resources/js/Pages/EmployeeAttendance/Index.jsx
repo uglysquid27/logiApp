@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import Modal from '@/Components/Modal';
 
 export default function Index() {
   const { employees: paginationData, filters, uniqueStatuses, uniqueSections, uniqueSubSections, auth } = usePage().props;
@@ -14,6 +15,8 @@ export default function Index() {
   const [filterSubSection, setFilterSubSection] = useState(filters.sub_section || 'All');
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [processing, setProcessing] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [showWorkloadModal, setShowWorkloadModal] = useState(false);
 
   // Helper function for status badges
   const getStatusClasses = (status) => {
@@ -72,10 +75,7 @@ export default function Index() {
 
   // Handle update workloads
   const handleUpdateWorkloads = async () => {
-    if (!confirm('Are you sure you want to update all workload data? This will scan all schedules and may take some time.')) {
-      return;
-    }
-
+    setShowWorkloadModal(false);
     setProcessing(true);
     try {
       await router.post(route('employee-attendance.update-workloads'), {}, {
@@ -101,20 +101,18 @@ export default function Index() {
 
   // Handle reset all statuses
   const handleResetAllStatuses = () => {
-    if (confirm('Apakah Anda yakin ingin mereset status semua karyawan menjadi "available" dan "cuti: no"? Tindakan ini tidak dapat dibatalkan.')) {
-      router.post(route('employee-attendance.reset-all-statuses'), {}, {
-        onSuccess: () => {
-          alert('Semua status karyawan berhasil direset.');
-          router.reload({ preserveState: false, preserveScroll: false });
-        },
-        onError: (errors) => {
-          console.error('Gagal mereset status karyawan:', errors);
-          alert('Terjadi kesalahan saat mereset status karyawan. Silakan coba lagi.');
-        },
-      });
-    }
+    setShowResetModal(false);
+    router.post(route('employee-attendance.reset-all-statuses'), {}, {
+      onSuccess: () => {
+        alert('Semua status karyawan berhasil direset.');
+        router.reload({ preserveState: false, preserveScroll: false });
+      },
+      onError: (errors) => {
+        console.error('Gagal mereset status karyawan:', errors);
+        alert('Terjadi kesalahan saat mereset status karyawan. Silakan coba lagi.');
+      },
+    });
   };
-
   return (
     <AuthenticatedLayout
       header={
@@ -123,6 +121,62 @@ export default function Index() {
         </h2>
       }
     >
+
+      <Modal show={showResetModal} onClose={() => setShowResetModal(false)}>
+        <div className="p-6">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            Reset All Employee Statuses
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            Apakah Anda yakin ingin mereset status semua karyawan menjadi "available" dan "cuti: no"?
+            Tindakan ini tidak dapat dibatalkan dan akan mempengaruhi semua karyawan dalam sistem.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setShowResetModal(false)}
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleResetAllStatuses}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              Confirm Reset
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal show={showWorkloadModal} onClose={() => setShowWorkloadModal(false)}>
+        <div className="p-6">
+          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+            Update All Workload Data
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+            This will scan all schedules and update workload data for all employees.
+            The process may take some time depending on the number of employees and schedules.
+            Are you sure you want to proceed?
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={() => setShowWorkloadModal(false)}
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleUpdateWorkloads}
+              disabled={processing}
+              className={`px-4 py-2 text-white rounded-md transition-colors ${processing ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
+            >
+              {processing ? 'Processing...' : 'Confirm Update'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+
       <div className="py-4 sm:py-8">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
           <div className="bg-white dark:bg-gray-800 shadow-lg sm:rounded-lg overflow-hidden">
@@ -132,7 +186,7 @@ export default function Index() {
                   <h1 className="font-bold text-gray-700 dark:text-gray-300 text-xl sm:text-2xl">
                     Ringkasan Penugasan Pegawai
                   </h1>
-                  
+
                   {/* Buttons container - will wrap on mobile */}
                   {!isUser && (
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -146,7 +200,7 @@ export default function Index() {
                         </svg>
                         <span className="whitespace-nowrap">Add Employee</span>
                       </Link>
-                      
+
                       {/* Inactive Employees - full width on mobile, auto on larger */}
                       <Link
                         href={route('employee-attendance.inactive')}
@@ -157,10 +211,10 @@ export default function Index() {
                         </svg>
                         <span className="whitespace-nowrap">Inactive Employees</span>
                       </Link>
-                      
+
                       {/* Reset All Statuses - full width on mobile, auto on larger */}
                       <button
-                        onClick={handleResetAllStatuses}
+                        onClick={() => setShowResetModal(true)}
                         className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -168,10 +222,10 @@ export default function Index() {
                         </svg>
                         <span className="whitespace-nowrap">Reset All Statuses</span>
                       </button>
-                      
+
                       {/* Update Workloads - full width on mobile, auto on larger */}
                       <button
-                        onClick={handleUpdateWorkloads}
+                        onClick={() => setShowWorkloadModal(true)}
                         disabled={processing}
                         className={`flex items-center justify-center gap-2 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto ${processing ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
                       >
@@ -462,9 +516,9 @@ export default function Index() {
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Workload</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cuti</th>
-                      {!isUser && (
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                      )}
+
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+
                       <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
                     </tr>
                   </thead>
@@ -506,42 +560,52 @@ export default function Index() {
                                 {employee.cuti}
                               </span>
                             </td>
-                            {!isUser && (
-                              <td className="px-4 py-4 text-sm whitespace-nowrap">
-                                <div className="flex space-x-2">
-                                  <Link
-                                    href={route('employee-attendance.edit', employee.id)}
-                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                    title="Edit"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                  </Link>
-                                  <Link
-                                    href={route('employee-attendance.deactivate', employee.id)}
-                                    className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
-                                    title="Deactivate"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                                    </svg>
-                                  </Link>
-                                  {employee.sub_sections && employee.sub_sections.some(ss => ss.section?.name === 'Operator Forklift') && (
+
+                            <td className="px-4 py-4 text-sm whitespace-nowrap">
+                              <div className="flex space-x-2">
+                                {!isUser && (
+                                  <>
+                                    {/* Edit Link */}
                                     <Link
-                                      href={route('employees.license.show', employee.id)}
-                                      className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                      title="View License"
+                                      href={route('employee-attendance.edit', employee.id)}
+                                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                      title="Edit"
                                     >
                                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                       </svg>
                                     </Link>
-                                  )}
-                                </div>
-                              </td>
-                            )}
+
+                                    {/* Deactivate Link */}
+                                    <Link
+                                      href={route('employee-attendance.deactivate', employee.id)}
+                                      className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+                                      title="Deactivate"
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                      </svg>
+                                    </Link>
+                                  </>
+                                )}
+
+                                {/* View License Link for Operator Forklift */}
+                                {employee.sub_sections?.some(ss => ss.section?.name === 'Operator Forklift') && (
+                                  <Link
+                                    href={route('employees.license.show', employee.id)}
+                                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                    title="View License"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                  </Link>
+                                )}
+                              </div>
+                            </td>
+
+
                             <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                               <div className="flex items-center gap-1">
                                 {employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}

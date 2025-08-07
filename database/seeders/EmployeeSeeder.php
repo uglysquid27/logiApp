@@ -4,39 +4,66 @@ namespace Database\Seeders;
 
 use App\Models\Employee;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class EmployeeSeeder extends Seeder
 {
-    public function run(): void
+    public function run()
     {
-        $filePath = database_path('seeders/data/employees.csv');
-        $csvData = File::get($filePath);
-        $lines = explode(PHP_EOL, $csvData);
+        // Truncate the table first to avoid duplicates
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Employee::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // Process the merged CSV file
+        $csvFile = fopen(database_path('seeders/data/employees_with_contacts.csv'), 'r');
         
-        // Remove header
-        array_shift($lines);
+        // Skip header
+        fgetcsv($csvFile);
         
-        foreach ($lines as $line) {
-            if (empty($line)) continue;
+        $emailCounters = []; // To handle duplicate emails
+        
+        while (($row = fgetcsv($csvFile)) !== false) {
+            $email = !empty($row[5]) ? trim($row[5]) : null;
             
-            $data = str_getcsv($line);
+            // Handle duplicate emails by adding a number suffix
+            if ($email) {
+                if (isset($emailCounters[$email])) {
+                    $emailCounters[$email]++;
+                    $email = str_replace('@', "{$emailCounters[$email]}@", $email);
+                } else {
+                    $emailCounters[$email] = 1;
+                }
+            } else {
+                // Generate a default email if none exists
+                $email = Str::slug($row[1]) . '@example.com';
+            }
             
-            // Skip if data doesn't have enough columns
-            if (count($data) < 4) continue;
-            
-            Employee::create([
-                'nik' => $data[0],
-                'name' => $data[1],
-                'type' => $data[2],
-                'gender' => $data[3],
-                'password' => Hash::make('password123'), // Default password
-                'status' => 'available', // Default status
-                'cuti' => 'no', // Default cuti status
-            ]);
+            try {
+                Employee::create([
+                    'nik' => $row[0], // nik
+                    'name' => $row[1], // name
+                    'email' => $email,
+                    'password' => Hash::make('password'), // Default password
+                    'type' => $row[2], // type
+                    'status' => 'available',
+                    'cuti' => 'no',
+                    'gender' => $row[3], // gender
+                    'group' => !empty($row[4]) ? $row[4] : null, // group
+                    'phone' => !empty($row[6]) ? $row[6] : null, // phone
+                    'address' => !empty($row[7]) ? $row[7] : null, // address
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                // Log any errors (like duplicate emails) and continue
+                \Log::error("Failed to create employee {$row[0]}: {$e->getMessage()}");
+                continue;
+            }
         }
         
-        // Add test employees if needed
+        fclose($csvFile);
     }
 }

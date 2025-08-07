@@ -94,16 +94,16 @@ Route::middleware(['auth:employee', 'prevent.back'])
     ->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         Route::get('/license', [LicenseVerificationController::class, 'showForm'])->name('license');
-        
+
         // Schedule routes
         Route::post('/schedule/{schedule}/respond', [EmployeeDashboardController::class, 'respond'])->name('schedule.respond');
         Route::get('/schedule/{schedule}/same-day', [EmployeeDashboardController::class, 'sameDayEmployees'])
             ->name('schedule.same-day'); // Changed from 'employee.schedule.same-day'
-        
+    
         // Old same-shift route (you can remove this if not used anymore)
         // Route::get('/schedule/{schedule}/same-shift', [EmployeeDashboardController::class, 'sameShiftEmployees'])
         //     ->name('schedule.same-shift');
-        
+    
         // Other routes
         Route::resource('permits', PermitController::class);
         Route::post('/operator-license', [LicenseVerificationController::class, 'store']);
@@ -161,15 +161,15 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
     Route::resource('manpower-requests', ManPowerRequestController::class);
     Route::get('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'create'])
         ->name('manpower-requests.fulfill');
+        Route::get('/manpower-requests/create', [ManPowerRequestController::class, 'create'])
+    ->name('manpower-requests.create');
     Route::post('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'store'])
         ->name('manpower-requests.fulfill.store');
     Route::post('/manpower-requests/{manpower_request}/request-revision', [ManPowerRequestController::class, 'requestRevision'])
         ->name('manpower-requests.request-revision');
     Route::get('/manpower-requests/{manpower_request}/revision', [ManPowerRequestController::class, 'edit'])
         ->name('manpower-requests.revision.edit');
-    Route::delete('/manpower-requests/{manpowerRequest}', [ManPowerRequestController::class, 'destroy'])
-        ->name('manpower-requests.destroy');
-    Route::post('/manpower-requests/check-duplicates', [ManPowerRequestController::class, 'checkDuplicates'])
+    Route::post('/manpower-requests/check-dulicates', [ManPowerRequestController::class, 'checkDuplicates'])
         ->name('manpower-requests.check-duplicates');
 
     // Additional dashboard routes
@@ -183,8 +183,7 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
     Route::get('/dashboard/employee-assignments/filtered', [DashboardController::class, 'getFilteredEmployeeAssignments'])
         ->name('dashboard.employee.assignments.filtered');
 
-    Route::get('/dashboard/schedules/sub-section/{subSectionId}', [DashboardController::class, 'getSchedulesBySubSection'])
-        ->name('dashboard.schedules.bySubSection');
+ 
 
     Route::get('/dashboard/requests/{periodType}/{period}/{status}', [DashboardController::class, 'getManpowerRequestsByPeriod'])
         ->name('dashboard.requests.byPeriod');
