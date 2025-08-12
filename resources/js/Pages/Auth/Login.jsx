@@ -42,15 +42,13 @@ export default function Login({ status, canResetPassword }) {
         <GuestLayout>
             <Head title="Log in" />
 
-            {/* Hapus div ini agar konten login mengisi GuestLayout */}
-            {/* <div className="flex min-h-screen items-center justify-center bg-gray-100"> */}
-            <div className="w-full rounded-lg bg-white p-8 shadow-xl md:max-w-md">
-                <h2 className="mb-6 text-center text-3xl font-bold text-gray-800">
+            <div className="w-full rounded-lg bg-white dark:bg-gray-900 p-8 shadow-xl md:max-w-md">
+                <h2 className="mb-6 text-center text-3xl font-bold text-gray-800 dark:text-gray-100">
                     Selamat Datang Kembali!
                 </h2>
 
                 {status && (
-                    <div className="mb-4 rounded-md bg-green-100 p-3 text-sm font-medium text-green-600">
+                    <div className="mb-4 rounded-md bg-green-100 dark:bg-green-900 p-3 text-sm font-medium text-green-600 dark:text-green-300">
                         {status}
                     </div>
                 )}
@@ -60,7 +58,7 @@ export default function Login({ status, canResetPassword }) {
                         <InputLabel
                             htmlFor="credential"
                             value="Email / NIK"
-                            className="mb-2 text-sm font-semibold text-gray-700"
+                            className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
                         />
 
                         <TextInput
@@ -68,7 +66,7 @@ export default function Login({ status, canResetPassword }) {
                             type="text"
                             name="credential"
                             value={data.credential}
-                            className="block w-full rounded-md border-gray-300 bg-gray-50 p-3 shadow-sm transition duration-200 ease-in-out focus:border-indigo-500 focus:ring-indigo-500"
+                            className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 shadow-sm transition duration-200 ease-in-out focus:border-indigo-500 focus:ring-indigo-500"
                             autoComplete="username"
                             isFocused={true}
                             onChange={(e) => setData('credential', e.target.value)}
@@ -85,7 +83,7 @@ export default function Login({ status, canResetPassword }) {
                         <InputLabel
                             htmlFor="password"
                             value="Password"
-                            className="mb-2 text-sm font-semibold text-gray-700"
+                            className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
                         />
 
                         <TextInput
@@ -93,14 +91,14 @@ export default function Login({ status, canResetPassword }) {
                             type={showPassword ? 'text' : 'password'}
                             name="password"
                             value={data.password}
-                            className="block w-full rounded-md border-gray-300 bg-gray-50 p-3 pr-10 shadow-sm transition duration-200 ease-in-out focus:border-indigo-500 focus:ring-indigo-500"
+                            className="block w-full rounded-md border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-3 pr-10 shadow-sm transition duration-200 ease-in-out focus:border-indigo-500 focus:ring-indigo-500"
                             autoComplete="current-password"
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="Masukkan Password Anda"
                         />
 
                         <span
-                            className="absolute inset-y-0 right-0 top-6 flex cursor-pointer items-center pr-3 text-gray-400"
+                            className="absolute inset-y-0 right-0 top-6 flex cursor-pointer items-center pr-3 text-gray-400 dark:text-gray-500"
                             onClick={toggleShowPassword}
                             role="button"
                             aria-label={showPassword ? "Hide password" : "Show password"}
@@ -122,30 +120,17 @@ export default function Login({ status, canResetPassword }) {
                         {canResetPassword && (
                             <Link
                                 href={route('password.request')}
-                                className="rounded-md text-sm font-medium text-indigo-600 transition-colors duration-200 ease-in-out hover:text-indigo-800 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                className="rounded-md text-sm font-medium text-indigo-600 dark:text-indigo-400 transition-colors duration-200 ease-in-out hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                             >
                                 Lupa password?
                             </Link>
                         )}
-                        {/* <div className="flex items-center">
-                                <label className="flex items-center text-sm font-medium text-gray-700">
-                                    <Checkbox
-                                        name="remember"
-                                        checked={data.remember}
-                                        onChange={(e) => setData('remember', e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <span className="ml-2">
-                                        Ingat saya
-                                    </span>
-                                </label>
-                            </div> */}
                     </div>
 
                     <PrimaryButton
                         className={`w-full rounded-md py-3 font-semibold transition duration-200 ease-in-out flex items-center justify-center ${processing
-                                ? 'cursor-not-allowed bg-indigo-400'
-                                : 'bg-indigo-600 hover:bg-indigo-700'
+                                ? 'cursor-not-allowed bg-indigo-400 dark:bg-indigo-500'
+                                : 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600'
                             }`}
                         disabled={processing}
                     >
@@ -160,7 +145,6 @@ export default function Login({ status, canResetPassword }) {
                     </PrimaryButton>
                 </form>
             </div>
-            {/* </div> */}
         </GuestLayout>
     );
 }

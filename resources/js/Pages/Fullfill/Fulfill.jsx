@@ -18,6 +18,42 @@ export default function Fulfill({
     message,
     auth 
 }) {
+    // Dark mode state
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('darkMode') === 'true' || 
+                   (!localStorage.getItem('darkMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+        return false;
+    });
+
+    // Toggle dark mode
+    const toggleDarkMode = () => {
+        setIsDarkMode(prev => {
+            const newMode = !prev;
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('darkMode', newMode.toString());
+                if (newMode) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+            return newMode;
+        });
+    };
+
+    // Apply dark mode class on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+    }, [isDarkMode]);
+
     // Normalize gender with strict validation
     const normalizeGender = (gender) => {
         if (!gender) {
@@ -333,19 +369,29 @@ export default function Fulfill({
     if (request.status === 'fulfilled' && !request.schedules?.length) {
         return (
             <AuthenticatedLayout
-                header={<h2 className="font-semibold text-gray-800 text-xl">Penuhi Request Man Power</h2>}
+                header={
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-xl">Penuhi Request Man Power</h2>
+                        <button
+                            onClick={toggleDarkMode}
+                            className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                        >
+                            {isDarkMode ? '☀️' : '🌙'}
+                        </button>
+                    </div>
+                }
                 user={auth.user}
             >
-                <div className="bg-white shadow-md mx-auto mt-6 p-4 rounded-lg max-w-4xl text-center">
-                    <p className="mb-3 font-bold text-green-600 text-lg">Permintaan ini sudah terpenuhi!</p>
+                <div className="bg-white dark:bg-gray-800 shadow-md mx-auto mt-6 p-4 rounded-lg max-w-4xl text-center">
+                    <p className="mb-3 font-bold text-green-600 dark:text-green-400 text-lg">Permintaan ini sudah terpenuhi!</p>
                     {request.fulfilled_by && (
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-gray-600 dark:text-gray-300 mb-4">
                             Dipenuhi oleh: {request.fulfilled_by.name} ({request.fulfilled_by.email})
                         </p>
                     )}
                     <button
                         onClick={() => router.visit(route('manpower-requests.index'))}
-                        className="bg-blue-600 hover:bg-blue-700 mt-4 px-4 py-2 rounded-lg text-white"
+                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 mt-4 px-4 py-2 rounded-lg text-white"
                     >
                         Kembali ke Daftar
                     </button>
@@ -358,19 +404,29 @@ export default function Fulfill({
 
     return (
         <AuthenticatedLayout
-            header={<h2 className="font-semibold text-gray-800 text-xl">Penuhi Request Man Power</h2>}
+            header={
+                <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-xl">Penuhi Request Man Power</h2>
+                    <button
+                        onClick={toggleDarkMode}
+                        className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
+                    >
+                        {isDarkMode ? '☀️' : '🌙'}
+                    </button>
+                </div>
+            }
             user={auth.user}
         >
             <div className="mx-auto mt-6 max-w-4xl">
                 <RequestDetails request={request} auth={auth} />
                 
                 {request.status === 'fulfilled' && (
-                    <div className="bg-blue-50 shadow-md mb-6 p-4 rounded-lg border border-blue-200">
-                        <h3 className="mb-3 font-bold text-lg text-blue-800">Informasi Jadwal Saat Ini</h3>
-                        <p className="text-blue-700">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 shadow-md mb-6 p-4 rounded-lg border border-blue-200 dark:border-blue-700">
+                        <h3 className="mb-3 font-bold text-lg text-blue-800 dark:text-blue-300">Informasi Jadwal Saat Ini</h3>
+                        <p className="text-blue-700 dark:text-blue-300">
                             {genderStats.current_scheduled} dari {request.requested_amount} karyawan sudah dijadwalkan sebelumnya.
                         </p>
-                        <p className="text-blue-700 mt-1">
+                        <p className="text-blue-700 dark:text-blue-300 mt-1">
                             Anda dapat mengganti karyawan yang menolak atau membiarkan yang sudah menerima.
                         </p>
                     </div>
@@ -384,14 +440,14 @@ export default function Fulfill({
                 />
 
                 {backendError && (
-                    <div className="bg-red-100 mb-4 p-3 border border-red-400 rounded-lg text-red-700">
+                    <div className="bg-red-100 dark:bg-red-900/20 mb-4 p-3 border border-red-400 dark:border-red-600 rounded-lg text-red-700 dark:text-red-300">
                         <p className="font-semibold">Error:</p>
                         <p>{backendError}</p>
                     </div>
                 )}
 
                 {totalSameSubSection < request.requested_amount && (
-                    <div className="bg-yellow-100 mb-4 p-3 border border-yellow-400 rounded-lg text-yellow-700">
+                    <div className="bg-yellow-100 dark:bg-yellow-900/20 mb-4 p-3 border border-yellow-400 dark:border-yellow-600 rounded-lg text-yellow-700 dark:text-yellow-300">
                         <p>Hanya {totalSameSubSection} karyawan dari sub-bagian yang sama yang tersedia</p>
                     </div>
                 )}

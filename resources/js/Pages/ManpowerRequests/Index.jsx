@@ -2,13 +2,15 @@ import { Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useState } from 'react';
-import SectionGroup from './components/ManpowerRequests/SectionGroup';
+import { useState, useMemo } from 'react';
 
 export default function Index({ requests, auth, sections }) {
   const { post, delete: destroy } = useForm({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+  const [expandedSection, setExpandedSection] = useState(null);
+  const [expandedDate, setExpandedDate] = useState(null);
   const user = auth && auth.user ? auth.user : null;
 
   // Status styling configuration
@@ -62,13 +64,59 @@ export default function Index({ requests, auth, sections }) {
     });
   };
 
-  // Group requests by section
-  const requestsBySection = sections.map(section => ({
-    ...section,
-    requests: (requests?.data || []).filter(req => 
-      req.sub_section?.section_id === section.id
-    )
-  })).filter(section => section.requests.length > 0);
+  // Handle sort request
+  const requestSort = (key) => {
+    let direction = 'desc';
+    if (sortConfig.key === key && sortConfig.direction === 'desc') {
+      direction = 'asc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Sort requests
+  const sortedRequests = useMemo(() => {
+    if (!requests?.data) return [];
+    
+    const sortableItems = [...requests.data];
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [requests, sortConfig]);
+
+  // Group requests by date and section
+  const groupedRequests = useMemo(() => {
+    const groups = {};
+    
+    sortedRequests.forEach(request => {
+      const dateKey = request.date;
+      const sectionId = request.sub_section?.section_id;
+      
+      if (!groups[dateKey]) {
+        groups[dateKey] = {};
+      }
+      
+      if (!groups[dateKey][sectionId]) {
+        const section = sections.find(s => s.id === sectionId);
+        groups[dateKey][sectionId] = {
+          sectionName: section?.name || 'Unknown Section',
+          requests: []
+        };
+      }
+      
+      groups[dateKey][sectionId].requests.push(request);
+    });
+    
+    return groups;
+  }, [sortedRequests, sections]);
 
   const isUser = user && user.role === 'user';
 
@@ -108,22 +156,173 @@ export default function Index({ requests, auth, sections }) {
                 </Link>
               </div>
 
-              {requestsBySection.length === 0 ? (
+              {sortedRequests.length === 0 ? (
                 <EmptyState />
               ) : (
-                <div className="space-y-6">
-                  {requestsBySection.map(section => (
-                    <SectionGroup
-                      key={section.id}
-                      section={section}
-                      requests={section.requests}
-                      formatDate={formatDate}
-                      getStatusClasses={getStatusClasses}
-                      onDelete={handleDeleteRequest}
-                      onRevision={() => {}}
-                      isUser={isUser}
-                    />
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th 
+                          scope="col" 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                          onClick={() => requestSort('date')}
+                        >
+                          <div className="flex items-center">
+                            Date
+                            {sortConfig.key === 'date' && (
+                              <span className="ml-1">
+                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Section
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Total
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Male
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Female
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {Object.entries(groupedRequests).map(([date, sectionsData]) => (
+                        Object.entries(sectionsData).map(([sectionId, sectionData]) => {
+                          const isExpanded = expandedDate === date && expandedSection === sectionId;
+                          const totalRequests = sectionData.requests.length;
+                          const totalWorkers = sectionData.requests.reduce((sum, req) => sum + req.requested_amount, 0);
+                          const totalMale = sectionData.requests.reduce((sum, req) => sum + req.male_count, 0);
+                          const totalFemale = sectionData.requests.reduce((sum, req) => sum + req.female_count, 0);
+
+                          return (
+                            <>
+                              <tr 
+                                key={`${date}-${sectionId}`} 
+                                className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                                onClick={() => {
+                                  if (isExpanded) {
+                                    setExpandedDate(null);
+                                    setExpandedSection(null);
+                                  } else {
+                                    setExpandedDate(date);
+                                    setExpandedSection(sectionId);
+                                  }
+                                }}
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                  {formatDate(date)}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {sectionData.sectionName}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <div className="flex flex-wrap gap-1">
+                                    {Array.from(new Set(sectionData.requests.map(r => r.status))).map(status => (
+                                      <span 
+                                        key={status} 
+                                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(status)}`}
+                                      >
+                                        {status.replace('_', ' ')}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {totalWorkers}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {totalMale}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  {totalFemale}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                  <div className="flex space-x-2">
+                                    <span className="text-blue-600 dark:text-blue-400">
+                                      {totalRequests} request{totalRequests !== 1 ? 's' : ''}
+                                    </span>
+                                  </div>
+                                </td>
+                              </tr>
+                              {isExpanded && (
+                                <tr>
+                                  <td colSpan="7" className="px-6 py-4 bg-gray-50 dark:bg-gray-700">
+                                    <div className="space-y-2">
+                                      {sectionData.requests.map(request => (
+                                        <div key={request.id} className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+                                          <div className="flex justify-between items-center">
+                                            <div>
+                                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(request.status)}`}>
+                                                {request.status.replace('_', ' ')}
+                                              </span>
+                                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                                                {request.sub_section?.name || 'N/A'} - {request.shift?.name || 'N/A'}
+                                              </span>
+                                            </div>
+                                            <div className="flex space-x-2">
+                                              <Link
+                                                href={route('manpower-requests.edit', request.id)}
+                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
+                                              >
+                                                View
+                                              </Link>
+                                              {request.status === 'pending' && !isUser && (
+                                                <Link
+                                                  href={route('manpower-requests.fulfill', request.id)}
+                                                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
+                                                >
+                                                  Fulfill
+                                                </Link>
+                                              )}
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleDeleteRequest(request.id);
+                                                }}
+                                                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
+                                              >
+                                                Delete
+                                              </button>
+                                            </div>
+                                          </div>
+                                          <div className="mt-2 grid grid-cols-3 gap-2 text-sm">
+                                            <div className="text-center">
+                                              <div className="text-gray-500 dark:text-gray-400">Total</div>
+                                              <div>{request.requested_amount}</div>
+                                            </div>
+                                            <div className="text-center">
+                                              <div className="text-gray-500 dark:text-gray-400">Male</div>
+                                              <div>{request.male_count}</div>
+                                            </div>
+                                            <div className="text-center">
+                                              <div className="text-gray-500 dark:text-gray-400">Female</div>
+                                              <div>{request.female_count}</div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </>
+                          );
+                        })
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
 

@@ -46,6 +46,35 @@ export default function RequestForm({
     });
   };
 
+  // Helper function to validate time combinations
+  const validateShiftTimes = (startTime, endTime) => {
+    if (!startTime || !endTime) return { isValid: true, message: '' };
+    
+    // Allow same times (like 00:00:00 to 00:00:00 for continuous shifts)
+    if (startTime === endTime) {
+      return { 
+        isValid: true, 
+        message: 'Shift berlangsung 24 jam penuh',
+        type: 'info'
+      };
+    }
+    
+    const start = new Date(`2000-01-01 ${startTime}`);
+    const end = new Date(`2000-01-01 ${endTime}`);
+    
+    // Handle overnight shifts
+    if (end < start) {
+      end.setDate(end.getDate() + 1);
+      return { 
+        isValid: true, 
+        message: `Shift malam: ${startTime.substring(0, 5)} - ${endTime.substring(0, 5)} (+1 hari)`,
+        type: 'warning'
+      };
+    }
+    
+    return { isValid: true, message: '' };
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -109,11 +138,19 @@ export default function RequestForm({
           const requestedAmount = parseInt(slotData.requested_amount) || 0;
           const showGenderFields = requestedAmount > 0;
           const isDuplicate = duplicateRequests.some(req => req.shift_id == shift.id);
+          
+          // Validate time combination for this shift
+          const timeValidation = validateShiftTimes(slotData.start_time, slotData.end_time);
 
           return (
             <div key={shift.id} className={`p-3 sm:p-4 border ${isDuplicate ? 'border-yellow-500 dark:border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20' : 'border-gray-200 dark:border-gray-700'} rounded-md space-y-3`}>
               <h4 className="font-medium text-gray-700 dark:text-gray-300">
                 {shift.name}
+                {shift.start_time && shift.end_time && (
+                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                    (Default: {shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)})
+                  </span>
+                )}
               </h4>
 
               <div>
@@ -160,6 +197,38 @@ export default function RequestForm({
                     errors={errors.time_slots?.[shift.id] || {}}
                     handleSlotChange={(field, value) => handleSlotChange(shift.id, field, value)}
                   />
+
+                  {/* Display time validation message */}
+                  {timeValidation.message && (
+                    <div className={`border rounded-md p-3 ${
+                      timeValidation.type === 'warning' 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700'
+                        : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    }`}>
+                      <div className="flex">
+                        <div className="flex-shrink-0">
+                          {timeValidation.type === 'warning' ? (
+                            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          ) : (
+                            <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="ml-3">
+                          <p className={`text-sm ${
+                            timeValidation.type === 'warning'
+                              ? 'text-blue-800 dark:text-blue-200'
+                              : 'text-gray-600 dark:text-gray-400'
+                          }`}>
+                            {timeValidation.message}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <GenderFields
                     shift={shift}
