@@ -19,17 +19,20 @@ use App\Models\Employee; // Pastikan ini sudah ada
 
 class ManPowerRequestController extends Controller
 {
-    public function index(): Response
-    {
-        $requests = ManPowerRequest::with(['subSection.section', 'shift'])
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+public function index(): Response
+{
+    $requests = ManPowerRequest::with(['subSection.section', 'shift'])
+        ->orderBy('date', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
 
-        return Inertia::render('ManpowerRequests/Index', [
-            'requests' => $requests,
-        ]);
-    }
+    $sections = Section::with('subSections')->get();
+
+    return Inertia::render('ManpowerRequests/Index', [
+        'requests' => $requests,
+        'sections' => $sections,
+    ]);
+}
 
    public function create(): Response
 {

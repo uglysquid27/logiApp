@@ -3,7 +3,15 @@ import { useState } from 'react';
 import GenderFields from './GenderFields';
 import TimeFields from './TimeFields';
 
-export default function RequestForm({ request, shifts, errors, onChange, onSlotChange }) {
+export default function RequestForm({ 
+  request, 
+  shifts, 
+  errors, 
+  onChange, 
+  onSlotChange, 
+  globalDate = null, 
+  hideDate = false 
+}) {
   const today = new Date().toISOString().split('T')[0];
   const [duplicateRequests, setDuplicateRequests] = useState([]);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
@@ -26,6 +34,18 @@ export default function RequestForm({ request, shifts, errors, onChange, onSlotC
     onSlotChange(shiftId, field, value);
   };
 
+  // Helper function to format date for display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -37,22 +57,44 @@ export default function RequestForm({ request, shifts, errors, onChange, onSlotC
         </div>
       </div>
 
-      <div>
-        <label htmlFor="date" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-          Tanggal Dibutuhkan <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="date"
-          id="date"
-          name="date"
-          value={request.date}
-          onChange={(e) => onChange('date', e.target.value)}
-          min={today}
-          className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.date ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
-          required
-        />
-        {errors.date && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.date}</p>}
-      </div>
+      {/* Date field - only show if not hidden */}
+      {!hideDate && (
+        <div>
+          <label htmlFor="date" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
+            Tanggal Dibutuhkan <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            value={request.date}
+            onChange={(e) => onChange('date', e.target.value)}
+            min={today}
+            className={`mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${errors.date ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100`}
+            required
+          />
+          {errors.date && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.date}</p>}
+        </div>
+      )}
+
+      {/* Show selected date from global date */}
+      {hideDate && globalDate && (
+        <div>
+          <label className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
+            Tanggal Dibutuhkan
+          </label>
+          <div className="mt-1 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-md">
+            <div className="flex items-center">
+              <svg className="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-green-800 dark:text-green-200 font-medium">
+                {formatDateForDisplay(globalDate)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4 mt-4 pt-4 border-t">
         <h3 className="font-medium text-gray-800 dark:text-gray-200 text-lg">

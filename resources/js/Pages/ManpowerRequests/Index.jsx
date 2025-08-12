@@ -3,8 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState } from 'react';
+import SectionGroup from './components/ManpowerRequests/SectionGroup';
 
-export default function Index({ requests, auth }) {
+export default function Index({ requests, auth, sections }) {
   const { post, delete: destroy } = useForm({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState(null);
@@ -36,25 +37,6 @@ export default function Index({ requests, auth }) {
     }
   };
 
-  // Handle revision request
-  const handleRequestRevision = (requestId) => {
-    if (!confirm('Request revision for this manpower request?')) return;
-
-    // console.log('Initiating revision for request:', requestId);
-
-    post(route('manpower-requests.request-revision', requestId), {
-      preserveScroll: true,
-      onSuccess: () => {
-        // console.log('Revision initiated for request:', requestId);
-        window.location.href = route('manpower-requests.revision.edit', requestId);
-      },
-      onError: (errors) => {
-        // console.error('Revision failed:', errors);
-        toast.error('Failed to request revision');
-      }
-    });
-  };
-
   // Handle delete request
   const handleDeleteRequest = (requestId) => {
     setRequestToDelete(requestId);
@@ -63,8 +45,6 @@ export default function Index({ requests, auth }) {
 
   const confirmDelete = () => {
     if (!requestToDelete) return;
-
-    // console.log('Attempting to delete request ID:', requestToDelete);
 
     destroy(route('manpower-requests.destroy', requestToDelete), {
       preserveScroll: true,
@@ -82,9 +62,13 @@ export default function Index({ requests, auth }) {
     });
   };
 
-  // Data preparation
-  const manpowerRequests = requests?.data || [];
-  const paginationLinks = requests?.links || [];
+  // Group requests by section
+  const requestsBySection = sections.map(section => ({
+    ...section,
+    requests: (requests?.data || []).filter(req => 
+      req.sub_section?.section_id === section.id
+    )
+  })).filter(section => section.requests.length > 0);
 
   const isUser = user && user.role === 'user';
 
@@ -124,48 +108,35 @@ export default function Index({ requests, auth }) {
                 </Link>
               </div>
 
-              {/* Mobile View */}
-              <div className="sm:hidden space-y-4">
-                {manpowerRequests.length === 0 ? (
-                  <EmptyState />
-                ) : (
-                  manpowerRequests.map((req) => (
-                    <MobileRequestCard
-                      key={req.id}
-                      request={req}
-                      onDelete={handleDeleteRequest}
-                      onRevision={handleRequestRevision}
-                      getStatusClasses={getStatusClasses}
+              {requestsBySection.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <div className="space-y-6">
+                  {requestsBySection.map(section => (
+                    <SectionGroup
+                      key={section.id}
+                      section={section}
+                      requests={section.requests}
                       formatDate={formatDate}
-                      isUser={user?.role === 'user'}
+                      getStatusClasses={getStatusClasses}
+                      onDelete={handleDeleteRequest}
+                      onRevision={() => {}}
+                      isUser={isUser}
                     />
-                  ))
-                )}
-              </div>
-
-              {/* Desktop View */}
-              <div className="hidden sm:block overflow-x-auto">
-                <DesktopRequestTable
-                  requests={manpowerRequests}
-                  onDelete={handleDeleteRequest}
-                  onRevision={handleRequestRevision}
-                  getStatusClasses={getStatusClasses}
-                  formatDate={formatDate}
-                  isEmpty={manpowerRequests.length === 0}
-                  isUser={user?.role === 'user'}
-                />
-              </div>
+                  ))}
+                </div>
+              )}
 
               {/* Pagination */}
-              {paginationLinks.length > 3 && (
-                <Pagination links={paginationLinks} />
+              {requests?.links?.length > 3 && (
+                <Pagination links={requests.links} />
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal - Centered */}
+      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 transition-opacity"></div>
@@ -211,7 +182,6 @@ export default function Index({ requests, auth }) {
   );
 }
 
-// Sub-components
 function EmptyState() {
   return (
     <div className="text-center py-8">
@@ -229,301 +199,6 @@ function EmptyState() {
           Create your first request
         </Link>
       </div>
-    </div>
-  );
-}
-
-function MobileRequestCard({ request, onDelete, onRevision, getStatusClasses, formatDate, isUser }) {
-  return (
-    <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(request.status)}`}>
-            {request.status.replace('_', ' ')}
-          </span>
-        </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          {formatDate(request.date)}
-        </div>
-      </div>
-
-      <div className="mb-2">
-        <div className="font-medium text-gray-700 dark:text-gray-300">
-          {request.sub_section?.name || 'N/A'}
-        </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          {request.shift?.name || 'N/A'}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-2 text-sm mb-3">
-        <div className="text-center">
-          <div className="text-gray-500 dark:text-gray-400">Total</div>
-          <div>{request.requested_amount}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-gray-500 dark:text-gray-400">Male</div>
-          <div>{request.male_count}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-gray-500 dark:text-gray-400">Female</div>
-          <div>{request.female_count}</div>
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-2">
-        {request.status === 'pending' && (
-          <>
-            <Link
-              href={route('manpower-requests.edit', request.id)}
-              className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-              title="Edit"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </Link>
-            {!isUser && (
-              <Link
-                href={route('manpower-requests.fulfill', request.id)}
-                className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
-                title="Fulfill"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </Link>
-            )}
-            <button
-              onClick={() => onDelete(request.id)}
-              className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-              title="Cancel"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </>
-        )}
-        {request.status === 'fulfilled' && (
-          <>
-            <span className="p-2 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 inline-flex items-center" title="Fulfilled">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-            </span>
-            {/* <button
-              onClick={() => onRevision(request.id)}
-              className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
-              title="Revise"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button> */}
-            <button
-              onClick={() => onDelete(request.id)}
-              className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-              title="Cancel"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </>
-        )}
-        {request.status === 'revision_requested' && (
-          <>
-            <Link
-              href={route('manpower-requests.revision.edit', request.id)}
-              className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-              title="Edit"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </Link>
-            <button
-              onClick={() => onDelete(request.id)}
-              className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-              title="Cancel"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DesktopRequestTable({ requests, onDelete, onRevision, getStatusClasses, formatDate, isEmpty, isUser }) {
-  return (
-    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-      <thead className="bg-gray-50 dark:bg-gray-700">
-        <tr>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sub Section</th>
-          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Shift</th>
-          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
-          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Male</th>
-          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Female</th>
-          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">By</th>
-        </tr>
-      </thead>
-      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-        {isEmpty ? (
-          <tr>
-            <td colSpan="9" className="px-6 py-12 text-center">
-              <EmptyState />
-            </td>
-          </tr>
-        ) : (
-          requests.map((req) => (
-            <tr key={req.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                {formatDate(req.date)}
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                {req.sub_section?.name || 'N/A'}
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                {req.shift?.name || 'N/A'}
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 text-center">
-                {req.requested_amount}
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 text-center">
-                {req.male_count}
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 text-center">
-                {req.female_count}
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-center">
-                <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${getStatusClasses(req.status)}`}>
-                  {req.status.replace('_', ' ')}
-                </span>
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-center">
-                {req.status === 'pending' && (
-                  <PendingActions
-                    requestId={req.id}
-                    onDelete={onDelete}
-                    isUser={isUser}
-                  />
-                )}
-                {req.status === 'fulfilled' && (
-                  <FulfilledActions requestId={req.id} onDelete={onDelete} onRevision={onRevision} />
-                )}
-                {req.status === 'revision_requested' && (
-                  <RevisionActions requestId={req.id} onDelete={onDelete} />
-                )}
-              </td>
-              <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 text-center">
-                {req.fulfilled_by?.name || '-'}
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  );
-}
-
-function PendingActions({ requestId, onDelete, isUser }) {
-  return (
-    <div className="flex justify-center items-center space-x-2">
-      <Link
-        href={route('manpower-requests.edit', requestId)}
-        className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-        title="Edit"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      </Link>
-      {!isUser && (
-        <Link
-          href={route('manpower-requests.fulfill', requestId)}
-          className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
-          title="Fulfill"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        </Link>
-      )}
-      <button
-        onClick={() => onDelete(requestId)}
-        className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-        title="Cancel"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
-function FulfilledActions({ requestId, onDelete, onRevision }) {
-  return (
-    <div className="flex justify-center items-center space-x-2">
-      <span
-        className="p-2 rounded-full bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 inline-flex items-center"
-        title="Fulfilled"
-      >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-        </svg>
-      </span>
-      {/* <button
-        onClick={() => onRevision(requestId)}
-        className="p-2 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-800 transition-colors"
-        title="Revise"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      </button> */}
-      <button
-        onClick={() => onDelete(requestId)}
-        className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-        title="Cancel"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
-function RevisionActions({ requestId, onDelete }) {
-  return (
-    <div className="flex justify-center items-center space-x-2">
-      <Link
-        href={route('manpower-requests.revision.edit', requestId)}
-        className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-        title="Edit"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      </Link>
-      <button
-        onClick={() => onDelete(requestId)}
-        className="p-2 rounded-full bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
-        title="Cancel"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
     </div>
   );
 }
