@@ -73,22 +73,73 @@ class ManPowerRequestController extends Controller
             'has_duplicates' => $duplicates->isNotEmpty(),
         ]);
     }
-
 public function store(Request $request)
 {
-    $validated = $request->validate([
-        'requests' => ['required', 'array', 'min:1'],
-        'requests.*.sub_section_id' => ['required', 'exists:sub_sections,id'],
-        'requests.*.date' => ['required', 'date', 'after_or_equal:today'],
-        'requests.*.time_slots' => ['required', 'array'],
-        'requests.*.time_slots.*.requested_amount' => ['required', 'integer', 'min:1'],
-        'requests.*.time_slots.*.male_count' => ['nullable', 'integer', 'min:0'],
-        'requests.*.time_slots.*.female_count' => ['nullable', 'integer', 'min:0'],
-        'requests.*.time_slots.*.start_time' => ['nullable', 'date_format:H:i:s'],
-        'requests.*.time_slots.*.end_time' => ['nullable', 'date_format:H:i:s'],
-        'requests.*.time_slots.*.reason' => ['nullable', 'string', 'min:10'],
-        'requests.*.time_slots.*.is_additional' => ['nullable', 'boolean'],
+    // Log semua data request mentah (untuk debug)
+    Log::info('ManPowerRequest submission initiated', [
+        'user_id' => auth()->id(),
+        'request_data' => $request->all(),
+        'ip_address' => $request->ip(),
     ]);
+
+    try {
+        $validated = $request->validate([
+            'requests' => ['required', 'array', 'min:1'],
+            'requests.*.sub_section_id' => ['required', 'exists:sub_sections,id'],
+            'requests.*.date' => ['required', 'date', 'after_or_equal:today'],
+            'requests.*.time_slots' => ['required', 'array', 'min:1'],
+            'requests.*.time_slots.*.requested_amount' => ['required', 'integer', 'min:1'],
+            'requests.*.time_slots.*.male_count' => ['required', 'integer', 'min:0'],
+            'requests.*.time_slots.*.female_count' => ['required', 'integer', 'min:0'],
+            // Accept both H:i and H:i:s formats
+            'requests.*.time_slots.*.start_time' => ['nullable', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/'],
+            'requests.*.time_slots.*.end_time' => ['nullable', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/'],
+            'requests.*.time_slots.*.reason' => ['nullable', 'string', 'min:10'],
+            'requests.*.time_slots.*.is_additional' => ['nullable', 'boolean'],
+        ]);
+
+        // Additional validation for time order and format conversion
+        foreach ($validated['requests'] as $requestIndex => $requestData) {
+            foreach ($requestData['time_slots'] as $shiftId => $slot) {
+                // Convert times to H:i:s format
+                if (!empty($slot['start_time'])) {
+                    $validated['requests'][$requestIndex]['time_slots'][$shiftId]['start_time'] = 
+                        $this->convertToHisFormat($slot['start_time']);
+                }
+                if (!empty($slot['end_time'])) {
+                    $validated['requests'][$requestIndex]['time_slots'][$shiftId]['end_time'] = 
+                        $this->convertToHisFormat($slot['end_time']);
+                }
+
+                // Validate time order if both times are provided
+                if (!empty($validated['requests'][$requestIndex]['time_slots'][$shiftId]['start_time']) && 
+                    !empty($validated['requests'][$requestIndex]['time_slots'][$shiftId]['end_time'])) {
+                    
+                    $startTime = Carbon::createFromFormat('H:i:s', $validated['requests'][$requestIndex]['time_slots'][$shiftId]['start_time']);
+                    $endTime = Carbon::createFromFormat('H:i:s', $validated['requests'][$requestIndex]['time_slots'][$shiftId]['end_time']);
+                    
+                    if ($endTime->lte($startTime)) {
+                        throw ValidationException::withMessages([
+                            "requests.{$requestIndex}.time_slots.{$shiftId}.end_time" => 'End time must be after start time.'
+                        ]);
+                    }
+                }
+            }
+        }
+
+        Log::info('Validation passed', [
+            'validated_data' => $validated,
+            'user_id' => auth()->id(),
+        ]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Log detail error validasi
+        Log::error('Validation failed', [
+            'errors' => $e->errors(),
+            'input' => $request->all(),
+            'user_id' => auth()->id(),
+        ]);
+        throw $e; // biar Laravel tetap balikin response error
+    }
 
     DB::transaction(function () use ($validated) {
         foreach ($validated['requests'] as $requestData) {
@@ -98,11 +149,11 @@ public function store(Request $request)
                     'date' => $requestData['date'],
                     'shift_id' => $shiftId,
                     'requested_amount' => $slot['requested_amount'],
-                    'male_count' => $slot['male_count'] ?? 0,
-                    'female_count' => $slot['female_count'] ?? 0,
-                    'start_time' => $slot['start_time'] ?? null,
-                    'end_time' => $slot['end_time'] ?? null,
-                    'reason' => $slot['reason'] ?? null,
+                    'male_count' => $slot['male_count'],
+                    'female_count' => $slot['female_count'],
+                    'start_time' => $slot['start_time'], // Already in H:i:s format
+                    'end_time' => $slot['end_time'],     // Already in H:i:s format
+                    'reason' => $slot['reason'],
                     'is_additional' => $slot['is_additional'] ?? false,
                     'status' => 'pending',
                 ]);
@@ -111,7 +162,40 @@ public function store(Request $request)
     });
 
     return redirect()->route('manpower-requests.index')
-        ->with('success', 'All requests submitted successfully!');
+        ->with('success', 'Request submitted successfully!');
+}
+
+/**
+ * Convert time string to H:i:s format
+ */
+private function convertToHisFormat($timeString)
+{
+    if (empty($timeString)) {
+        return null;
+    }
+
+    // If already in H:i:s format, return as is
+    if (preg_match('/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/', $timeString)) {
+        return $timeString;
+    }
+
+    // If in H:i format, add :00 seconds
+    if (preg_match('/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/', $timeString)) {
+        return $timeString . ':00';
+    }
+
+    // If format is invalid, try to parse and reformat
+    try {
+        $carbon = Carbon::createFromFormat('H:i', $timeString);
+        return $carbon->format('H:i:s');
+    } catch (\Exception $e) {
+        try {
+            $carbon = Carbon::createFromFormat('H:i:s', $timeString);
+            return $carbon->format('H:i:s');
+        } catch (\Exception $e2) {
+            return null;
+        }
+    }
 }
 
 public function update(Request $request, ManPowerRequest $manpowerRequest)
@@ -128,14 +212,34 @@ public function update(Request $request, ManPowerRequest $manpowerRequest)
             'time_slots.*.requested_amount' => ['nullable', 'integer', 'min:0'],
             'time_slots.*.male_count' => ['nullable', 'integer', 'min:0'],
             'time_slots.*.female_count' => ['nullable', 'integer', 'min:0'],
-            'time_slots.*.start_time' => ['nullable', 'date_format:H:i:s', 'required_if:time_slots.*.requested_amount,>0'],
-            'time_slots.*.end_time' => [
-                'nullable',
-                'date_format:H:i:s',
-                'required_if:time_slots.*.requested_amount,>0',
-                new ShiftTimeOrder('start_time', 'time_slots.*.end_time'),
-            ],
+            // Accept both H:i and H:i:s formats
+            'time_slots.*.start_time' => ['nullable', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/', 'required_if:time_slots.*.requested_amount,>0'],
+            'time_slots.*.end_time' => ['nullable', 'regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/', 'required_if:time_slots.*.requested_amount,>0'],
         ]);
+
+        // Convert times to H:i:s format and validate time order
+        foreach ($validated['time_slots'] as $shiftId => $slot) {
+            if (!empty($slot['start_time'])) {
+                $validated['time_slots'][$shiftId]['start_time'] = $this->convertToHisFormat($slot['start_time']);
+            }
+            if (!empty($slot['end_time'])) {
+                $validated['time_slots'][$shiftId]['end_time'] = $this->convertToHisFormat($slot['end_time']);
+            }
+
+            // Validate time order if both times are provided
+            if (!empty($validated['time_slots'][$shiftId]['start_time']) && 
+                !empty($validated['time_slots'][$shiftId]['end_time'])) {
+                
+                $startTime = Carbon::createFromFormat('H:i:s', $validated['time_slots'][$shiftId]['start_time']);
+                $endTime = Carbon::createFromFormat('H:i:s', $validated['time_slots'][$shiftId]['end_time']);
+                
+                if ($endTime->lte($startTime)) {
+                    throw ValidationException::withMessages([
+                        "time_slots.{$shiftId}.end_time" => 'End time must be after start time.'
+                    ]);
+                }
+            }
+        }
 
         DB::transaction(function () use ($validated, $manpowerRequest) {
             $existingRequests = ManPowerRequest::where('date', $manpowerRequest->date)
@@ -163,8 +267,8 @@ public function update(Request $request, ManPowerRequest $manpowerRequest)
                             'requested_amount' => $requestedAmount,
                             'male_count' => $maleCount,
                             'female_count' => $femaleCount,
-                            'start_time' => $slot['start_time'],
-                            'end_time' => $slot['end_time'],
+                            'start_time' => $slot['start_time'], // Already in H:i:s format
+                            'end_time' => $slot['end_time'],     // Already in H:i:s format
                             'status' => 'pending',
                         ]);
                     } else {
@@ -175,8 +279,8 @@ public function update(Request $request, ManPowerRequest $manpowerRequest)
                             'requested_amount' => $requestedAmount,
                             'male_count' => $maleCount,
                             'female_count' => $femaleCount,
-                            'start_time' => $slot['start_time'],
-                            'end_time' => $slot['end_time'],
+                            'start_time' => $slot['start_time'], // Already in H:i:s format
+                            'end_time' => $slot['end_time'],     // Already in H:i:s format
                             'status' => 'pending',
                         ]);
                     }

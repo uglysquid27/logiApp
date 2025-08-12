@@ -2,7 +2,7 @@ export default function ApplicationLogo(props) {
     return (
         <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
          width="100.000000pt" height="100.000000pt" viewBox="0 0 350.000000 350.000000"
-         preserveAspectRatio="xMidYMid meet" className="fill-blue-600 ">
+         preserveAspectRatio="xMidYMid meet" className="fill-blue-600 dark:fill-white">
 
         <g transform="translate(0.000000,350.000000) scale(0.100000,-0.100000)"
         stroke="none">

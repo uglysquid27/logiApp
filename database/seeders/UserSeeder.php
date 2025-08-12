@@ -16,7 +16,7 @@ class UserSeeder extends Seeder
         // Admin user (original)
         User::create([
             'name' => 'Admin',
-            'email' => 'admin@arina.com',
+            'email' => 'admin@internal',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
@@ -24,28 +24,28 @@ class UserSeeder extends Seeder
         // New Admin users for Arina
         User::create([
             'name' => 'Hadi',
-            'email' => 'hadi@arina.com',
+            'email' => 'hadi@internal',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
         User::create([
             'name' => 'Lukman',
-            'email' => 'lukman@arina.com',
+            'email' => 'lukman@internal',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
         User::create([
             'name' => 'Redia',
-            'email' => 'redia@arina.com',
+            'email' => 'redia@internal',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
 
         User::create([
             'name' => 'Subchan',
-            'email' => 'subchan@arina.com',
+            'email' => 'subchan@internal',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
@@ -53,7 +53,7 @@ class UserSeeder extends Seeder
         // New Regular user for Arina
         User::create([
             'name' => 'Otsuka1',
-            'email' => 'user1@otsuka.com',
+            'email' => 'user1@otsuka',
             'password' => Hash::make('password'),
             'role' => 'user',
         ]);
