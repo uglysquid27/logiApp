@@ -12,8 +12,8 @@ export default function DateGroup({ date, requests, formatDate, getStatusClasses
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
       >
-        <span className="font-medium text-gray-700 dark:text-gray-300">{date}</span>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="font-medium text-gray-700 dark:text-gray-300 truncate">{date}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
           {requests.length} request{requests.length !== 1 ? 's' : ''}
         </span>
       </button>

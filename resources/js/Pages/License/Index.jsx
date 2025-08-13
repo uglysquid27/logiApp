@@ -142,33 +142,34 @@ export default function LicenseDateExtractor() {
     };
 
     const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            setDebugInfo({ error: 'File size too large (max 5MB)' });
-            return;
-        }
+    if (file.size > 5 * 1024 * 1024) {
+        setDebugInfo({ error: 'File size too large (max 5MB)' });
+        return;
+    }
 
-        resetState();
-        setImageLoading(true);
-        setImageFile(file);
-        
-        try {
-            const imageUrl = await fixImageOrientation(file);
-            setImage(imageUrl);
-            
-            setDebugInfo({ status: 'Enhancing image...' });
-            const enhancedUrl = await enhanceImage(imageUrl);
-            setProcessedImage(enhancedUrl);
-            setDebugInfo(prev => ({ ...prev, status: 'Image enhanced, ready for OCR' }));
-        } catch (error) {
-            console.error('Error processing image:', error);
-            setDebugInfo(prev => ({ ...prev, status: 'Image processing failed', error: error.message }));
-        } finally {
-            setImageLoading(false);
-        }
-    };
+    resetState();
+    setImageLoading(true);
+    setImageFile(file);
+    
+    try {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            setImage(event.target.result); // show uploaded image immediately
+            setShowManualInput(true); // show manual date input right away
+        };
+        reader.readAsDataURL(file);
+    } catch (error) {
+        console.error('Error displaying image:', error);
+        setDebugInfo(prev => ({ ...prev, status: 'Image display failed', error: error.message }));
+    } finally {
+        setImageLoading(false);
+    }
+};
+
+
 
     const extractRegistrationNumber = (text) => {
         // Improved pattern to match various license number formats including the new type
@@ -787,7 +788,7 @@ export default function LicenseDateExtractor() {
                                         </div>
                                     )}
                                     
-                                    {(convertedDate || showDateConversion) && (
+                                    {/* {(convertedDate || showDateConversion) && (
                                         <div className="mt-4 bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
                                             <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-1">
                                                 Converted Date (YYYY-MM-DD):
@@ -799,7 +800,7 @@ export default function LicenseDateExtractor() {
                                                 This is the format that will be saved to the database
                                             </p>
                                         </div>
-                                    )}
+                                    )} */}
                                     
                                     {convertedDate && (
                                         <div className="mt-4">
@@ -823,7 +824,7 @@ export default function LicenseDateExtractor() {
                                 </div>
                             )}
 
-                            <div className="mt-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                            {/* <div className="mt-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                                 <h3 className="text-lg font-medium mb-2">Processing Information</h3>
                                 
                                 <div className="space-y-2">
@@ -874,7 +875,7 @@ export default function LicenseDateExtractor() {
                                         </details>
                                     )}
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
                 </div>

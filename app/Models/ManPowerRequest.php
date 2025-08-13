@@ -27,6 +27,9 @@ class ManPowerRequest extends Model
     protected $casts = [
         'date' => 'date:Y-m-d', // Explicit format
         'is_additional' => 'boolean',
+        'requested_amount' => 'integer',
+        'male_count' => 'integer',
+        'female_count' => 'integer',
     ];
 
     public function fulfilledBy()
@@ -68,11 +71,11 @@ class ManPowerRequest extends Model
     }
 
     public static function hasExistingRequest($subSectionId, $shiftId, $date)
-{
-    return static::where('sub_section_id', $subSectionId)
-        ->where('shift_id', $shiftId)
-        ->whereDate('date', $date)
-        ->where('status', '!=', 'rejected')
-        ->exists();
-}
+    {
+        return static::where('sub_section_id', $subSectionId)
+            ->where('shift_id', $shiftId)
+            ->whereDate('date', $date)
+            ->where('status', '!=', 'rejected')
+            ->exists();
+    }
 }

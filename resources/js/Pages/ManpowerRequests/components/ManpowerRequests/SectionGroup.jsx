@@ -22,7 +22,7 @@ export default function SectionGroup({ section, requests, formatDate, getStatusC
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
       >
-        <h3 className="font-medium text-gray-900 dark:text-gray-100">
+        <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
           {section.name}
         </h3>
         <svg

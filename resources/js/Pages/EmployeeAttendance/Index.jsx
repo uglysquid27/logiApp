@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { usePage, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
+import EmployeeFilters from './components/EmployeeFilters';
+import EmployeeTable from './components/EmployeeTable';
+import EmployeeCards from './components/EmployeeCards';
+import ResetStatusModal from './components/ResetStatusModal';
+import UpdateWorkloadModal from './components/UpdateWorkloadModal';
 
 export default function Index() {
   const { employees: paginationData, filters, uniqueStatuses, uniqueSections, uniqueSubSections, auth } = usePage().props;
@@ -17,20 +22,6 @@ export default function Index() {
   const [processing, setProcessing] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [showWorkloadModal, setShowWorkloadModal] = useState(false);
-
-  // Helper function for status badges
-  const getStatusClasses = (status) => {
-    switch (status.toLowerCase()) {
-      case 'available':
-        return 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100';
-      case 'assigned':
-        return 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-100';
-      case 'deactivated':
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
-      default:
-        return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100';
-    }
-  };
 
   // Apply filters
   const applyFilters = (newFilters) => {
@@ -113,6 +104,7 @@ export default function Index() {
       },
     });
   };
+
   return (
     <AuthenticatedLayout
       header={
@@ -121,61 +113,22 @@ export default function Index() {
         </h2>
       }
     >
-
       <Modal show={showResetModal} onClose={() => setShowResetModal(false)}>
-        <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-            Reset All Employee Statuses
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            Apakah Anda yakin ingin mereset status semua karyawan menjadi "available" dan "cuti: no"?
-            Tindakan ini tidak dapat dibatalkan dan akan mempengaruhi semua karyawan dalam sistem.
-          </p>
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={() => setShowResetModal(false)}
-              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleResetAllStatuses}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            >
-              Confirm Reset
-            </button>
-          </div>
-        </div>
+        <ResetStatusModal 
+          show={showResetModal} 
+          onClose={() => setShowResetModal(false)} 
+          onConfirm={handleResetAllStatuses} 
+        />
       </Modal>
 
       <Modal show={showWorkloadModal} onClose={() => setShowWorkloadModal(false)}>
-        <div className="p-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-            Update All Workload Data
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-            This will scan all schedules and update workload data for all employees.
-            The process may take some time depending on the number of employees and schedules.
-            Are you sure you want to proceed?
-          </p>
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={() => setShowWorkloadModal(false)}
-              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleUpdateWorkloads}
-              disabled={processing}
-              className={`px-4 py-2 text-white rounded-md transition-colors ${processing ? 'bg-purple-400' : 'bg-purple-600 hover:bg-purple-700'}`}
-            >
-              {processing ? 'Processing...' : 'Confirm Update'}
-            </button>
-          </div>
-        </div>
+        <UpdateWorkloadModal 
+          show={showWorkloadModal} 
+          onClose={() => setShowWorkloadModal(false)} 
+          onConfirm={handleUpdateWorkloads} 
+          processing={processing} 
+        />
       </Modal>
-
 
       <div className="py-4 sm:py-8">
         <div className="mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
@@ -187,10 +140,8 @@ export default function Index() {
                     Ringkasan Penugasan Pegawai
                   </h1>
 
-                  {/* Buttons container - will wrap on mobile */}
                   {!isUser && (
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                      {/* Add Employee - full width on mobile, auto on larger */}
                       <Link
                         href={route('employee-attendance.create')}
                         className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
@@ -201,7 +152,6 @@ export default function Index() {
                         <span className="whitespace-nowrap">Add Employee</span>
                       </Link>
 
-                      {/* Inactive Employees - full width on mobile, auto on larger */}
                       <Link
                         href={route('employee-attendance.inactive')}
                         className="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
@@ -212,7 +162,6 @@ export default function Index() {
                         <span className="whitespace-nowrap">Inactive Employees</span>
                       </Link>
 
-                      {/* Reset All Statuses - full width on mobile, auto on larger */}
                       <button
                         onClick={() => setShowResetModal(true)}
                         className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-3 py-2 sm:px-4 rounded-md font-medium text-white text-sm transition-colors duration-200 w-full sm:w-auto"
@@ -223,7 +172,6 @@ export default function Index() {
                         <span className="whitespace-nowrap">Reset All Statuses</span>
                       </button>
 
-                      {/* Update Workloads - full width on mobile, auto on larger */}
                       <button
                         onClick={() => setShowWorkloadModal(true)}
                         disabled={processing}
@@ -251,390 +199,38 @@ export default function Index() {
                 </div>
               </div>
 
-              {/* Mobile Filters */}
-              <div className="sm:hidden space-y-3 mb-4">
-                <div className="w-full">
-                  <label htmlFor="mobileStatusFilter" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Status
-                  </label>
-                  <select
-                    id="mobileStatusFilter"
-                    value={filterStatus}
-                    onChange={handleStatusChange}
-                    className="w-full bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    {uniqueStatuses.map(status => (
-                      <option key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <EmployeeFilters
+                filterStatus={filterStatus}
+                filterSection={filterSection}
+                filterSubSection={filterSubSection}
+                searchTerm={searchTerm}
+                uniqueStatuses={uniqueStatuses}
+                uniqueSections={uniqueSections}
+                uniqueSubSections={uniqueSubSections}
+                handleStatusChange={handleStatusChange}
+                handleSectionChange={handleSectionChange}
+                handleSubSectionChange={handleSubSectionChange}
+                handleSearchChange={handleSearchChange}
+                isMobile
+              />
 
-                <div className="w-full">
-                  <label htmlFor="mobileSectionFilter" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Section
-                  </label>
-                  <select
-                    id="mobileSectionFilter"
-                    value={filterSection}
-                    onChange={handleSectionChange}
-                    className="w-full bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    {uniqueSections.map(section => (
-                      <option key={section} value={section}>
-                        {section}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <EmployeeFilters
+                filterStatus={filterStatus}
+                filterSection={filterSection}
+                filterSubSection={filterSubSection}
+                searchTerm={searchTerm}
+                uniqueStatuses={uniqueStatuses}
+                uniqueSections={uniqueSections}
+                uniqueSubSections={uniqueSubSections}
+                handleStatusChange={handleStatusChange}
+                handleSectionChange={handleSectionChange}
+                handleSubSectionChange={handleSubSectionChange}
+                handleSearchChange={handleSearchChange}
+              />
 
-                <div className="w-full">
-                  <label htmlFor="mobileSubSectionFilter" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Sub Section
-                  </label>
-                  <select
-                    id="mobileSubSectionFilter"
-                    value={filterSubSection}
-                    onChange={handleSubSectionChange}
-                    className="w-full bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    {uniqueSubSections.map(subSection => (
-                      <option key={subSection} value={subSection}>
-                        {subSection}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <EmployeeCards employees={employees} isUser={isUser} />
+              <EmployeeTable employees={employees} totalWorkCount={totalWorkCount} totalWeeklyWorkCount={totalWeeklyWorkCount} isUser={isUser} />
 
-                <div className="w-full">
-                  <label htmlFor="mobileSearchEmployee" className="block mb-1 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Cari Nama/NIK
-                  </label>
-                  <input
-                    type="text"
-                    id="mobileSearchEmployee"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    placeholder="Cari nama atau NIK..."
-                    className="w-full bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Desktop Filters */}
-              <div className="hidden sm:flex flex-wrap items-center gap-3 mb-4">
-                <div className="flex items-center">
-                  <label htmlFor="statusFilter" className="block mr-2 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Status:
-                  </label>
-                  <select
-                    id="statusFilter"
-                    value={filterStatus}
-                    onChange={handleStatusChange}
-                    className="bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    {uniqueStatuses.map(status => (
-                      <option key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center">
-                  <label htmlFor="sectionFilter" className="block mr-2 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Section:
-                  </label>
-                  <select
-                    id="sectionFilter"
-                    value={filterSection}
-                    onChange={handleSectionChange}
-                    className="bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    {uniqueSections.map(section => (
-                      <option key={section} value={section}>
-                        {section}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center">
-                  <label htmlFor="subSectionFilter" className="block mr-2 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Sub Section:
-                  </label>
-                  <select
-                    id="subSectionFilter"
-                    value={filterSubSection}
-                    onChange={handleSubSectionChange}
-                    className="bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    {uniqueSubSections.map(subSection => (
-                      <option key={subSection} value={subSection}>
-                        {subSection}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex items-center flex-1 min-w-[200px]">
-                  <label htmlFor="searchEmployee" className="block mr-2 font-medium text-gray-700 dark:text-gray-300 text-sm">
-                    Cari:
-                  </label>
-                  <input
-                    type="text"
-                    id="searchEmployee"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    placeholder="Nama/NIK..."
-                    className="w-full bg-white dark:bg-gray-700 shadow-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-indigo-500 text-gray-900 dark:text-gray-100 text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Mobile Cards View */}
-              <div className="sm:hidden space-y-4">
-                {employees.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="flex flex-col items-center">
-                      <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                      </svg>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                        Tidak ada data pegawai dengan kriteria filter ini
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  employees.map((employee) => {
-                    return (
-                      <div key={employee.id} className="bg-white dark:bg-gray-700 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-600">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h3 className="font-medium text-gray-700 dark:text-gray-300">{employee.name}</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{employee.nik}</p>
-                          </div>
-                          <div className="flex flex-col items-end">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(employee.status)}`}>
-                              {employee.status}
-                            </span>
-                            <span className={`mt-1 px-2 py-1 text-xs font-semibold rounded-full ${employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-100' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100'}`}>
-                              Cuti: {employee.cuti}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-sm mt-3">
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Gender</p>
-                            <p>{employee.gender}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Tipe</p>
-                            <p>{employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Sub Section</p>
-                            <p>{employee.sub_sections && employee.sub_sections.length > 0 ? employee.sub_sections.map(ss => ss.name).join(', ') : 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Section</p>
-                            <p>{employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Total</p>
-                            <p>{employee.total_work_count || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Minggu Ini</p>
-                            <p>{employee.weekly_work_count || 0}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Workload</p>
-                            <p>{employee.workload_point !== undefined ? employee.workload_point : 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-500 dark:text-gray-400">Rating</p>
-                            <p>{employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}</p>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex justify-end space-x-2">
-                          {employee.sub_sections && employee.sub_sections.some(ss => ss.section?.name === 'Operator Forklift') && (
-                            <Link
-                              href={route('employees.license.show', employee.id)}
-                              className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm"
-                            >
-                              View License
-                            </Link>
-                          )}
-                          {!isUser && (
-                            <>
-                              <Link
-                                href={route('employee-attendance.edit', employee.id)}
-                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
-                              >
-                                Edit
-                              </Link>
-                              <Link
-                                href={route('employee-attendance.deactivate', employee.id)}
-                                className="text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-300 text-sm"
-                              >
-                                Deactivate
-                              </Link>
-                            </>
-                          )}
-                          <Link
-                            href={route('ratings.create', employee.id)}
-                            className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
-                          >
-                            Rate ({employee.ratings_count || 0})
-                          </Link>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              {/* Desktop Table View */}
-              <div className="hidden sm:block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Nama</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Gender</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">NIK</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tipe</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sub Section</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Section</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Minggu Ini</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Workload</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cuti</th>
-
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-
-                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {employees.length === 0 ? (
-                      <tr>
-                        <td colSpan={isUser ? 12 : 13} className="px-6 py-12 text-gray-500 dark:text-gray-400 text-center">
-                          Tidak ada data pegawai dengan kriteria filter atau pencarian ini.
-                        </td>
-                      </tr>
-                    ) : (
-                      employees.map((employee) => {
-                        return (
-                          <tr key={employee.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                            <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{employee.name}</td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{employee.gender}</td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">{employee.nik}</td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                              {employee.type ? employee.type.charAt(0).toUpperCase() + employee.type.slice(1) : 'N/A'}
-                            </td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                              {employee.sub_sections && employee.sub_sections.length > 0 ? employee.sub_sections.map(ss => ss.name).join(', ') : 'N/A'}
-                            </td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                              {employee.sub_sections && employee.sub_sections.length > 0 ? [...new Set(employee.sub_sections.map(ss => ss.section?.name || 'N/A'))].join(', ') : 'N/A'}
-                            </td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.total_work_count || 0}</td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">{employee.weekly_work_count || 0}</td>
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 text-center">
-                              {employee.workload_point !== undefined ? employee.workload_point : 'N/A'}
-                            </td>
-                            <td className="px-4 py-4 text-sm whitespace-nowrap">
-                              <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusClasses(employee.status)}`}>
-                                {employee.status}
-                              </span>
-                            </td>
-                            <td className="px-4 py-4 text-sm whitespace-nowrap">
-                              <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${employee.cuti === 'yes' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-100' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100'}`}>
-                                {employee.cuti}
-                              </span>
-                            </td>
-
-                            <td className="px-4 py-4 text-sm whitespace-nowrap">
-                              <div className="flex space-x-2">
-                                {!isUser && (
-                                  <>
-                                    {/* Edit Link */}
-                                    <Link
-                                      href={route('employee-attendance.edit', employee.id)}
-                                      className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                      title="Edit"
-                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                      </svg>
-                                    </Link>
-
-                                    {/* Deactivate Link */}
-                                    <Link
-                                      href={route('employee-attendance.deactivate', employee.id)}
-                                      className="text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
-                                      title="Deactivate"
-                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                                      </svg>
-                                    </Link>
-                                  </>
-                                )}
-
-                                {/* View License Link for Operator Forklift */}
-                                {employee.sub_sections?.some(ss => ss.section?.name === 'Operator Forklift') && (
-                                  <Link
-                                    href={route('employees.license.show', employee.id)}
-                                    className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                    title="View License"
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                  </Link>
-                                )}
-                              </div>
-                            </td>
-
-
-                            <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                              <div className="flex items-center gap-1">
-                                {employee.calculated_rating !== undefined ? employee.calculated_rating : 'N/A'}
-                                <Link
-                                  href={route('ratings.create', employee.id)}
-                                  className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 flex items-center gap-1"
-                                  title="Rate Employee"
-                                >
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                  </svg>
-                                </Link>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                    <tr className="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300">
-                      <td colSpan="6" className="px-4 py-3 text-right">Total Penugasan:</td>
-                      <td className="px-4 py-3 text-center">{totalWorkCount}</td>
-                      <td className="px-4 py-3 text-center">{totalWeeklyWorkCount}</td>
-                      <td colSpan={isUser ? 4 : 5} className="px-4 py-3 text-center"></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
               {paginationLinks.length > 3 && (
                 <div className="flex flex-wrap justify-center sm:justify-end gap-2 mt-6">
                   {paginationLinks.map((link, index) => (

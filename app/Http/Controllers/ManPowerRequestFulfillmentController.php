@@ -19,8 +19,8 @@ class ManPowerRequestFulfillmentController extends Controller
     public function create($id)
     {
         $request = ManPowerRequest::with([
-            'subSection.section', 
-            'shift', 
+            'subSection.section',
+            'shift',
             'fulfilledBy',
             'schedules.employee.subSections.section'
         ])->findOrFail($id);
@@ -45,16 +45,18 @@ class ManPowerRequestFulfillmentController extends Controller
 
         $currentScheduledIds = $request->schedules->pluck('employee_id')->toArray();
 
-        $eligibleEmployees = Employee::where(function($query) use ($currentScheduledIds) {
-                $query->where('status', 'available')
-                    ->orWhereIn('id', $currentScheduledIds);
-            })
+        $eligibleEmployees = Employee::where(function ($query) use ($currentScheduledIds) {
+            $query->where('status', 'available')
+                ->orWhereIn('id', $currentScheduledIds);
+        })
             ->where('cuti', 'no')
             ->whereNotIn('id', array_diff($scheduledEmployeeIdsOnRequestDate, $currentScheduledIds))
             ->with(['subSections.section', 'workloads', 'blindTests', 'ratings'])
-            ->withCount(['schedules' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('date', [$startDate, $endDate]);
-            }])
+            ->withCount([
+                'schedules' => function ($query) use ($startDate, $endDate) {
+                    $query->whereBetween('date', [$startDate, $endDate]);
+                }
+            ])
             ->with(['schedules.manPowerRequest.shift'])
             ->get()
             ->map(function ($employee) {
@@ -68,37 +70,53 @@ class ManPowerRequestFulfillmentController extends Controller
                 $weeklyScheduleCount = $employee->schedules_count;
 
                 $rating = 0;
-                if ($weeklyScheduleCount === 5) { $rating = 5; }
-                elseif ($weeklyScheduleCount === 4) { $rating = 4; }
-                elseif ($weeklyScheduleCount === 3) { $rating = 3; }
-                elseif ($weeklyScheduleCount === 2) { $rating = 2; }
-                elseif ($weeklyScheduleCount === 1) { $rating = 1; }
-                elseif ($weeklyScheduleCount === 0) { $rating = 0; }
-                else { $rating = 0; }
+                if ($weeklyScheduleCount === 5) {
+                    $rating = 5;
+                } elseif ($weeklyScheduleCount === 4) {
+                    $rating = 4;
+                } elseif ($weeklyScheduleCount === 3) {
+                    $rating = 3;
+                } elseif ($weeklyScheduleCount === 2) {
+                    $rating = 2;
+                } elseif ($weeklyScheduleCount === 1) {
+                    $rating = 1;
+                } elseif ($weeklyScheduleCount === 0) {
+                    $rating = 0;
+                } else {
+                    $rating = 0;
+                }
 
                 $workingDayWeight = 0;
-                if ($rating === 5) { $workingDayWeight = 15; }
-                elseif ($rating === 4) { $workingDayWeight = 45; }
-                elseif ($rating === 3) { $workingDayWeight = 75; }
-                elseif ($rating === 2) { $workingDayWeight = 105; }
-                elseif ($rating === 1) { $workingDayWeight = 135; }
-                elseif ($rating === 0) { $workingDayWeight = 165; }
-                else { $workingDayWeight = 0; }
+                if ($rating === 5) {
+                    $workingDayWeight = 15;
+                } elseif ($rating === 4) {
+                    $workingDayWeight = 45;
+                } elseif ($rating === 3) {
+                    $workingDayWeight = 75;
+                } elseif ($rating === 2) {
+                    $workingDayWeight = 105;
+                } elseif ($rating === 1) {
+                    $workingDayWeight = 135;
+                } elseif ($rating === 0) {
+                    $workingDayWeight = 165;
+                } else {
+                    $workingDayWeight = 0;
+                }
 
                 // Calculate workload points (sum of latest week)
                 $workloadPoints = $employee->workloads->sortByDesc('week')->first()->workload_point ?? 0;
-                
+
                 // Get latest blind test result (convert to points: Pass=3, Fail=0)
                 $blindTestResult = $employee->blindTests->sortByDesc('test_date')->first()->result ?? 'Fail';
                 $blindTestPoints = $blindTestResult === 'Pass' ? 3 : 0;
-                
+
                 // Get average rating (from ratings table)
                 $averageRating = $employee->ratings->avg('rating') ?? 0;
-                
+
                 // Calculate total score (higher is better)
                 $totalScore = ($workloadPoints * 0.5) + ($blindTestPoints * 0.3) + ($averageRating * 0.2);
 
-                $subSectionsData = $employee->subSections->map(function($subSection) {
+                $subSectionsData = $employee->subSections->map(function ($subSection) {
                     return [
                         'id' => $subSection->id,
                         'name' => $subSection->name,
@@ -106,6 +124,8 @@ class ManPowerRequestFulfillmentController extends Controller
                         'section' => $subSection->section ? $subSection->section->toArray() : null,
                     ];
                 })->toArray();
+
+             
 
                 return [
                     'id' => $employee->id,
@@ -131,17 +151,19 @@ class ManPowerRequestFulfillmentController extends Controller
 
         $sortEmployees = function ($employees) {
             return $employees->sortByDesc('total_score')
-                ->sortByDesc(function($employee) {
+                ->sortByDesc(function ($employee) {
                     return $employee['type'] === 'bulanan' ? 1 : 0;
                 })
                 ->sortBy('working_day_weight')
                 ->values();
         };
 
-        $sameSubSectionEligible = $eligibleEmployees->filter(fn($employee) =>
+        $sameSubSectionEligible = $eligibleEmployees->filter(
+            fn($employee) =>
             collect($employee['sub_sections_data'])->contains('id', $request->sub_section_id)
         );
-        $otherSubSectionEligible = $eligibleEmployees->filter(fn($employee) =>
+        $otherSubSectionEligible = $eligibleEmployees->filter(
+            fn($employee) =>
             !collect($employee['sub_sections_data'])->contains('id', $request->sub_section_id)
         );
 
@@ -172,7 +194,7 @@ class ManPowerRequestFulfillmentController extends Controller
                 $currentSchedules = $req->schedules;
                 $currentEmployeeIds = $currentSchedules->pluck('employee_id')->toArray();
                 $newEmployeeIds = $validated['employee_ids'];
-                
+
                 $employeesToRemove = array_diff($currentEmployeeIds, $newEmployeeIds);
                 foreach ($employeesToRemove as $employeeId) {
                     $schedule = $currentSchedules->where('employee_id', $employeeId)->first();
@@ -183,11 +205,11 @@ class ManPowerRequestFulfillmentController extends Controller
                         $schedule->delete();
                     }
                 }
-                
+
                 $employeesToAdd = array_diff($newEmployeeIds, $currentEmployeeIds);
                 foreach ($employeesToAdd as $employeeId) {
                     $employee = Employee::where('id', $employeeId)
-                        ->where(function($query) {
+                        ->where(function ($query) {
                             $query->where('status', 'available')
                                 ->orWhere('status', 'assigned');
                         })
@@ -197,11 +219,11 @@ class ManPowerRequestFulfillmentController extends Controller
                                 ->where('man_power_request_id', '!=', $req->id);
                         })
                         ->first();
-                    
+
                     if (!$employee) {
                         throw new \Exception("Karyawan ID {$employeeId} tidak tersedia, sedang cuti, atau sudah dijadwalkan pada tanggal ini.");
                     }
-                    
+
                     Schedule::create([
                         'employee_id' => $employeeId,
                         'sub_section_id' => $req->sub_section_id,
@@ -212,7 +234,7 @@ class ManPowerRequestFulfillmentController extends Controller
                     $employee->status = 'assigned';
                     $employee->save();
                 }
-                
+
                 $req->status = 'fulfilled';
                 $req->fulfilled_by = $validated['fulfilled_by'];
                 $req->save();
@@ -227,11 +249,11 @@ class ManPowerRequestFulfillmentController extends Controller
             });
         } catch (\Exception $e) {
             Log::error('Fulfillment Error: ' . $e->getMessage(), [
-                'exception' => $e, 
+                'exception' => $e,
                 'request_id' => $id,
                 'user_id' => auth()->id()
             ]);
-            
+
             return back()->withErrors(['fulfillment_error' => $e->getMessage()]);
         }
 

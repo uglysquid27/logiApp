@@ -41,7 +41,7 @@ class EmployeeDashboardController extends Controller
         $employee = Auth::guard('employee')->user();
         
         // Verify schedule ownership
-        abort_unless($schedule->employee_id === $employee->id, 403);
+        //abort_unless($schedule->employee_id === $employee->id, 403);
     
         // Get the current section
         $currentSection = $schedule->subSection->section;
@@ -104,7 +104,7 @@ class EmployeeDashboardController extends Controller
     
         // Ensure the schedule belongs to the authenticated employee
         $employee = Auth::guard('employee')->user();
-        abort_unless($schedule->employee_id === $employee->id, 403, 'Unauthorized action.');
+        //abort_unless($schedule->employee_id === $employee->id, 403, 'Unauthorized action.');
     
         // Start a database transaction to ensure atomicity for multiple updates
         DB::transaction(function () use ($req, $schedule, $employee) {
