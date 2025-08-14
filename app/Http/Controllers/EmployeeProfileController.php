@@ -19,9 +19,18 @@ class EmployeeProfileController extends Controller
                 'name',
                 'gender',
                 'birth_date',
-                'address',
                 'religion',
                 'phone',
+                'street',
+                'rt',
+                'rw',
+                'kelurahan',
+                'kecamatan',
+                'kabupaten_kota',
+                'provinsi',
+                'kode_pos',
+                'type',
+                'group',
             ]),
         ]);
     }
@@ -32,11 +41,17 @@ class EmployeeProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'gender' => ['required', 'in:male,female'],
             'birth_date' => ['nullable', 'date'],
-            'email' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:500'],
-            'city' => ['nullable', 'string', 'max:100'],
+            'email' => ['nullable', 'string', 'email', 'max:255'],
             'religion' => ['nullable', 'string', 'max:50'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'rt' => ['nullable', 'string', 'max:10'],
+            'rw' => ['nullable', 'string', 'max:10'],
+            'kelurahan' => ['nullable', 'string', 'max:100'],
+            'kecamatan' => ['nullable', 'string', 'max:100'],
+            'kabupaten_kota' => ['nullable', 'string', 'max:100'],
+            'provinsi' => ['nullable', 'string', 'max:100'],
+            'kode_pos' => ['nullable', 'string', 'max:10'],
         ]);
 
         $employee->update($request->only([
@@ -44,13 +59,20 @@ class EmployeeProfileController extends Controller
             'gender',
             'birth_date',
             'email',
-            'address',
             'religion',
             'phone',
+            'street',
+            'rt',
+            'rw',
+            'kelurahan',
+            'kecamatan',
+            'kabupaten_kota',
+            'provinsi',
+            'kode_pos',
         ]));
 
         return redirect()->route('employee.employees.edit', $employee)
-    ->with('success', 'Profile updated successfully.');
+            ->with('success', 'Profile updated successfully.');
     }
 
     public function updatePassword(Request $request, Employee $employee)

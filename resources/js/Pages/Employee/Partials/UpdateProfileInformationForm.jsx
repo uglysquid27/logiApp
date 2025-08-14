@@ -8,9 +8,16 @@ export default function UpdateProfileInformationForm({ employee, className }) {
         gender: employee.gender,
         group: employee.group,
         birth_date: employee.birth_date,
-        address: employee.address,
         religion: employee.religion,
         phone: employee.phone,
+        street: employee.street,
+        rt: employee.rt,
+        rw: employee.rw,
+        kelurahan: employee.kelurahan,
+        kecamatan: employee.kecamatan,
+        kabupaten_kota: employee.kabupaten_kota,
+        provinsi: employee.provinsi || 'Jawa Timur',
+        kode_pos: employee.kode_pos,
     });
 
     const submit = (e) => {
@@ -136,21 +143,130 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                     {errors.birth_date && <p className="mt-1 text-sm text-red-600">{errors.birth_date}</p>}
                 </div>
 
-                {/* Address */}
+                {/* Address Fields */}
                 <div className="sm:col-span-6">
-                    <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                        Alamat
+                    <label className="block text-sm font-medium text-gray-700">
+                        Alamat Lengkap
                     </label>
-                    <div className="mt-1">
-                        <textarea
-                            id="address"
-                            value={data.address}
-                            onChange={(e) => setData('address', e.target.value)}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
-                            rows={3}
-                        />
+                    <div className="mt-1 grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
+                        {/* Street */}
+                        <div className="sm:col-span-6">
+                            <label htmlFor="street" className="block text-sm font-medium text-gray-700">
+                                Jalan/Dusun
+                            </label>
+                            <input
+                                id="street"
+                                type="text"
+                                value={data.street}
+                                onChange={(e) => setData('street', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.street && <p className="mt-1 text-sm text-red-600">{errors.street}</p>}
+                        </div>
+
+                        {/* RT/RW */}
+                        <div className="sm:col-span-1">
+                            <label htmlFor="rt" className="block text-sm font-medium text-gray-700">
+                                RT
+                            </label>
+                            <input
+                                id="rt"
+                                type="text"
+                                value={data.rt}
+                                onChange={(e) => setData('rt', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.rt && <p className="mt-1 text-sm text-red-600">{errors.rt}</p>}
+                        </div>
+
+                        <div className="sm:col-span-1">
+                            <label htmlFor="rw" className="block text-sm font-medium text-gray-700">
+                                RW
+                            </label>
+                            <input
+                                id="rw"
+                                type="text"
+                                value={data.rw}
+                                onChange={(e) => setData('rw', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.rw && <p className="mt-1 text-sm text-red-600">{errors.rw}</p>}
+                        </div>
+
+                        {/* Kelurahan/Kecamatan */}
+                        <div className="sm:col-span-2">
+                            <label htmlFor="kelurahan" className="block text-sm font-medium text-gray-700">
+                                Kelurahan/Desa
+                            </label>
+                            <input
+                                id="kelurahan"
+                                type="text"
+                                value={data.kelurahan}
+                                onChange={(e) => setData('kelurahan', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.kelurahan && <p className="mt-1 text-sm text-red-600">{errors.kelurahan}</p>}
+                        </div>
+
+                        <div className="sm:col-span-2">
+                            <label htmlFor="kecamatan" className="block text-sm font-medium text-gray-700">
+                                Kecamatan
+                            </label>
+                            <input
+                                id="kecamatan"
+                                type="text"
+                                value={data.kecamatan}
+                                onChange={(e) => setData('kecamatan', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.kecamatan && <p className="mt-1 text-sm text-red-600">{errors.kecamatan}</p>}
+                        </div>
+
+                        {/* Kabupaten/Kota */}
+                        <div className="sm:col-span-3">
+                            <label htmlFor="kabupaten_kota" className="block text-sm font-medium text-gray-700">
+                                Kabupaten/Kota
+                            </label>
+                            <input
+                                id="kabupaten_kota"
+                                type="text"
+                                value={data.kabupaten_kota}
+                                onChange={(e) => setData('kabupaten_kota', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.kabupaten_kota && <p className="mt-1 text-sm text-red-600">{errors.kabupaten_kota}</p>}
+                        </div>
+
+                        {/* Provinsi */}
+                        <div className="sm:col-span-2">
+                            <label htmlFor="provinsi" className="block text-sm font-medium text-gray-700">
+                                Provinsi
+                            </label>
+                            <input
+                                id="provinsi"
+                                type="text"
+                                value={data.provinsi}
+                                onChange={(e) => setData('provinsi', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.provinsi && <p className="mt-1 text-sm text-red-600">{errors.provinsi}</p>}
+                        </div>
+
+                        {/* Kode Pos */}
+                        <div className="sm:col-span-1">
+                            <label htmlFor="kode_pos" className="block text-sm font-medium text-gray-700">
+                                Kode Pos
+                            </label>
+                            <input
+                                id="kode_pos"
+                                type="text"
+                                value={data.kode_pos}
+                                onChange={(e) => setData('kode_pos', e.target.value)}
+                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                            />
+                            {errors.kode_pos && <p className="mt-1 text-sm text-red-600">{errors.kode_pos}</p>}
+                        </div>
                     </div>
-                    {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
                 </div>
 
                 {/* Religion */}

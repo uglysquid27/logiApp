@@ -41,6 +41,10 @@ class EmployeeSeeder extends Seeder
                 $email = Str::slug($row[1]) . '@example.com';
             }
             
+            // Parse the address components
+            $address = !empty($row[7]) ? trim($row[7]) : null;
+            // $parsedAddress = $this->parseIndonesianAddress($address);
+            
             try {
                 Employee::create([
                     'nik' => $row[0], // nik
@@ -53,7 +57,18 @@ class EmployeeSeeder extends Seeder
                     'gender' => $row[3], // gender
                     'group' => !empty($row[4]) ? $row[4] : null, // group
                     'phone' => !empty($row[6]) ? $row[6] : null, // phone
-                    'address' => !empty($row[7]) ? $row[7] : null, // address
+                    'address' => $address, // original full address
+                    
+                    // Parsed address components
+                    // 'street' => $parsedAddress['street'],
+                    // 'rt' => $parsedAddress['rt'],
+                    // 'rw' => $parsedAddress['rw'],
+                    // 'kelurahan' => $parsedAddress['kelurahan'],
+                    // 'kecamatan' => $parsedAddress['kecamatan'],
+                    // 'kabupaten_kota' => $parsedAddress['kabupaten_kota'],
+                    // 'provinsi' => 'Jawa Timur', // Default as most addresses are in East Java
+                    // 'kode_pos' => $parsedAddress['kode_pos'],
+                    
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -66,4 +81,77 @@ class EmployeeSeeder extends Seeder
         
         fclose($csvFile);
     }
+
+    /**
+     * Parse Indonesian address into components
+     */
+    // protected function parseIndonesianAddress($address)
+    // {
+    //     if (empty($address)) {
+    //         return [
+    //             'street' => null,
+    //             'rt' => null,
+    //             'rw' => null,
+    //             'kelurahan' => null,
+    //             'kecamatan' => null,
+    //             'kabupaten_kota' => null,
+    //             'kode_pos' => null,
+    //         ];
+    //     }
+
+    //     // Initialize components
+    //     $components = [
+    //         'street' => null,
+    //         'rt' => null,
+    //         'rw' => null,
+    //         'kelurahan' => null,
+    //         'kecamatan' => null,
+    //         'kabupaten_kota' => null,
+    //         'kode_pos' => null,
+    //     ];
+
+    //     // Extract postal code (5 digits at the end)
+    //     if (preg_match('/(\d{5})/', $address, $matches)) {
+    //         $components['kode_pos'] = $matches[1];
+    //         $address = str_replace($matches[1], '', $address);
+    //     }
+
+    //     // Common patterns to look for
+    //     $patterns = [
+    //         'rt' => '/Rt\.?\s*(\d+)/i',
+    //         'rw' => '/Rw\.?\s*(\d+)/i',
+    //         'kelurahan' => '/Kel\.?\s*([^,\.]+)/i',
+    //         'kecamatan' => '/Kec\.?\s*([^,\.]+)/i',
+    //         'kabupaten' => '/Kab\.?\s*([^,\.]+)/i',
+    //         'kota' => '/Kota\s*([^,\.]+)/i',
+    //     ];
+
+    //     // Extract components using patterns
+    //     foreach ($patterns as $key => $pattern) {
+    //         if (preg_match($pattern, $address, $matches)) {
+    //             $components[$key] = trim($matches[1]);
+    //             $address = str_replace($matches[0], '', $address);
+    //         }
+    //     }
+
+    //     // Handle Kabupaten/Kota
+    //     if (!empty($components['kabupaten'])) {
+    //         $components['kabupaten_kota'] = $components['kabupaten'];
+    //     } elseif (!empty($components['kota'])) {
+    //         $components['kabupaten_kota'] = $components['kota'];
+    //     }
+    //     unset($components['kabupaten'], $components['kota']);
+
+    //     // The remaining part is likely the street/dusun
+    //     $components['street'] = trim(preg_replace('/\s+/', ' ', $address));
+
+    //     // Clean up extracted values
+    //     foreach ($components as &$value) {
+    //         if ($value) {
+    //             $value = trim($value, " \t\n\r\0\x0B,");
+    //         }
+    //     }
+
+    //     return $components;
+    // }
 }
