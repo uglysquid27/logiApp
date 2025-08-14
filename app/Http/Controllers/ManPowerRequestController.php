@@ -19,18 +19,88 @@ use App\Models\Employee;
 
 class ManPowerRequestController extends Controller
 {
-    public function index(): Response
+   public function index(Request $request): Response
     {
-        $requests = ManPowerRequest::with(['subSection.section', 'shift'])
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = Section::with(['subSections.manPowerRequests' => function($query) {
+            $query->orderBy('date', 'desc')
+                  ->orderBy('created_at', 'desc');
+        }]);
 
-        $sections = Section::with('subSections')->get();
+        // Apply section filter if provided
+        if ($request->has('section_id') && $request->section_id) {
+            $query->where('id', $request->section_id);
+        }
+
+        $sections = $query->get();
+
+        // Paginate the sections
+        $perPage = 10;
+        $currentPage = $request->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedSections = $sections->slice($offset, $perPage);
+        
+        // Create a LengthAwarePaginator instance
+        $sectionsPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedSections,
+            $sections->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Get all sections for filter dropdown
+        $allSections = Section::all();
 
         return Inertia::render('ManpowerRequests/Index', [
-            'requests' => $requests,
-            'sections' => $sections,
+            'sections' => $sectionsPaginator,
+            'filterSections' => $allSections,
+            'filters' => $request->only(['section_id']),
+        ]);
+    }
+
+    public function getSectionRequests(Request $request, $sectionId)
+    {
+        $section = Section::with(['subSections.manPowerRequests' => function($query) {
+            $query->orderBy('date', 'desc')
+                  ->orderBy('created_at', 'desc');
+        }])->findOrFail($sectionId);
+
+        $requests = collect();
+        foreach ($section->subSections as $subSection) {
+            foreach ($subSection->manPowerRequests as $request) {
+                $requests->push([
+                    'id' => $request->id,
+                    'sub_section' => $subSection->only(['id', 'name']),
+                    'shift' => $request->shift ? $request->shift->only(['id', 'name']) : null,
+                    'status' => $request->status,
+                    'requested_amount' => $request->requested_amount,
+                    'male_count' => $request->male_count,
+                    'female_count' => $request->female_count,
+                    'date' => $request->date,
+                    'start_time' => $request->start_time,
+                    'end_time' => $request->end_time,
+                ]);
+            }
+        }
+
+        // Paginate the requests
+        $perPage = 10;
+        $currentPage = $request->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedRequests = $requests->slice($offset, $perPage);
+        
+        // Create a LengthAwarePaginator instance
+        $requestsPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $paginatedRequests,
+            $requests->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return response()->json([
+            'section' => $section->only(['id', 'name']),
+            'requests' => $requestsPaginator,
         ]);
     }
 

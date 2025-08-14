@@ -4,13 +4,13 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState, useMemo } from 'react';
 
-export default function Index({ requests, auth, sections }) {
+export default function Index({ sections, auth }) {
   const { post, delete: destroy } = useForm({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
-  const [expandedSection, setExpandedSection] = useState(null);
-  const [expandedDate, setExpandedDate] = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
   const user = auth && auth.user ? auth.user : null;
 
   // Status styling configuration
@@ -64,59 +64,108 @@ export default function Index({ requests, auth, sections }) {
     });
   };
 
+  // Handle view details
+  const handleViewDetails = (section) => {
+    setSelectedSection(section);
+    setShowDetailsModal(true);
+  };
+
   // Handle sort request
   const requestSort = (key) => {
-    let direction = 'desc';
-    if (sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = 'asc';
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
     }
     setSortConfig({ key, direction });
   };
 
-  // Sort requests
-  const sortedRequests = useMemo(() => {
-    if (!requests?.data) return [];
+  // Sort sections
+  const sortedSections = useMemo(() => {
+    if (!sections?.data) return [];
     
-    const sortableItems = [...requests.data];
+    const sortableItems = [...sections.data];
     if (sortConfig.key) {
       sortableItems.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
+        // For name sorting
+        if (sortConfig.key === 'name') {
+          return sortConfig.direction === 'asc' 
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name);
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // For date sorting (using earliest request date)
+        if (sortConfig.key === 'date') {
+          const getEarliestDate = (section) => {
+            let earliest = null;
+            section.sub_sections.forEach(sub => {
+              sub.man_power_requests.forEach(req => {
+                const reqDate = new Date(req.date);
+                if (!earliest || reqDate < earliest) {
+                  earliest = reqDate;
+                }
+              });
+            });
+            return earliest || new Date(0);
+          };
+          
+          const dateA = getEarliestDate(a);
+          const dateB = getEarliestDate(b);
+          return sortConfig.direction === 'asc' 
+            ? dateA - dateB 
+            : dateB - dateA;
         }
+        
+        // For request count sorting
+        if (sortConfig.key === 'count') {
+          const countA = a.sub_sections.reduce((sum, sub) => sum + sub.man_power_requests.length, 0);
+          const countB = b.sub_sections.reduce((sum, sub) => sum + sub.man_power_requests.length, 0);
+          return sortConfig.direction === 'asc' 
+            ? countA - countB 
+            : countB - countA;
+        }
+        
         return 0;
       });
     }
     return sortableItems;
-  }, [requests, sortConfig]);
+  }, [sections, sortConfig]);
 
-  // Group requests by date and section
-  const groupedRequests = useMemo(() => {
-    const groups = {};
-    
-    sortedRequests.forEach(request => {
-      const dateKey = request.date;
-      const sectionId = request.sub_section?.section_id;
-      
-      if (!groups[dateKey]) {
-        groups[dateKey] = {};
-      }
-      
-      if (!groups[dateKey][sectionId]) {
-        const section = sections.find(s => s.id === sectionId);
-        groups[dateKey][sectionId] = {
-          sectionName: section?.name || 'Unknown Section',
-          requests: []
-        };
-      }
-      
-      groups[dateKey][sectionId].requests.push(request);
+  // Calculate section statistics
+  const sectionStats = useMemo(() => {
+    return sortedSections.map(section => {
+      let totalRequests = 0;
+      let totalWorkers = 0;
+      let totalMale = 0;
+      let totalFemale = 0;
+      let statuses = new Set();
+      let earliestDate = null;
+
+      section.sub_sections.forEach(subSection => {
+        subSection.man_power_requests.forEach(request => {
+          totalRequests++;
+          totalWorkers += request.requested_amount;
+          totalMale += request.male_count;
+          totalFemale += request.female_count;
+          statuses.add(request.status);
+          
+          const requestDate = new Date(request.date);
+          if (!earliestDate || requestDate < earliestDate) {
+            earliestDate = requestDate;
+          }
+        });
+      });
+
+      return {
+        ...section,
+        totalRequests,
+        totalWorkers,
+        totalMale,
+        totalFemale,
+        statuses: Array.from(statuses),
+        earliestDate,
+      };
     });
-    
-    return groups;
-  }, [sortedRequests, sections]);
+  }, [sortedSections]);
 
   const isUser = user && user.role === 'user';
 
@@ -156,7 +205,7 @@ export default function Index({ requests, auth, sections }) {
                 </Link>
               </div>
 
-              {sortedRequests.length === 0 ? (
+              {sectionStats.length === 0 ? (
                 <EmptyState />
               ) : (
                 <div className="overflow-x-auto">
@@ -166,10 +215,24 @@ export default function Index({ requests, auth, sections }) {
                         <th 
                           scope="col" 
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                          onClick={() => requestSort('name')}
+                        >
+                          <div className="flex items-center">
+                            Section
+                            {sortConfig.key === 'name' && (
+                              <span className="ml-1">
+                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          scope="col" 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                           onClick={() => requestSort('date')}
                         >
                           <div className="flex items-center">
-                            Date
+                            Earliest Date
                             {sortConfig.key === 'date' && (
                               <span className="ml-1">
                                 {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -178,19 +241,13 @@ export default function Index({ requests, auth, sections }) {
                           </div>
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Section
+                          Statuses
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Status
+                          Total Requests
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Total
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Male
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Female
+                          Total Workers
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           Actions
@@ -198,128 +255,44 @@ export default function Index({ requests, auth, sections }) {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {Object.entries(groupedRequests).map(([date, sectionsData]) => (
-                        Object.entries(sectionsData).map(([sectionId, sectionData]) => {
-                          const isExpanded = expandedDate === date && expandedSection === sectionId;
-                          const totalRequests = sectionData.requests.length;
-                          const totalWorkers = sectionData.requests.reduce((sum, req) => sum + req.requested_amount, 0);
-                          const totalMale = sectionData.requests.reduce((sum, req) => sum + req.male_count, 0);
-                          const totalFemale = sectionData.requests.reduce((sum, req) => sum + req.female_count, 0);
-
-                          return (
-                            <>
-                              <tr 
-                                key={`${date}-${sectionId}`} 
-                                className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                                onClick={() => {
-                                  if (isExpanded) {
-                                    setExpandedDate(null);
-                                    setExpandedSection(null);
-                                  } else {
-                                    setExpandedDate(date);
-                                    setExpandedSection(sectionId);
-                                  }
-                                }}
-                              >
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                                  {formatDate(date)}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {sectionData.sectionName}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className="flex flex-wrap gap-1">
-                                    {Array.from(new Set(sectionData.requests.map(r => r.status))).map(status => (
-                                      <span 
-                                        key={status} 
-                                        className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(status)}`}
-                                      >
-                                        {status.replace('_', ' ')}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {totalWorkers}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {totalMale}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  {totalFemale}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                  <div className="flex space-x-2">
-                                    <span className="text-blue-600 dark:text-blue-400">
-                                      {totalRequests} request{totalRequests !== 1 ? 's' : ''}
-                                    </span>
-                                  </div>
-                                </td>
-                              </tr>
-                              {isExpanded && (
-                                <tr>
-                                  <td colSpan="7" className="px-6 py-4 bg-gray-50 dark:bg-gray-700">
-                                    <div className="space-y-2">
-                                      {sectionData.requests.map(request => (
-                                        <div key={request.id} className="p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-                                          <div className="flex justify-between items-center">
-                                            <div>
-                                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(request.status)}`}>
-                                                {request.status.replace('_', ' ')}
-                                              </span>
-                                              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-                                                {request.sub_section?.name || 'N/A'} - {request.shift?.name || 'N/A'}
-                                              </span>
-                                            </div>
-                                            <div className="flex space-x-2">
-                                              <Link
-                                                href={route('manpower-requests.edit', request.id)}
-                                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
-                                              >
-                                                View
-                                              </Link>
-                                              {request.status === 'pending' && !isUser && (
-                                                <Link
-                                                  href={route('manpower-requests.fulfill', request.id)}
-                                                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
-                                                >
-                                                  Fulfill
-                                                </Link>
-                                              )}
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  handleDeleteRequest(request.id);
-                                                }}
-                                                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
-                                              >
-                                                Delete
-                                              </button>
-                                            </div>
-                                          </div>
-                                          <div className="mt-2 grid grid-cols-3 gap-2 text-sm">
-                                            <div className="text-center">
-                                              <div className="text-gray-500 dark:text-gray-400">Total</div>
-                                              <div>{request.requested_amount}</div>
-                                            </div>
-                                            <div className="text-center">
-                                              <div className="text-gray-500 dark:text-gray-400">Male</div>
-                                              <div>{request.male_count}</div>
-                                            </div>
-                                            <div className="text-center">
-                                              <div className="text-gray-500 dark:text-gray-400">Female</div>
-                                              <div>{request.female_count}</div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </td>
-                                </tr>
-                              )}
-                            </>
-                          );
-                        })
+                      {sectionStats.map((section) => (
+                        <tr 
+                          key={section.id} 
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {section.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {formatDate(section.earliestDate)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex flex-wrap gap-1">
+                              {section.statuses.map(status => (
+                                <span 
+                                  key={status} 
+                                  className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(status)}`}
+                                >
+                                  {status.replace('_', ' ')}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {section.totalRequests}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {section.totalWorkers}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            <button
+                              onClick={() => handleViewDetails(section)}
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                            >
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
                       ))}
                     </tbody>
                   </table>
@@ -327,8 +300,8 @@ export default function Index({ requests, auth, sections }) {
               )}
 
               {/* Pagination */}
-              {requests?.links?.length > 3 && (
-                <Pagination links={requests.links} />
+              {sections?.links?.length > 3 && (
+                <Pagination links={sections.links} />
               )}
             </div>
           </div>
@@ -373,6 +346,135 @@ export default function Index({ requests, auth, sections }) {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Section Details Modal */}
+      {showDetailsModal && selectedSection && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full sm:p-6">
+              <div>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+                      {selectedSection.name} Requests
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(selectedSection.earliestDate)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="bg-white dark:bg-gray-700 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none"
+                    onClick={() => setShowDetailsModal(false)}
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Sub Section
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Shift
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Total
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Male
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Female
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                      {selectedSection.sub_sections.flatMap(subSection => 
+                        subSection.man_power_requests.map(request => (
+                          <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {subSection.name}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {request.shift?.name || 'N/A'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(request.status)}`}>
+                                {request.status.replace('_', ' ')}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {request.requested_amount}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {request.male_count}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              {request.female_count}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              <div className="flex space-x-2">
+                                <Link
+                                  href={route('manpower-requests.edit', request.id)}
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
+                                >
+                                  View
+                                </Link>
+                                {request.status === 'pending' && !isUser && (
+                                  <Link
+                                    href={route('manpower-requests.fulfill', request.id)}
+                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
+                                  >
+                                    Fulfill
+                                  </Link>
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteRequest(request.id);
+                                  }}
+                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="mt-5 sm:mt-6">
+                <button
+                  type="button"
+                  className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                  onClick={() => setShowDetailsModal(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
