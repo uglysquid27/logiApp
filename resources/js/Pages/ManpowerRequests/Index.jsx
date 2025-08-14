@@ -4,6 +4,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState, useMemo } from 'react';
 import SectionGroup from './Components/ManpowerRequests/SectionGroup';
+import { useEffect } from 'react';
 
 export default function Index({ sections, auth }) {
   const { delete: destroy } = useForm({});
@@ -15,6 +16,19 @@ export default function Index({ sections, auth }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Inside your component
+  useEffect(() => {
+    if (showDetailsModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showDetailsModal]);
   // Modal pagination
   const [modalPage, setModalPage] = useState(1);
   const modalItemsPerPage = 6;
@@ -155,7 +169,7 @@ export default function Index({ sections, auth }) {
   };
 
   return (
-     <AuthenticatedLayout
+    <AuthenticatedLayout
       user={auth.user}
       header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manpower Requests</h2>}
     >
@@ -212,8 +226,8 @@ export default function Index({ sections, auth }) {
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th 
-                          scope="col" 
+                        <th
+                          scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                           onClick={() => toggleSort('name')}
                         >
@@ -226,8 +240,8 @@ export default function Index({ sections, auth }) {
                             )}
                           </div>
                         </th>
-                        <th 
-                          scope="col" 
+                        <th
+                          scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                           onClick={() => toggleSort('date')}
                         >
@@ -243,8 +257,8 @@ export default function Index({ sections, auth }) {
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           Statuses
                         </th>
-                        <th 
-                          scope="col" 
+                        <th
+                          scope="col"
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
                           onClick={() => toggleSort('total')}
                         >
@@ -267,8 +281,8 @@ export default function Index({ sections, auth }) {
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {paginatedGroups.map((group, idx) => (
-                        <tr 
-                          key={`${group.sectionId}-${group.date}-${idx}`} 
+                        <tr
+                          key={`${group.sectionId}-${group.date}-${idx}`}
                           className="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -280,8 +294,8 @@ export default function Index({ sections, auth }) {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-wrap gap-1">
                               {group.statuses.map(status => (
-                                <span 
-                                  key={status} 
+                                <span
+                                  key={status}
                                   className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(status)}`}
                                 >
                                   {status.replace('_', ' ')}
@@ -317,11 +331,10 @@ export default function Index({ sections, auth }) {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded-md text-sm transition-all ${
-                        page === currentPage
-                          ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                      }`}
+                      className={`px-3 py-1 rounded-md text-sm transition-all ${page === currentPage
+                        ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
                     >
                       {page}
                     </button>
@@ -335,13 +348,17 @@ export default function Index({ sections, auth }) {
 
       {/* Details Modal */}
       {showDetailsModal && selectedGroup && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
+        <div className="fixed inset-0 z-40 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"
+            onClick={() => setShowDetailsModal(false)}
+          ></div>
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full sm:p-6">
+            <div
+              className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full sm:p-6 relative z-50"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div>
                 <div className="flex justify-between items-start">
                   <div>
@@ -367,7 +384,7 @@ export default function Index({ sections, auth }) {
                     formatDate={formatDate}
                     getStatusClasses={getStatusClasses}
                     onDelete={requestDelete}
-                    onRevision={() => {}}
+                    onRevision={() => { }}
                     isUser={!!user}
                     initialOpen
                   />
@@ -391,7 +408,10 @@ export default function Index({ sections, auth }) {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 transition-opacity"></div>
-
+          <div
+            className="relative z-40"
+            onClick={(e) => e.stopPropagation()} // Prevent click inside modal from closing it
+          ></div>
           <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-gray-800 shadow-xl rounded-lg">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50">
