@@ -1,4 +1,15 @@
+import { Link } from '@inertiajs/react';
+
 export default function RequestItem({ request, formatDate, getStatusClasses, onDelete, onRevision, isUser }) {
+  const getShiftLabel = (req) => {
+    if (req?.shift && (req.shift.name || typeof req.shift === 'string')) {
+      return req.shift.name || String(req.shift);
+    }
+    if (req?.shift_id) return `Shift ${req.shift_id}`;
+    if (typeof req?.shift === 'number') return `Shift ${req.shift}`;
+    return 'N/A';
+  };
+
   return (
     <div className="p-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
@@ -7,7 +18,7 @@ export default function RequestItem({ request, formatDate, getStatusClasses, onD
             {request.status.replace('_', ' ')}
           </span>
           <div className="mt-1 sm:mt-0 sm:ml-2 sm:inline-block text-sm text-gray-700 dark:text-gray-300 truncate">
-            {request.sub_section?.name || 'N/A'} - {request.shift?.name || 'N/A'}
+            {(request.sub_section?.name || 'N/A')} - {getShiftLabel(request)}
           </div>
         </div>
         <div className="flex justify-end sm:justify-start space-x-3">

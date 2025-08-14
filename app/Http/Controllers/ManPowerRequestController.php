@@ -21,25 +21,26 @@ class ManPowerRequestController extends Controller
 {
    public function index(Request $request): Response
     {
-        $query = Section::with(['subSections.manPowerRequests' => function($query) {
-            $query->orderBy('date', 'desc')
-                  ->orderBy('created_at', 'desc');
-        }]);
+        $query = Section::with([
+            'subSections',
+            'subSections.manPowerRequests' => function ($query) {
+                $query->orderBy('date', 'desc')
+                      ->orderBy('created_at', 'desc');
+            },
+            'subSections.manPowerRequests.shift'
+        ]);
 
-        // Apply section filter if provided
         if ($request->has('section_id') && $request->section_id) {
             $query->where('id', $request->section_id);
         }
 
         $sections = $query->get();
 
-        // Paginate the sections
         $perPage = 10;
         $currentPage = $request->get('page', 1);
         $offset = ($currentPage - 1) * $perPage;
         $paginatedSections = $sections->slice($offset, $perPage);
-        
-        // Create a LengthAwarePaginator instance
+
         $sectionsPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
             $paginatedSections,
             $sections->count(),
@@ -48,62 +49,58 @@ class ManPowerRequestController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // Get all sections for filter dropdown
         $allSections = Section::all();
 
         return Inertia::render('ManpowerRequests/Index', [
             'sections' => $sectionsPaginator,
             'filterSections' => $allSections,
-            'filters' => $request->only(['section_id']),
+            'filters' => [
+                'section_id' => $request->section_id,
+            ],
         ]);
     }
 
-    public function getSectionRequests(Request $request, $sectionId)
+    public function getSectionRequests($sectionId)
     {
-        $section = Section::with(['subSections.manPowerRequests' => function($query) {
-            $query->orderBy('date', 'desc')
-                  ->orderBy('created_at', 'desc');
-        }])->findOrFail($sectionId);
+        $section = Section::with([
+            'subSections',
+            'subSections.manPowerRequests' => function ($query) {
+                $query->orderBy('date', 'desc')
+                      ->orderBy('created_at', 'desc');
+            },
+            'subSections.manPowerRequests.shift'
+        ])->findOrFail($sectionId);
 
-        $requests = collect();
+        $requests = [];
+
         foreach ($section->subSections as $subSection) {
             foreach ($subSection->manPowerRequests as $request) {
-                $requests->push([
+                $requests[] = [
                     'id' => $request->id,
-                    'sub_section' => $subSection->only(['id', 'name']),
-                    'shift' => $request->shift ? $request->shift->only(['id', 'name']) : null,
+                    'date' => $request->date,
                     'status' => $request->status,
                     'requested_amount' => $request->requested_amount,
                     'male_count' => $request->male_count,
                     'female_count' => $request->female_count,
-                    'date' => $request->date,
-                    'start_time' => $request->start_time,
-                    'end_time' => $request->end_time,
-                ]);
+                    'created_at' => $request->created_at,
+                    'sub_section' => [
+                        'id' => $subSection->id,
+                        'name' => $subSection->name,
+                    ],
+                    'shift' => $request->shift ? $request->shift->only(['id', 'name']) : null,
+                    'shift_id' => $request->shift_id,
+                ];
             }
         }
 
-        // Paginate the requests
-        $perPage = 10;
-        $currentPage = $request->get('page', 1);
-        $offset = ($currentPage - 1) * $perPage;
-        $paginatedRequests = $requests->slice($offset, $perPage);
-        
-        // Create a LengthAwarePaginator instance
-        $requestsPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
-            $paginatedRequests,
-            $requests->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
         return response()->json([
-            'section' => $section->only(['id', 'name']),
-            'requests' => $requestsPaginator,
+            'section' => [
+                'id' => $section->id,
+                'name' => $section->name,
+            ],
+            'requests' => $requests,
         ]);
     }
-
     public function create(): Response
     {
         $sections = Section::with('subSections')->get();

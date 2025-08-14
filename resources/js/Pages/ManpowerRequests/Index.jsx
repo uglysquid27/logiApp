@@ -3,28 +3,34 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState, useMemo } from 'react';
+import SectionGroup from './Components/ManpowerRequests/SectionGroup';
 
 export default function Index({ sections, auth }) {
-  const { post, delete: destroy } = useForm({});
+  const { delete: destroy } = useForm({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [requestToDelete, setRequestToDelete] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
+  const [selectedGroup, setSelectedGroup] = useState(null); // {section, date, requests}
   const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
-  const user = auth && auth.user ? auth.user : null;
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  // Status styling configuration
+  // Modal pagination
+  const [modalPage, setModalPage] = useState(1);
+  const modalItemsPerPage = 6;
+
+  const user = auth?.user || null;
+
   const statusClasses = {
-    fulfilled: 'bg-green-100 text-green-700',
     pending: 'bg-yellow-100 text-yellow-700',
+    approved: 'bg-green-100 text-green-700',
     rejected: 'bg-red-100 text-red-700',
+    fulfilled: 'bg-indigo-100 text-indigo-700',
     revision_requested: 'bg-purple-100 text-purple-700',
   };
-
   const getStatusClasses = (status) =>
     statusClasses[status?.toLowerCase()] || 'bg-blue-100 text-blue-700';
 
-  // Format date with error handling
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     try {
@@ -33,144 +39,123 @@ export default function Index({ sections, auth }) {
         month: 'long',
         day: 'numeric',
       });
-    } catch (error) {
-      console.error('Date formatting error:', error);
-      return dateString;
+    } catch {
+      return String(dateString);
     }
   };
 
-  // Handle delete request
-  const handleDeleteRequest = (requestId) => {
-    setRequestToDelete(requestId);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = () => {
-    if (!requestToDelete) return;
-
-    destroy(route('manpower-requests.destroy', requestToDelete), {
-      preserveScroll: true,
-      onSuccess: () => {
-        toast.success('Request deleted successfully');
-        setShowDeleteModal(false);
-        setRequestToDelete(null);
-      },
-      onError: (errors) => {
-        console.error('Delete error:', errors);
-        toast.error(errors.message || 'Failed to delete request');
-        setShowDeleteModal(false);
-        setRequestToDelete(null);
-      }
-    });
-  };
-
-  // Handle view details
-  const handleViewDetails = (section) => {
-    setSelectedSection(section);
-    setShowDetailsModal(true);
-  };
-
-  // Handle sort request
-  const requestSort = (key) => {
-    let direction = 'asc';
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  // Sort sections
-  const sortedSections = useMemo(() => {
+  // 🔹 Group by section + date
+  const sectionDateGroups = useMemo(() => {
     if (!sections?.data) return [];
-    
-    const sortableItems = [...sections.data];
-    if (sortConfig.key) {
-      sortableItems.sort((a, b) => {
-        // For name sorting
-        if (sortConfig.key === 'name') {
-          return sortConfig.direction === 'asc' 
-            ? a.name.localeCompare(b.name)
-            : b.name.localeCompare(a.name);
-        }
-        
-        // For date sorting (using earliest request date)
-        if (sortConfig.key === 'date') {
-          const getEarliestDate = (section) => {
-            let earliest = null;
-            section.sub_sections.forEach(sub => {
-              sub.man_power_requests.forEach(req => {
-                const reqDate = new Date(req.date);
-                if (!earliest || reqDate < earliest) {
-                  earliest = reqDate;
-                }
-              });
-            });
-            return earliest || new Date(0);
-          };
-          
-          const dateA = getEarliestDate(a);
-          const dateB = getEarliestDate(b);
-          return sortConfig.direction === 'asc' 
-            ? dateA - dateB 
-            : dateB - dateA;
-        }
-        
-        // For request count sorting
-        if (sortConfig.key === 'count') {
-          const countA = a.sub_sections.reduce((sum, sub) => sum + sub.man_power_requests.length, 0);
-          const countB = b.sub_sections.reduce((sum, sub) => sum + sub.man_power_requests.length, 0);
-          return sortConfig.direction === 'asc' 
-            ? countA - countB 
-            : countB - countA;
-        }
-        
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [sections, sortConfig]);
+    const groups = [];
 
-  // Calculate section statistics
-  const sectionStats = useMemo(() => {
-    return sortedSections.map(section => {
-      let totalRequests = 0;
-      let totalWorkers = 0;
-      let totalMale = 0;
-      let totalFemale = 0;
-      let statuses = new Set();
-      let earliestDate = null;
-
-      section.sub_sections.forEach(subSection => {
-        subSection.man_power_requests.forEach(request => {
-          totalRequests++;
-          totalWorkers += request.requested_amount;
-          totalMale += request.male_count;
-          totalFemale += request.female_count;
-          statuses.add(request.status);
-          
-          const requestDate = new Date(request.date);
-          if (!earliestDate || requestDate < earliestDate) {
-            earliestDate = requestDate;
+    sections.data.forEach((section) => {
+      const dateMap = {};
+      (section.sub_sections || []).forEach((sub) => {
+        (sub.man_power_requests || []).forEach((req) => {
+          const dateKey = new Date(req.date).toISOString().slice(0, 10);
+          if (!dateMap[dateKey]) {
+            dateMap[dateKey] = [];
           }
+          dateMap[dateKey].push({ ...req, sub_section: { id: sub.id, name: sub.name } });
         });
       });
 
-      return {
-        ...section,
-        totalRequests,
-        totalWorkers,
-        totalMale,
-        totalFemale,
-        statuses: Array.from(statuses),
-        earliestDate,
-      };
+      Object.keys(dateMap).forEach((dateKey) => {
+        const reqs = dateMap[dateKey];
+        groups.push({
+          sectionId: section.id,
+          sectionName: section.name,
+          date: dateKey,
+          requests: reqs,
+          totalRequests: reqs.length,
+          totalWorkers: reqs.reduce((sum, r) => sum + (r.requested_amount || 0), 0),
+          statuses: [...new Set(reqs.map((r) => r.status))],
+        });
+      });
     });
-  }, [sortedSections]);
 
-  const isUser = user && user.role === 'user';
+    return groups;
+  }, [sections]);
+
+  // 🔹 Sorting
+  const sortedGroups = useMemo(() => {
+    const items = [...sectionDateGroups];
+    if (sortConfig.key === 'name') {
+      items.sort((a, b) =>
+        sortConfig.direction === 'asc'
+          ? a.sectionName.localeCompare(b.sectionName)
+          : b.sectionName.localeCompare(a.sectionName)
+      );
+    } else if (sortConfig.key === 'date') {
+      items.sort((a, b) => {
+        const ad = new Date(a.date).getTime();
+        const bd = new Date(b.date).getTime();
+        return sortConfig.direction === 'asc' ? ad - bd : bd - ad;
+      });
+    } else if (sortConfig.key === 'total') {
+      items.sort((a, b) =>
+        sortConfig.direction === 'asc'
+          ? a.totalRequests - b.totalRequests
+          : b.totalRequests - a.totalRequests
+      );
+    }
+    return items;
+  }, [sectionDateGroups, sortConfig]);
+
+  // 🔹 Pagination table utama
+  const totalPages = Math.ceil(sortedGroups.length / itemsPerPage);
+  const paginatedGroups = sortedGroups.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const requestDelete = (id) => {
+    setRequestToDelete(id);
+    setShowDeleteModal(true);
+  };
+  const confirmDelete = () => {
+    if (!requestToDelete) return;
+    destroy(route('manpower-requests.destroy', requestToDelete), {
+      preserveScroll: true,
+      onSuccess: () => {
+        toast.success('Request deleted');
+        setShowDeleteModal(false);
+        setRequestToDelete(null);
+      },
+      onError: () => {
+        toast.error('Failed to delete');
+        setShowDeleteModal(false);
+        setRequestToDelete(null);
+      },
+    });
+  };
+
+  const openDetails = (group) => {
+    setSelectedGroup(group);
+    setModalPage(1); // reset modal pagination
+    setShowDetailsModal(true);
+  };
+
+  const toggleSort = (key) => {
+    setSortConfig((prev) =>
+      prev.key === key
+        ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+        : { key, direction: 'asc' }
+    );
+  };
+
+  const getShiftLabel = (req) => {
+    if (req?.shift && (req.shift.name || typeof req.shift === 'string')) {
+      return req.shift.name || String(req.shift);
+    }
+    if (req?.shift_id) return `Shift ${req.shift_id}`;
+    if (typeof req?.shift === 'number') return `Shift ${req.shift}`;
+    return 'N/A';
+  };
 
   return (
-    <AuthenticatedLayout
+     <AuthenticatedLayout
       user={auth.user}
       header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manpower Requests</h2>}
     >
@@ -205,8 +190,23 @@ export default function Index({ sections, auth }) {
                 </Link>
               </div>
 
-              {sectionStats.length === 0 ? (
-                <EmptyState />
+              {paginatedGroups.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="flex flex-col items-center">
+                    <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      No manpower requests found.
+                    </p>
+                    <Link
+                      href={route('manpower-requests.create')}
+                      className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
+                    >
+                      Create your first request
+                    </Link>
+                  </div>
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -215,7 +215,7 @@ export default function Index({ sections, auth }) {
                         <th 
                           scope="col" 
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                          onClick={() => requestSort('name')}
+                          onClick={() => toggleSort('name')}
                         >
                           <div className="flex items-center">
                             Section
@@ -229,10 +229,10 @@ export default function Index({ sections, auth }) {
                         <th 
                           scope="col" 
                           className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
-                          onClick={() => requestSort('date')}
+                          onClick={() => toggleSort('date')}
                         >
                           <div className="flex items-center">
-                            Earliest Date
+                            Date
                             {sortConfig.key === 'date' && (
                               <span className="ml-1">
                                 {sortConfig.direction === 'asc' ? '↑' : '↓'}
@@ -243,8 +243,19 @@ export default function Index({ sections, auth }) {
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           Statuses
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Total Requests
+                        <th 
+                          scope="col" 
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer"
+                          onClick={() => toggleSort('total')}
+                        >
+                          <div className="flex items-center">
+                            Total Requests
+                            {sortConfig.key === 'total' && (
+                              <span className="ml-1">
+                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                           Total Workers
@@ -255,20 +266,20 @@ export default function Index({ sections, auth }) {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {sectionStats.map((section) => (
+                      {paginatedGroups.map((group, idx) => (
                         <tr 
-                          key={section.id} 
+                          key={`${group.sectionId}-${group.date}-${idx}`} 
                           className="hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {section.name}
+                            {group.sectionName}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {formatDate(section.earliestDate)}
+                            {formatDate(group.date)}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-wrap gap-1">
-                              {section.statuses.map(status => (
+                              {group.statuses.map(status => (
                                 <span 
                                   key={status} 
                                   className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(status)}`}
@@ -279,14 +290,14 @@ export default function Index({ sections, auth }) {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {section.totalRequests}
+                            {group.totalRequests}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {section.totalWorkers}
+                            {group.totalWorkers}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <button
-                              onClick={() => handleViewDetails(section)}
+                              onClick={() => openDetails(group)}
                               className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
                             >
                               View Details
@@ -300,13 +311,81 @@ export default function Index({ sections, auth }) {
               )}
 
               {/* Pagination */}
-              {sections?.links?.length > 3 && (
-                <Pagination links={sections.links} />
+              {totalPages > 1 && (
+                <div className="mt-6 flex justify-end flex-wrap gap-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded-md text-sm transition-all ${
+                        page === currentPage
+                          ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {showDetailsModal && selectedGroup && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+            </div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full sm:p-6">
+              <div>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+                      {selectedGroup.sectionName} Requests - {formatDate(selectedGroup.date)}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    className="bg-white dark:bg-gray-700 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none"
+                    onClick={() => setShowDetailsModal(false)}
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="mt-4">
+                  <SectionGroup
+                    section={{ name: selectedGroup.sectionName }}
+                    requests={selectedGroup.requests}
+                    formatDate={formatDate}
+                    getStatusClasses={getStatusClasses}
+                    onDelete={requestDelete}
+                    onRevision={() => {}}
+                    isUser={!!user}
+                    initialOpen
+                  />
+                </div>
+              </div>
+              <div className="mt-5 sm:mt-6">
+                <button
+                  type="button"
+                  className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
+                  onClick={() => setShowDetailsModal(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
@@ -350,175 +429,6 @@ export default function Index({ sections, auth }) {
           </div>
         </div>
       )}
-
-      {/* Section Details Modal */}
-      {showDetailsModal && selectedSection && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
-            </div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full sm:p-6">
-              <div>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
-                      {selectedSection.name} Requests
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(selectedSection.earliestDate)}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="bg-white dark:bg-gray-700 rounded-md text-gray-400 dark:text-gray-300 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none"
-                    onClick={() => setShowDetailsModal(false)}
-                  >
-                    <span className="sr-only">Close</span>
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="mt-4 overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-gray-700">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Sub Section
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Shift
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Total
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Male
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Female
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                      {selectedSection.sub_sections.flatMap(subSection => 
-                        subSection.man_power_requests.map(request => (
-                          <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {subSection.name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {request.shift?.name || 'N/A'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusClasses(request.status)}`}>
-                                {request.status.replace('_', ' ')}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {request.requested_amount}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {request.male_count}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              {request.female_count}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              <div className="flex space-x-2">
-                                <Link
-                                  href={route('manpower-requests.edit', request.id)}
-                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm"
-                                >
-                                  View
-                                </Link>
-                                {request.status === 'pending' && !isUser && (
-                                  <Link
-                                    href={route('manpower-requests.fulfill', request.id)}
-                                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 text-sm"
-                                  >
-                                    Fulfill
-                                  </Link>
-                                )}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteRequest(request.id);
-                                  }}
-                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-              <div className="mt-5 sm:mt-6">
-                <button
-                  type="button"
-                  className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm"
-                  onClick={() => setShowDetailsModal(false)}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </AuthenticatedLayout>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="text-center py-8">
-      <div className="flex flex-col items-center">
-        <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-        </svg>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-          No manpower requests found.
-        </p>
-        <Link
-          href={route('manpower-requests.create')}
-          className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium"
-        >
-          Create your first request
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function Pagination({ links }) {
-  return (
-    <div className="mt-6 flex justify-end flex-wrap gap-2">
-      {links.map((link, index) => (
-        <Link
-          key={index}
-          href={link.url || '#'}
-          className={`px-3 py-1 rounded-md text-sm transition-all ${link.active
-            ? 'bg-indigo-600 dark:bg-indigo-700 text-white'
-            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-            } ${!link.url && 'pointer-events-none opacity-50'}`}
-          dangerouslySetInnerHTML={{ __html: link.label }}
-          preserveScroll
-        />
-      ))}
-    </div>
   );
 }
