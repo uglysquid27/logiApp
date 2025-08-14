@@ -3,8 +3,16 @@ export default function GenderFields({
   slotData,
   requestedAmount,
   handleSlotChange,
-  handleNumberFocus
+  handleNumberFocus,
+  sectionName // Add sectionName as a prop
 }) {
+  // Hide gender fields for these sections
+  const hideGenderFields = ['Finished goods', 'Loader'].includes(sectionName);
+
+  if (hideGenderFields) {
+    return null;
+  }
+
   return (
     <div className="bg-gray-50 dark:bg-gray-700 p-3 sm:p-4 rounded-md">
       <h5 className="font-medium text-gray-700 dark:text-gray-300 text-sm mb-3">

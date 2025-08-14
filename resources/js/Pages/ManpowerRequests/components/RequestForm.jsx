@@ -236,6 +236,7 @@ export default function RequestForm({
                     requestedAmount={requestedAmount}
                     handleSlotChange={(field, value) => handleSlotChange(shift.id, field, value)}
                     handleNumberFocus={handleNumberFocus}
+                    sectionName={request.section_name}
                   />
                 </>
               )}
