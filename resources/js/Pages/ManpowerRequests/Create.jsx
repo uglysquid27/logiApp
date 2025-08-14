@@ -12,6 +12,7 @@ export default function Create({ sections, shifts }) {
   const [activeRequestIndex, setActiveRequestIndex] = useState(0);
   const [globalDate, setGlobalDate] = useState('');
   const [showSummary, setShowSummary] = useState(false);
+  const [selectedSubSections, setSelectedSubSections] = useState([]);
 
   const { data, setData, post, processing, errors } = useForm({
     requests: []
@@ -21,10 +22,11 @@ export default function Create({ sections, shifts }) {
 
   const handleSectionSelect = (section) => {
     setSelectedSection(section);
+    setSelectedSubSections([]); // Reset selected subsections when changing section
     setShowSubSectionModal(true);
   };
 
-  const handleSubSectionSelect = (subSection) => {
+  const handleSubSectionSelect = (subSections) => {
     const initialTimeSlots = {};
     shifts.forEach(shift => {
       initialTimeSlots[shift.id] = {
@@ -38,22 +40,22 @@ export default function Create({ sections, shifts }) {
       };
     });
 
-    const newRequest = {
+    const newRequests = subSections.map(subSection => ({
       sub_section_id: subSection.id,
       sub_section_name: subSection.name,
       section_name: selectedSection.name,
-      date: globalDate, // Auto-assign the global date
-      time_slots: initialTimeSlots
-    };
+      date: globalDate,
+      time_slots: JSON.parse(JSON.stringify(initialTimeSlots)) // Deep copy
+    }));
 
-    setRequests([...requests, newRequest]);
-    setActiveRequestIndex(requests.length);
+    setRequests([...requests, ...newRequests]);
+    setActiveRequestIndex(requests.length > 0 ? requests.length : 0);
     setShowSubSectionModal(false);
+    setSelectedSubSections([]);
   };
 
   const handleGlobalDateChange = (newDate) => {
     setGlobalDate(newDate);
-    // Update all existing requests with the new date
     const updatedRequests = requests.map(request => ({
       ...request,
       date: newDate
@@ -83,7 +85,6 @@ export default function Create({ sections, shifts }) {
   };
 
   const handleShowSummary = () => {
-    // Validate that we have at least one valid request
     const hasValidRequests = requests.some(request => 
       Object.values(request.time_slots).some(slot => 
         slot.requested_amount && parseInt(slot.requested_amount) > 0
@@ -108,7 +109,7 @@ export default function Create({ sections, shifts }) {
     
     const formattedRequests = requests.map(request => ({
       sub_section_id: request.sub_section_id,
-      date: globalDate, // Use global date
+      date: globalDate,
       time_slots: Object.entries(request.time_slots)
         .filter(([_, slot]) => slot.requested_amount && parseInt(slot.requested_amount) > 0)
         .reduce((acc, [shiftId, slot]) => ({
@@ -134,7 +135,6 @@ export default function Create({ sections, shifts }) {
     post('/manpower-requests');
   };
 
-  // Summary Component
   const RequestSummary = () => {
     const formatTimeForDisplay = (timeString) => {
       if (!timeString) return '-';
@@ -185,7 +185,6 @@ export default function Create({ sections, shifts }) {
 
     return (
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -203,7 +202,6 @@ export default function Create({ sections, shifts }) {
           </div>
         </div>
 
-        {/* Summary Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
@@ -247,7 +245,6 @@ export default function Create({ sections, shifts }) {
           </div>
         </div>
 
-        {/* Detailed Breakdown */}
         <div className="space-y-4">
           <h4 className="font-medium text-gray-900 dark:text-gray-100">Request Details</h4>
           
@@ -334,7 +331,6 @@ export default function Create({ sections, shifts }) {
           })}
         </div>
 
-        {/* Action Buttons */}
         <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             type="button"
@@ -419,7 +415,6 @@ export default function Create({ sections, shifts }) {
                 />
               ) : (
                 <div className="space-y-6">
-                  {/* Global Date Selection */}
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                     <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-3">
                       Select Date for All Requests
@@ -440,7 +435,6 @@ export default function Create({ sections, shifts }) {
                     {errors.date && <p className="mt-1 text-red-600 dark:text-red-400 text-sm">{errors.date}</p>}
                   </div>
 
-                  {/* Sub-section Tabs */}
                   <div className="flex overflow-x-auto pb-2">
                     {requests.map((request, index) => (
                       <button
@@ -466,9 +460,10 @@ export default function Create({ sections, shifts }) {
                     <button
                       type="button"
                       onClick={() => setShowSubSectionModal(true)}
-                      className="flex items-center px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-md whitespace-nowrap"
+                      // disabled={!globalDate}
+                      className={`flex items-center px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-gray-700 rounded-md whitespace-nowrap `}
                     >
-                      + Tambah Sub Section
+                      + Add Sub Section
                     </button>
                   </div>
 
@@ -514,6 +509,7 @@ export default function Create({ sections, shifts }) {
         onClose={() => setShowSubSectionModal(false)}
         section={selectedSection}
         onSelect={handleSubSectionSelect}
+        selectedSubSections={requests.map(r => r.sub_section_id)}
       />
     </AuthenticatedLayout>
   );
