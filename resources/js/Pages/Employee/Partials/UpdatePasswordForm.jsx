@@ -1,8 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
-// Import ikon dari Heroicons untuk melihat/menyembunyikan password
 import { EyeIcon, EyeSlashIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
-
+import ToastNotification from '../Components/ToastNotification';
 
 export default function UpdatePasswordForm({ className, employee }) {
     const { data, setData, put, errors, processing, recentlySuccessful, reset } = useForm({
@@ -11,21 +10,31 @@ export default function UpdatePasswordForm({ className, employee }) {
         password_confirmation: '',
     });
 
-    // State untuk mengontrol visibilitas masing-masing kolom password
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showSuccessToast, setShowSuccessToast] = useState(false);
 
     const submit = (e) => {
         e.preventDefault();
         put(route('employee.employees.password.update', { employee: employee.id }), {
             preserveScroll: true,
-            onSuccess: () => reset(),
+            onSuccess: () => {
+                reset();
+                setShowSuccessToast(true);
+            },
         });
     };
 
     return (
         <section className={className}>
+            <ToastNotification
+                message="Berhasil Memperbarui Password!"
+                show={showSuccessToast}
+                onClose={() => setShowSuccessToast(false)}
+                type="success"
+            />
+
             <header>
                 <h2 className="text-lg font-semibold text-gray-800">Perbarui Kata Sandi</h2>
                 <p className="mt-1 text-sm text-gray-600">
@@ -34,7 +43,7 @@ export default function UpdatePasswordForm({ className, employee }) {
             </header>
 
             <form onSubmit={submit} className="mt-6 space-y-6">
-                {/* Kata Sandi Saat Ini */}
+                {/* Current Password */}
                 <div className="relative">
                     <label htmlFor="current_password" className="block text-sm font-medium text-gray-700 mb-1">
                         Kata Sandi Saat Ini
@@ -68,7 +77,7 @@ export default function UpdatePasswordForm({ className, employee }) {
                     )}
                 </div>
 
-                {/* Kata Sandi Baru */}
+                {/* New Password */}
                 <div className="relative">
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                         Kata Sandi Baru
@@ -105,7 +114,7 @@ export default function UpdatePasswordForm({ className, employee }) {
                     </p>
                 </div>
 
-                {/* Konfirmasi Kata Sandi Baru */}
+                {/* Confirm Password */}
                 <div className="relative">
                     <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 mb-1">
                         Konfirmasi Kata Sandi Baru

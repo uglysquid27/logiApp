@@ -17,8 +17,8 @@ class EmployeeSeeder extends Seeder
         Employee::truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // Process the merged CSV file
-        $csvFile = fopen(database_path('seeders/data/employees_with_contacts.csv'), 'r');
+        // Process the CSV file
+        $csvFile = fopen(database_path('seeders/data/employees_with_ktp.csv'), 'r');
         
         // Skip header
         fgetcsv($csvFile);
@@ -43,11 +43,14 @@ class EmployeeSeeder extends Seeder
             
             // Parse the address components
             $address = !empty($row[7]) ? trim($row[7]) : null;
-            // $parsedAddress = $this->parseIndonesianAddress($address);
+            
+            // Format KTP number (remove .0 if present)
+            $ktp = !empty($row[8]) ? rtrim($row[8], '.0') : null;
             
             try {
                 Employee::create([
-                    'nik' => $row[0], // nik
+                    'nik' => $row[0], // nik from CSV
+                    'ktp' => $ktp, // ktp from CSV (column 9)
                     'name' => $row[1], // name
                     'email' => $email,
                     'password' => Hash::make('password'), // Default password
@@ -56,18 +59,25 @@ class EmployeeSeeder extends Seeder
                     'cuti' => 'no',
                     'gender' => $row[3], // gender
                     'group' => !empty($row[4]) ? $row[4] : null, // group
-                    'phone' => !empty($row[6]) ? $row[6] : null, // phone
+                    'phone' => !empty($row[6]) ? rtrim($row[6], '.0') : null, // phone (remove .0 if present)
                     'address' => $address, // original full address
                     
-                    // Parsed address components
-                    // 'street' => $parsedAddress['street'],
-                    // 'rt' => $parsedAddress['rt'],
-                    // 'rw' => $parsedAddress['rw'],
-                    // 'kelurahan' => $parsedAddress['kelurahan'],
-                    // 'kecamatan' => $parsedAddress['kecamatan'],
-                    // 'kabupaten_kota' => $parsedAddress['kabupaten_kota'],
-                    // 'provinsi' => 'Jawa Timur', // Default as most addresses are in East Java
-                    // 'kode_pos' => $parsedAddress['kode_pos'],
+                    // Set default values for other fields
+                    'marital' => null,
+                    'birth_date' => null,
+                    'religion' => null,
+                    'street' => null,
+                    'rt' => null,
+                    'rw' => null,
+                    'kelurahan' => null,
+                    'kecamatan' => null,
+                    'kabupaten_kota' => null,
+                    'provinsi' => null,
+                    'kode_pos' => null,
+                    'deactivation_reason' => null,
+                    'deactivation_notes' => null,
+                    'deactivated_at' => null,
+                    'deactivated_by' => null,
                     
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -81,77 +91,4 @@ class EmployeeSeeder extends Seeder
         
         fclose($csvFile);
     }
-
-    /**
-     * Parse Indonesian address into components
-     */
-    // protected function parseIndonesianAddress($address)
-    // {
-    //     if (empty($address)) {
-    //         return [
-    //             'street' => null,
-    //             'rt' => null,
-    //             'rw' => null,
-    //             'kelurahan' => null,
-    //             'kecamatan' => null,
-    //             'kabupaten_kota' => null,
-    //             'kode_pos' => null,
-    //         ];
-    //     }
-
-    //     // Initialize components
-    //     $components = [
-    //         'street' => null,
-    //         'rt' => null,
-    //         'rw' => null,
-    //         'kelurahan' => null,
-    //         'kecamatan' => null,
-    //         'kabupaten_kota' => null,
-    //         'kode_pos' => null,
-    //     ];
-
-    //     // Extract postal code (5 digits at the end)
-    //     if (preg_match('/(\d{5})/', $address, $matches)) {
-    //         $components['kode_pos'] = $matches[1];
-    //         $address = str_replace($matches[1], '', $address);
-    //     }
-
-    //     // Common patterns to look for
-    //     $patterns = [
-    //         'rt' => '/Rt\.?\s*(\d+)/i',
-    //         'rw' => '/Rw\.?\s*(\d+)/i',
-    //         'kelurahan' => '/Kel\.?\s*([^,\.]+)/i',
-    //         'kecamatan' => '/Kec\.?\s*([^,\.]+)/i',
-    //         'kabupaten' => '/Kab\.?\s*([^,\.]+)/i',
-    //         'kota' => '/Kota\s*([^,\.]+)/i',
-    //     ];
-
-    //     // Extract components using patterns
-    //     foreach ($patterns as $key => $pattern) {
-    //         if (preg_match($pattern, $address, $matches)) {
-    //             $components[$key] = trim($matches[1]);
-    //             $address = str_replace($matches[0], '', $address);
-    //         }
-    //     }
-
-    //     // Handle Kabupaten/Kota
-    //     if (!empty($components['kabupaten'])) {
-    //         $components['kabupaten_kota'] = $components['kabupaten'];
-    //     } elseif (!empty($components['kota'])) {
-    //         $components['kabupaten_kota'] = $components['kota'];
-    //     }
-    //     unset($components['kabupaten'], $components['kota']);
-
-    //     // The remaining part is likely the street/dusun
-    //     $components['street'] = trim(preg_replace('/\s+/', ' ', $address));
-
-    //     // Clean up extracted values
-    //     foreach ($components as &$value) {
-    //         if ($value) {
-    //             $value = trim($value, " \t\n\r\0\x0B,");
-    //         }
-    //     }
-
-    //     return $components;
-    // }
 }

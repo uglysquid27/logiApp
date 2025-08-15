@@ -16,25 +16,36 @@ class Employee extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'nik',
-        'type',
-        'status',
-        'deactivation_reason',
-        'deactivation_notes',
-        'deactivated_at',
-        'deactivated_by',
-        'cuti',
-        'gender',
-        'group',
-        'birth_date',
-        'address',
-        'religion',
-        'phone',
-    ];
+   protected $fillable = [
+    'nik',
+    'ktp',
+    'name',
+    'email',
+    'password',
+    'marital',
+    'type',
+    'status',
+    'cuti',
+    'gender',
+    'group',
+    'birth_date',
+    'religion',
+    'phone',
+    'street',
+    'rt',
+    'rw',
+    'kelurahan',
+    'kecamatan',
+    'kabupaten_kota',
+    'provinsi',
+    'kode_pos',
+    'address',
+    'deactivation_reason',
+    'deactivation_notes',
+    'deactivated_at',
+    'deactivated_by',
+];
+
 
     protected $hidden = [
         'password',

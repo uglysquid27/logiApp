@@ -10,9 +10,12 @@ return new class extends Migration {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->string('nik')->unique();
+            $table->string('ktp')->unique()->nullable();
             $table->string('name');
+            $table->string('photo')->nullable();
             $table->string('email')->unique()->nullable();
             $table->string('password');
+            $table->enum('marital', ['single', 'married', 'divorced', 'widowed'])->default('single')->nullable();
             $table->enum('type', ['harian', 'bulanan']);
             $table->enum('status', ['available', 'assigned', 'on leave', 'deactivated'])->default('available');
             $table->enum('cuti', ['yes', 'no'])->default('no');

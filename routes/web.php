@@ -113,6 +113,9 @@ Route::middleware(['auth:employee', 'prevent.back'])
             ->name('employees.update');
         Route::put('/employees/{employee}/password', [EmployeeProfileController::class, 'updatePassword'])
             ->name('employees.password.update');
+        Route::put('employees/{employee}/photo', [EmployeeProfileController::class, 'updatePhoto'])
+            ->name('employees.photo.update');
+
     });
 
 // Admin routes with session protection
@@ -161,8 +164,8 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
     Route::resource('manpower-requests', ManPowerRequestController::class);
     Route::get('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'create'])
         ->name('manpower-requests.fulfill');
-        Route::get('/manpower-requests/create', [ManPowerRequestController::class, 'create'])
-    ->name('manpower-requests.create');
+    Route::get('/manpower-requests/create', [ManPowerRequestController::class, 'create'])
+        ->name('manpower-requests.create');
     Route::post('/manpower-requests/{id}/fulfill', [ManPowerRequestFulfillmentController::class, 'store'])
         ->name('manpower-requests.fulfill.store');
     Route::post('/manpower-requests/{manpower_request}/request-revision', [ManPowerRequestController::class, 'requestRevision'])
@@ -183,7 +186,7 @@ Route::middleware(['auth:web', 'prevent.back'])->group(function () {
     Route::get('/dashboard/employee-assignments/filtered', [DashboardController::class, 'getFilteredEmployeeAssignments'])
         ->name('dashboard.employee.assignments.filtered');
 
- 
+
 
     Route::get('/dashboard/requests/{periodType}/{period}/{status}', [DashboardController::class, 'getManpowerRequestsByPeriod'])
         ->name('dashboard.requests.byPeriod');
