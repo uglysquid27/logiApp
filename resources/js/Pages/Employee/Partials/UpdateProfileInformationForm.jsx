@@ -194,10 +194,14 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
                         >
                             <option value="">Pilih Status</option>
-                            <option value="single">Belum Menikah</option>
-                            <option value="married">Menikah</option>
-                            <option value="divorced">Cerai</option>
-                            <option value="widowed">Janda/Duda</option>
+                            <option value="K0">K/O - Nikah, Tanpa Anak</option>
+                            <option value="K1">K/1 - Nikah, Anak 1</option>
+                            <option value="K2">K/2 - Nikah, Anak 2</option>
+                            <option value="K3">K/3 - Nikah, Anak 3</option>
+                            <option value="BM">Belum Menikah</option>
+                            <option value="TK1">TK/1 - Tidak Nikah, 1 Tanggungan</option>
+                            <option value="TK2">TK/2 - Tidak Nikah, 2 Tanggungan</option>
+                            <option value="TK3">TK/3 - Tidak Nikah, 3 Tanggungan</option>
                         </select>
                     </div>
                     {errors.marital && <p className="mt-1 text-sm text-red-600">{errors.marital}</p>}
@@ -266,7 +270,7 @@ export default function UpdateProfileInformationForm({ employee, className }) {
                 {/* Address Fields */}
                 <div className="sm:col-span-6">
                     <label className="block text-sm font-medium text-gray-700">
-                        Alamat Lengkap 
+                        Alamat Lengkap
                     </label>
                     <div className="mt-1 grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
                         {/* Street */}

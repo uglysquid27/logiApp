@@ -52,7 +52,7 @@ class EmployeeProfileController extends Controller
             'type' => 'required|in:harian,bulanan',
             'gender' => 'required|in:male,female',
             'group' => 'nullable|string|max:255',
-            'marital' => 'nullable|in:single,married,divorced,widowed',
+            'marital' => 'nullable|in:K0,K1,K2,K3,BM,TK1,TK2,TK3',
             'birth_date' => 'required|date',
             'religion' => 'required|string|max:255',
             'phone' => 'nullable|string|max:20',

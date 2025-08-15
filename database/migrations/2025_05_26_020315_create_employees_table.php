@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('photo')->nullable();
             $table->string('email')->unique()->nullable();
             $table->string('password');
-            $table->enum('marital', ['single', 'married', 'divorced', 'widowed'])->default('single')->nullable();
+            $table->enum('marital', ['K0','K1','K2','K3','BM','TK1','TK2','TK3'])->default('BM')->nullable();
             $table->enum('type', ['harian', 'bulanan']);
             $table->enum('status', ['available', 'assigned', 'on leave', 'deactivated'])->default('available');
             $table->enum('cuti', ['yes', 'no'])->default('no');
